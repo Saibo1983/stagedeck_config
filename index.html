@@ -355,7 +355,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <h3>Come vengono contati i pezzi</h3>
     <ul class="assump">
       <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
-      <li>Ogni deck ha le sue 4 gambe. Dove si incontrano 2 gambe serve un morsetto singolo, dove se ne incontrano 4 uno doppio (manuale Larcher). I giunti sono i lati in comune tra due deck.</li>
+      <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
       <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
       <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
       <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
@@ -445,14 +445,14 @@ const TRIGGERS = {
   stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale e rampe'},
   fixed:{label:'una sola volta', group:'Varie'}
 };
-// when: 'perDeck' = solo gambe (sempre 4 per deck), 'deck' = gambe o Rollrisers, 'roll', 'spider'
+// when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
 const DEFAULT_RULES = {
-  v:4,
+  v:5,
   params:{legMode:'perDeck', stairOpening:1, rampOpening:1, skirtDeck:9, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
   rows:[
     {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
-    {on:true, label:'Morsetto tra 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'perDeck', note:'Manuale: un morsetto singolo ogni 2 gambe, al massimo 20 cm sotto il deck.'},
-    {on:true, label:'Morsetto tra 4 gambe', trigger:'junction34', code:'V4LC', qty:1, when:'perDeck', note:'Manuale: un morsetto doppio ogni 4 gambe, dove si incontrano 4 angoli di deck.'},
+    {on:true, label:'Connettore per 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe). Sul perimetro, dove si incontrano 2 gambe, un connettore doppio, al massimo 20 cm sotto il deck.'},
+    {on:true, label:'Connettore per 4 gambe', trigger:'junction34', code:'V4LC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm, come sopra. All\'interno, dove si incontrano 4 gambe, un connettore quadro.'},
     {on:true, label:'Connettore deck-deck', trigger:'joint_m', code:'VD2D', qty:1, when:'deckHigh', note:'Regola tua: 1 pezzo per ogni metro di lato connesso (un deck 2×1 collegato su un lato lungo e uno corto ne ha 3). Non per i palchi da 20 cm.'},
     {on:true, label:'Connettore deck-deck StageDeck da 20 cm', trigger:'joint_m', code:'D2DC', qty:1, when:'deck20', note:'Regola tua: con StageDeck a 20 cm si usa il connettore Spider D2DC al posto del VD2D, 1 pezzo per metro di lato connesso.'},
     {on:true, label:'Livellatore tra deck', trigger:'joint_m', code:'VDL', qty:1, note:'Regola tua: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.'},
@@ -472,6 +472,8 @@ const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'V
 const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
 const STRATS = [{rowMajor:true,preferH:true},{rowMajor:true,preferH:false},{rowMajor:false,preferH:true},{rowMajor:false,preferH:false}];
 
+// Gamba più lunga di 80 cm: fissa sopra 80 cm, oppure telescopica VTL60 (60–100) o più lunga.
+function legLongFn(leg, h){ return leg.tele ? leg.code!=='VTL40' : h>80; }
 function pickLeg(h, tele){
   // Altezze intermedie (30, 50, 70, 90): gamba virtuale a prezzo medio tra le due gambe fisse vicine.
   if(!tele && !FIXED_LEGS[h] && FIXED_LEGS[h-10] && FIXED_LEGS[h+10])
@@ -611,7 +613,7 @@ function compute(cfg, R, look, kits){
         ? 'Portata del deck 750 kg/m² (DIN 15921), deck fino a 244 × 122 cm su 4 gambe.'
         : `Portata ridotta a 500 kg/m² con gambe 60×60 a ${H} cm (tabella Larcher).`);
       if(leg.tele) out.notes.push('Gambe telescopiche: dopo la regolazione vanno bloccate con il dado autobloccante, è vietato usare il palco senza.');
-      out.notes.push('Morsetti tra le gambe al massimo 20 cm sotto il deck.');
+      if(legLongFn(leg, H)) out.notes.push('Gambe oltre 80 cm: connettori tra le gambe (doppi sul perimetro, quadri all\'interno), al massimo 20 cm sotto il deck.');
     }
   }else if(support==='roll'){
     rrOK = (H===30 || H===40);
@@ -622,6 +624,7 @@ function compute(cfg, R, look, kits){
     else out.lines.push({group:'Appoggi', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
   }
   out.info.leg = leg;
+  const legLong = !!(leg && legLongFn(leg, H));
 
   // --- scale e rampe
   const nStairs = cfg.stairs.length, nRamps = (cfg.ramps||[]).length;
@@ -692,6 +695,7 @@ function compute(cfg, R, look, kits){
     if(!r.on) continue;
     const w = r.when;
     if(w==='perDeck'){ if(support!=='legs' || !leg) continue; }
+    else if(w==='legsHigh'){ if(support!=='legs' || !leg || !legLong) continue; }
     else if(w==='deck'){ if(support==='spider') continue; }
     else if(w==='deckHigh'){ if(support==='spider' || +cfg.H===20) continue; }
     else if(w==='deck20'){ if(support==='spider' || +cfg.H!==20) continue; }
@@ -849,6 +853,13 @@ function load(){
     cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
     cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
     cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
+    if(s && s.rules && s.rules.rows && s.rules.v===4){
+      s.rules.v = 5;
+      for(const r of s.rules.rows) if(r.when==='perDeck' && (r.trigger==='junction2' || r.trigger==='junction34')){
+        const d = DEFAULT_RULES.rows.find(x => x.trigger===r.trigger && x.when==='legsHigh');
+        Object.assign(r, {when:'legsHigh', label:d.label, note:d.note});
+      }
+    }
     if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
   }catch(e){}
 }
