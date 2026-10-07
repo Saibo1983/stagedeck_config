@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0A5F7E">
+<meta name="theme-color" content="#B3261E">
 <title>StageDeck</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -15,8 +15,8 @@
 /* Layout: sinistra pannello di configurazione, destra pianta e offerta; su telefono tutto in colonna.
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
-  --bg:#F7E4E4; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-  --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3;
+  --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
   --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
@@ -25,16 +25,16 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#1E1316; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-    --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+    --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
     --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1E1316; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-  --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+  --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
   --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
@@ -164,7 +164,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 @media print{
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
     --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-    --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3; --warn:#80500A; --warn-bg:#FFFFFF;
+    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
     --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
