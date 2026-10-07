@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A5F7E">
+<title>StageDeck</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sinistra pannello di configurazione, destra pianta e offerta; su telefono tutto in colonna.
+   Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+  --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3;
+  --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
+  --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
+  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+    --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+    --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
+    --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+  --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+  --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
+  --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-inline:16px;padding-block:0 32px}
+.wrap{max-width:1320px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
+h2{font-size:22px;line-height:1.1}
+h3{font-size:17px;line-height:1.15}
+button,input,select{font:inherit;color:inherit}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:20px 14px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-size:34px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.brand .sub{color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px}
+.tab{background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:940px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px}
+.stack{display:flex;flex-direction:column;gap:16px;min-width:0}
+.config{display:flex;flex-direction:column;gap:18px}
+.config h3{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sec{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>span,.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+input[type=text],input[type=number],input[type=date],select{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-height:36px}
+input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+input:disabled{opacity:.5}
+.check{display:flex;align-items:center;gap:8px;cursor:pointer}
+.check input{width:16px;height:16px;accent-color:var(--accent)}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{flex:1;background:var(--surface);border:0;border-right:1px solid var(--line);padding:7px 4px;cursor:pointer;min-height:36px}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px;font-weight:500}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
+.btn.small{padding:3px 9px;min-height:28px;font-size:13px}
+.list{display:flex;flex-direction:column;gap:6px}
+.item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
+.hint{color:var(--muted);font-size:12.5px;margin:0}
+.tiles{display:flex;flex-wrap:wrap;gap:12px}
+.tile{flex:1 1 130px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.tile.main{flex:2 1 210px}
+.tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.tile .v{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile .v small{font-size:15px;font-weight:600;color:var(--muted)}
+.tile.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tile.main .k,.tile.main .v small{color:var(--accent-ink);opacity:.8}
+.notes{display:flex;flex-direction:column;gap:6px}
+.note{border-radius:6px;padding:8px 12px;font-size:13px}
+.note.info{background:var(--info-bg);color:var(--info)}
+.note.warn{background:var(--warn-bg);color:var(--warn)}
+.note.bad{background:var(--bad-bg);color:var(--bad)}
+.plan{width:100%;height:auto;display:block;max-height:560px}
+.panel>h2{margin-bottom:10px}
+.plan text{font-family:var(--f-mono);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;font-weight:600;padding:6px 8px;border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.num{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+th.num{text-align:right}
+.code{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap}
+tr.grp td{background:var(--surface-2);font-weight:600;font-family:var(--f-display);font-size:15px;letter-spacing:.03em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;letter-spacing:0}
+.techs{margin:14px 0 0;padding-left:18px;color:var(--muted);font-size:12.5px}
+.techs li{margin-bottom:3px}
+.sum{margin-left:auto;margin-top:14px;width:min(100%,360px);display:flex;flex-direction:column;gap:4px}
+.sum div{display:flex;justify-content:space-between;gap:12px}
+.sum .num{font-size:14px}
+.sum .int{color:var(--muted);font-size:13px;font-style:italic}
+.sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.status{color:var(--ok);font-size:13px;align-self:center;min-height:1em}
+.rule{display:grid;grid-template-columns:auto minmax(0,1.6fr) minmax(0,1.3fr) minmax(0,1fr) 84px auto;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.rule .sub{grid-column:2 / -1;font-size:12px;color:var(--muted)}
+.rule.off{opacity:.55}
+@media (max-width:760px){
+  .rule{grid-template-columns:auto minmax(0,1fr) auto}
+  .rule>.f-trig,.rule>.f-code,.rule>.f-qty{grid-column:2 / -1}
+  .rule .sub{grid-column:2 / -1}
+}
+.params{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.assump{margin:0;padding-left:18px;color:var(--ink)}
+.assump li{margin-bottom:4px}
+footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+[hidden]{display:none!important}
+@media print{
+  .top,.config,.actions,.tabs{display:none!important}
+  .grid2{display:block}
+  body{padding:0;background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <h1>StageDeck</h1>
+    <span class="sub">Offerte per palchi modulari · <span id="listinoName"></span></span>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sezioni">
+    <button class="tab" role="tab" id="t-offerta" aria-selected="true" data-tab="offerta">Offerta</button>
+    <button class="tab" role="tab" id="t-regole" aria-selected="false" data-tab="regole">Regole</button>
+    <button class="tab" role="tab" id="t-listino" aria-selected="false" data-tab="listino">Listino</button>
+  </nav>
+</header>
+
+<main>
+<!-- ============ OFFERTA ============ -->
+<section id="tab-offerta" class="grid2" aria-labelledby="t-offerta">
+  <form class="panel config" id="cfgForm" onsubmit="return false">
+    <div class="sec">
+      <h3>Dati offerta</h3>
+      <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
+      <div class="row">
+        <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
+        <label class="field"><span>Offerta n.</span><input type="text" id="numero" autocomplete="off"></label>
+      </div>
+      <label class="field"><span>Data</span><input type="date" id="data"></label>
+    </div>
+
+    <div class="sec">
+      <h3>Palco</h3>
+      <div class="row3">
+        <label class="field"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
+        <label class="field"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
+        <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="180" step="5" inputmode="numeric"></label>
+      </div>
+      <label class="field"><span>Struttura</span><select id="support"></select></label>
+      <label class="field"><span>Piano di calpestio</span><select id="family"></select></label>
+      <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
+      <p class="hint" id="legHint"></p>
+    </div>
+
+    <div class="sec">
+      <h3>Scale</h3>
+      <div class="row">
+        <label class="field"><span>Numero di scale</span><input type="number" id="nStairs" min="0" max="12" step="1" inputmode="numeric"></label>
+        <label class="field"><span>Tipo di scala</span>
+          <select id="stairType">
+            <option value="auto">Automatica (modulare se disponibile)</option>
+            <option value="modular">Modulare</option>
+            <option value="adjustable">Regolabile</option>
+          </select>
+        </label>
+      </div>
+      <div class="list" id="stairList"></div>
+      <p class="hint">Per ogni scala scegli il lato e se il corrimano è su un lato o su due.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Parapetti</h3>
+      <div class="seg" id="railSeg" role="group" aria-label="Numero di lati con parapetto">
+        <button type="button" data-n="0">Nessuno</button>
+        <button type="button" data-n="2">2 lati</button>
+        <button type="button" data-n="3">3 lati</button>
+        <button type="button" data-n="4">4 lati</button>
+      </div>
+      <div class="sides">
+        <label class="check"><input type="checkbox" data-side="back"> Retro</label>
+        <label class="check"><input type="checkbox" data-side="front"> Fronte</label>
+        <label class="check"><input type="checkbox" data-side="left"> Sinistra</label>
+        <label class="check"><input type="checkbox" data-side="right"> Destra</label>
+      </div>
+      <label class="check"><input type="checkbox" id="kick"> Con battipiede</label>
+    </div>
+
+    <div class="sec">
+      <h3>Mascheratura</h3>
+      <div class="seg" id="skSeg" role="group" aria-label="Numero di lati con mascheratura">
+        <button type="button" data-n="0">Nessuna</button>
+        <button type="button" data-n="2">2 lati</button>
+        <button type="button" data-n="3">3 lati</button>
+        <button type="button" data-n="4">4 lati</button>
+      </div>
+      <div class="sides">
+        <label class="check"><input type="checkbox" data-skside="back"> Retro</label>
+        <label class="check"><input type="checkbox" data-skside="front"> Fronte</label>
+        <label class="check"><input type="checkbox" data-skside="left"> Sinistra</label>
+        <label class="check"><input type="checkbox" data-skside="right"> Destra</label>
+      </div>
+      <div class="row">
+        <label class="field"><span>Stoffa</span><select id="skFabric"></select></label>
+        <label class="field"><span>Altezza telo</span>
+          <select id="skHeight"><option value="auto">Automatica</option><option value="20">20 cm</option><option value="40">40 cm</option><option value="60">60 cm</option><option value="80">80 cm</option><option value="100">100 cm</option></select>
+        </label>
+      </div>
+      <p class="hint">Un profilo con velcro e un telo per ogni lato di deck sul perimetro: 2 m per il lato lungo, 1 m per il corto. Non tiene conto delle scale.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Carrelli</h3>
+      <div class="row">
+        <label class="field"><span>Tipo di carrello</span><select id="trolleyType"></select></label>
+        <label class="field"><span>Quantità (vuoto = automatica)</span><input type="number" id="trolleyQty" min="0" step="1" inputmode="numeric"></label>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Rampe</h3>
+      <div class="list" id="rampList"></div>
+      <div><button type="button" class="btn small" id="addRamp">+ Aggiungi rampa</button></div>
+    </div>
+
+    <div class="sec">
+      <h3>Voci aggiuntive</h3>
+      <div class="row" style="grid-template-columns:minmax(0,1fr) 72px auto">
+        <input type="text" id="xCode" list="codeList" placeholder="Codice articolo" autocomplete="off" aria-label="Codice articolo">
+        <input type="number" id="xQty" value="1" min="1" step="1" aria-label="Quantità">
+        <button type="button" class="btn" id="addExtra">Aggiungi</button>
+      </div>
+      <div class="list" id="extraList"></div>
+    </div>
+
+    <div class="sec">
+      <h3>Prezzi</h3>
+      <div class="row3">
+        <label class="field"><span>Maggior. %</span><input type="number" id="markup" step="0.5" min="0" inputmode="decimal"></label>
+        <label class="field"><span>Sconto %</span><input type="number" id="discount" step="0.5" min="0" max="100" inputmode="decimal"></label>
+        <label class="field"><span>IVA %</span><input type="number" id="vat" step="1" min="0" inputmode="decimal"></label>
+      </div>
+      <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="10">10</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
+      <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione si applica a ogni riga e dà il prezzo di vendita. Lo sconto si applica al totale.</p>
+    </div>
+  </form>
+
+  <div class="stack" id="result">
+    <div class="tiles" id="tiles"></div>
+    <div class="notes" id="notes"></div>
+    <div class="panel">
+      <h2 id="planTitle">Pianta</h2>
+      <div id="planBox"></div>
+      <div class="legend">
+        <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
+        <span><i style="background:var(--leg);height:8px;width:8px"></i>Gamba</span>
+        <span><i style="background:var(--rail)"></i>Parapetto</span>
+        <span><i style="background:var(--ink);opacity:.55"></i>Mascheratura</span>
+        <span><i style="background:var(--stair);opacity:.5"></i>Scala</span>
+        <span><i style="background:var(--ramp);opacity:.5"></i>Rampa</span>
+        <span>Retro in alto, fronte in basso</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 id="offerTitle">Offerta</h2>
+      <div class="tablewrap" id="offerTable"></div>
+      <div class="sum" id="sum"></div>
+      <ul class="techs" id="techNotes"></ul>
+      <div class="actions">
+        <button type="button" class="btn primary" id="copyText">Copia offerta</button>
+        <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
+        <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
+        <span class="status" id="status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REGOLE ============ -->
+<section id="tab-regole" hidden aria-labelledby="t-regole" class="stack">
+  <div class="panel">
+    <h2>Regole dei pezzi accessori</h2>
+    <p class="hint" style="margin-top:6px">Ogni riga dice quanti pezzi di un articolo servono e rispetto a cosa. Le modifiche aggiornano subito l'offerta.</p>
+    <div class="params">
+      <label class="field"><span>Apertura scala (m)</span><input type="number" id="stairOpening" min="0.5" step="0.5" inputmode="decimal"></label>
+      <label class="field"><span>Apertura rampa (m)</span><input type="number" id="rampOpening" min="0.5" step="0.5" inputmode="decimal"></label>
+      <label class="field"><span>Mascheratura: cm aggiunti all'altezza</span><input type="number" id="skirtDeck" min="0" step="1" inputmode="decimal"></label>
+      <label class="field"><span>Capacità VTT (m² di deck)</span><input type="number" data-cap="VTT" min="1" step="1"></label>
+      <label class="field"><span>Capacità VDT (m²)</span><input type="number" data-cap="VDT" min="1" step="1"></label>
+      <label class="field"><span>Capacità VGT (m²)</span><input type="number" data-cap="VGT" min="1" step="1"></label>
+      <label class="field"><span>Capacità VTSP (m²)</span><input type="number" data-cap="VTSP" min="1" step="1"></label>
+      <label class="field"><span>Capacità FLSP (m²)</span><input type="number" data-cap="FLSP" min="1" step="1"></label>
+    </div>
+    <div id="rulesList"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="addRule">+ Aggiungi regola</button>
+      <button type="button" class="btn" id="resetRules">Ripristina regole predefinite</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Come vengono contati i pezzi</h3>
+    <ul class="assump">
+      <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
+      <li>Ogni deck ha le sue 4 gambe. Dove si incontrano 2 gambe serve un morsetto singolo, dove se ne incontrano 4 uno doppio (manuale Larcher). I giunti sono i lati in comune tra due deck.</li>
+      <li>Le scale modulari hanno un gradino ogni 20 cm: per un palco da 60 cm sono VSM20, VSM40 e VSM60. Sopra 80 cm si usa la scala regolabile, che non ha corrimano a 2 gradini.</li>
+      <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
+      <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
+      <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
+      <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ LISTINO ============ -->
+<section id="tab-listino" hidden aria-labelledby="t-listino" class="stack">
+  <div class="panel">
+    <h2>Listino</h2>
+    <div class="prices" id="pricesBox">
+      <p class="hint" id="pricesInfo"></p>
+      <div class="actions">
+        <label class="btn small" for="priceFile" style="cursor:pointer">Carica prezzi (prezzi.json)</label>
+        <input type="file" id="priceFile" accept=".json,application/json" hidden>
+        <button type="button" class="btn small" id="priceClear">Rimuovi prezzi</button>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:minmax(0,420px) auto;align-items:end;margin:12px 0">
+      <label class="field"><span>Cerca per codice, nome o gruppo</span><input type="text" id="q" autocomplete="off"></label>
+      <span class="hint" id="qCount"></span>
+    </div>
+    <div class="tablewrap"><table id="catTable"></table></div>
+  </div>
+</section>
+</main>
+
+<footer id="foot"></footer>
+</div>
+<datalist id="codeList"></datalist>
+
+<script type="application/json" id="catalog">{"listino":"Everdeck STAGEDECKS 2026.04","items":[{"code":"VS750H-2×1BULK","name":"Stage platform 2x1 HEXA BULK (without box)","section":"STAGE PLATFORMS","kg":32.0,"pack":[2005,1005,100]},{"code":"VS750H-2×1","name":"Stage platform 2x1 HEXA","section":"STAGE PLATFORMS","kg":32.0,"pack":[2005,1005,100]},{"code":"VS750H-1×1","name":"Stage platform 1x1 HEXA","section":"STAGE PLATFORMS","kg":17.5,"pack":[1005,1005,100]},{"code":"VS750H-2×0,5","name":"Stage platform 2x0,5 HEXA","section":"STAGE PLATFORMS","kg":17.5,"pack":[2005,505,100]},{"code":"VS750H-1x0,5","name":"Stage platform 1x0,5 HEXA","section":"STAGE PLATFORMS","kg":12.0,"pack":[1005,505,100]},{"code":"VS750H-0,5x0,5","name":"Stage platform 0,5x0,5 HEXA","section":"STAGE PLATFORMS","kg":8.5,"pack":[505,505,100]},{"code":"VS750H-2x1T-R","name":"Stage platform 2x1 Triangle Right HEXA","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750H-2x1T-L","name":"Stage platform 2x1 Triangle Left HEXA","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750H-1x1T","name":"Stage platform 1x1 Triangle HEXA","section":"STAGE PLATFORMS","kg":15.0,"pack":[1005,1005,100]},{"code":"VS750H-2x1C-R","name":"Stage platform 2x1 Circle HEXA Right","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750H-2x1C-L","name":"Stage platform 2x1 Circle HEXA Left","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750H-1x1C","name":"Stage platform 1x1 Circle HEXA","section":"STAGE PLATFORMS","kg":15.0,"pack":[1005,1005,100]},{"code":"VS750W-2×1","name":"Stage platform 2x1 WOOD","section":"STAGE PLATFORMS","kg":32.0,"pack":[2005,1005,100]},{"code":"VS750W-1×1","name":"Stage platform 1x1 WOOD","section":"STAGE PLATFORMS","kg":17.5,"pack":[1005,1005,100]},{"code":"VS750W-2×0,5","name":"Stage platform 2x0,5 WOOD","section":"STAGE PLATFORMS","kg":17.5,"pack":[2005,505,100]},{"code":"VS750W-1x0,5","name":"Stage platform 1x0,5 WOOD","section":"STAGE PLATFORMS","kg":12.0,"pack":[1005,505,100]},{"code":"VS750W-0,5x0,5","name":"Stage platform 0,5x0,5 WOOD","section":"STAGE PLATFORMS","kg":8.5,"pack":[505,505,100]},{"code":"VS750W-2x1T-R","name":"Stage platform 2x1 Triangle Right WOOD","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750W-2x1T-L","name":"Stage platform 2x1 Triangle Left WOOD","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750W-1x1T","name":"Stage platform 1x1 Triangle WOOD","section":"STAGE PLATFORMS","kg":15.0,"pack":[1005,1005,100]},{"code":"VS750W-2x1C-R","name":"Stage platform 2x1 Circle WOOD Right","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750W-2x1C-L","name":"Stage platform 2x1 Circle WOOD Left","section":"STAGE PLATFORMS","kg":24.0,"pack":[2005,1005,100]},{"code":"VS750W-1x1C","name":"Stage platform 1x1 Circle WOOD","section":"STAGE PLATFORMS","kg":15.0,"pack":[1005,1005,100]},{"code":"VS750PB-2×1","name":"Stage platform 2x1 PLEXI BLACK","section":"STAGE PLATFORMS","kg":45.0,"pack":[2005,1005,100]},{"code":"VS75PB-1×1","name":"Stage platform 1x1 PLEXI BLACK","section":"STAGE PLATFORMS","kg":22.0,"pack":[1005,1005,100]},{"code":"VS750PM-2×1","name":"Stage platform 2x1 PLEXI MILK","section":"STAGE PLATFORMS","kg":45.0,"pack":[2005,1005,100]},{"code":"VS750PM-1×1","name":"Stage platform 1x1 PLEXI MILK","section":"STAGE PLATFORMS","kg":22.0,"pack":[1005,1005,100]},{"code":"VS750PT-2×1","name":"Stage platform 2x1 PLEXI TRANSPARENT","section":"STAGE PLATFORMS","kg":45.0,"pack":[2005,1005,100]},{"code":"VS750PT-1×1","name":"Stage platform 1x1 PLEXI TRANSPARENT","section":"STAGE PLATFORMS","kg":22.0,"pack":[1005,1005,100]},{"code":"VS750H-2×1RC","name":"Stage Platform 200X100CM Black Hexa anti-slip Plywood with recessed corners","section":"STAGE PLATFORMS","kg":35.0,"pack":[2050,1050,100]},{"code":"VS750H-1×1RC","name":"Stage Platform 100X100CM Black Hexa anti-slip Plywood with recessed corners","section":"STAGE PLATFORMS","kg":20.0,"pack":[1050,1050,100]},{"code":"VS750H-2×0,5RC","name":"Stage Platform 200X050CM Black Hexa anti-slip Plywood with recessed corners","section":"STAGE PLATFORMS","kg":20.0,"pack":[2050,550,100]},{"code":"VS750H-1x0,5RC","name":"Stage Platform 100X050CM Black Hexa anti-slip Plywood with recessed corners","section":"STAGE PLATFORMS","kg":14.0,"pack":[1050,550,100]},{"code":"VD2D","name":"Deck to deck clamp","section":"CLAMPS AND ACCESORIES","kg":0.66,"pack":[160,120,60],"pkg":3},{"code":"VDL","name":"Deck leveller","section":"CLAMPS AND ACCESORIES","kg":0.1,"pack":[125,73,37],"pkg":3},{"code":"VLC","name":"Leg to leg clamp (2 legs)","section":"CLAMPS AND ACCESORIES","kg":0.6,"pack":[215,120,21]},{"code":"V4LC","name":"Leg to leg clamp (4 legs)","section":"CLAMPS AND ACCESORIES","kg":1.2,"pack":[240,210,20]},{"code":"VSM20","name":"Modular stair 20cm (separate 20cm step)","section":"MODULAR STAIRS","kg":8.4,"pack":[915,290,205]},{"code":"VSM40","name":"Modular stair 40cm (separate 40cm step)","section":"MODULAR STAIRS","kg":9.1,"pack":[915,290,405]},{"code":"VSM60","name":"Modular stair 60cm","section":"MODULAR STAIRS","kg":10.3,"pack":[915,290,605]},{"code":"VSM80","name":"Modular stair 80cm","section":"MODULAR STAIRS","kg":11.6,"pack":[915,290,805]},{"code":"VHSM","name":"Modular stair handrail","section":"MODULAR STAIRS","kg":3.0,"pack":[565,1350,35]},{"code":"VAS-2","name":"Adjustable stair 40-60","section":"ADJUSTABLE STAIRS","kg":16.5,"pack":[920,130,900]},{"code":"VAS-4","name":"Adjustable stair 60-100","section":"ADJUSTABLE STAIRS","kg":30.0,"pack":[1560,130,900]},{"code":"VAS-5","name":"Adjustable stair 80-140","section":"ADJUSTABLE STAIRS","kg":38.0,"pack":[1880,130,900]},{"code":"VAS-7","name":"Adjustable stair 100-180","section":"ADJUSTABLE STAIRS","kg":51.0,"pack":[2520,130,900]},{"code":"VASH-R","name":"Adjustable Stair handrail - right","section":"ADJUSTABLE STAIRS","kg":8.5,"pack":[2185,755,55]},{"code":"VASH-L","name":"Adjustable Stair handrail - left","section":"ADJUSTABLE STAIRS","kg":8.5,"pack":[2185,755,55]},{"code":"VFL20","name":"square leg 20cm","section":"SET LEGS","kg":1.0,"pack":[100,100,185],"pkg":4},{"code":"VFL40","name":"square leg 40cm","section":"SET LEGS","kg":2.0,"pack":[100,100,385],"pkg":4},{"code":"VFL60","name":"square leg 60cm","section":"SET LEGS","kg":3.0,"pack":[100,100,585],"pkg":4},{"code":"VFL80","name":"square leg 80cm","section":"SET LEGS","kg":4.0,"pack":[100,100,785],"pkg":4},{"code":"VFL100","name":"square leg 100cm","section":"SET LEGS","kg":5.0,"pack":[100,100,985],"pkg":4},{"code":"PROFILO-5M","name":"5m profile section 60x60x2mm","section":"SET LEGS","kg":6.15,"pack":null},{"code":"TAPPO-PLASTICA","name":"Plastic protection cap","section":"SET LEGS","kg":null,"pack":null},{"code":"VTL40","name":"Telescopic leg 40-60","section":"TELESCOPIG LEGS","kg":4.7,"pack":[165,150,385],"pkg":4},{"code":"VTL60","name":"Telescopic leg 60-100","section":"TELESCOPIG LEGS","kg":7.0,"pack":[165,150,585],"pkg":4},{"code":"VTL80","name":"Telescopic leg 80-140","section":"TELESCOPIG LEGS","kg":9.3,"pack":[165,150,785],"pkg":4},{"code":"VTL100","name":"Telescopic leg 100-180","section":"TELESCOPIG LEGS","kg":13.7,"pack":[165,150,985],"pkg":4},{"code":"RR30-1","name":"Rollriser 1 leg 30cm high","section":"ROLLRISERS","kg":0.8,"pack":null},{"code":"RR40-1","name":"Rollriser 1 leg 40cm high","section":"ROLLRISERS","kg":0.95,"pack":null},{"code":"RR30-2","name":"Rollriser 2 leg 30cm high","section":"ROLLRISERS","kg":1.35,"pack":null},{"code":"RR40-2","name":"Rollriser 2 leg 40cm high","section":"ROLLRISERS","kg":1.65,"pack":null},{"code":"RR30-4","name":"Rollriser 4 leg 30cm high","section":"ROLLRISERS","kg":2.3,"pack":null},{"code":"RR40-4","name":"Rollriser 4 leg 40cm high","section":"ROLLRISERS","kg":2.9,"pack":null},{"code":"VH2.0","name":"2m handrail","section":"STAGE HANDRAIL","kg":7.5,"pack":[1985,1085,55]},{"code":"VH1.0","name":"1m handrail","section":"STAGE HANDRAIL","kg":5.0,"pack":[985,1085,55]},{"code":"VHC","name":"Handrail connection","section":"STAGE HANDRAIL","kg":0.22,"pack":[125,73,37]},{"code":"VHCC","name":"Handrail connection Corner","section":"STAGE HANDRAIL","kg":0.44,"pack":[125,73,37]},{"code":"VHK2.0","name":"2m handrail with kickboard","section":"STAGE HANDRAIL","kg":18.2,"pack":[1985,1085,55]},{"code":"VHK1.0","name":"1m handrail with kickboard","section":"STAGE HANDRAIL","kg":11.0,"pack":[985,1085,55]},{"code":"VDT","name":"Platform Door Trolley","section":"TRANSPORTATION","kg":25.0,"pack":[2060,600,1020]},{"code":"VTT","name":"Platform trolley","section":"TRANSPORTATION","kg":15.0,"pack":[2060,1010,300]},{"code":"VGT","name":"Handrail trolley","section":"TRANSPORTATION","kg":22.0,"pack":[2060,1010,400]},{"code":"SKP470","name":"Skirt click profile incl. Velcro strip 470mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":0.85,"pack":[470,57,14]},{"code":"SKP970","name":"Skirt click profile incl. Velcro strip 970mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":1.7,"pack":[970,57,14]},{"code":"SKP1970","name":"Skirt click profile incl. Velcro strip 1970mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":3.5,"pack":[1970,57,14]},{"code":"SKBP470","name":"Skirt kick board profile incl. Velcro strip 470mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":0.85,"pack":[470,57,14]},{"code":"SKBP970","name":"Skirt kick board profile incl. Velcro strip 970mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":1.7,"pack":[970,57,14]},{"code":"SKBP1970","name":"Skirt kick board profile incl. Velcro strip 1970mm","section":"SKIRT ATTACHMENT/ CHAIR STOP PROFILE incl. Velcro strip","kg":3.5,"pack":[1970,57,14]},{"code":"PSP-S 200x1050","name":"Polyester stage platform skirt - straigth 200x1050","section":"SKIRTS","kg":0.054,"pack":[300,400,50]},{"code":"PSP-S 400x1050","name":"Polyester stage platform skirt - straigth 400x1050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"PSP-S 600x1050","name":"Polyester stage platform skirt - straigth 600x1050","section":"SKIRTS","kg":0.162,"pack":[300,400,50]},{"code":"PSP-S 800x1050","name":"Polyester stage platform skirt - straigth 800x1050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"PSP-S 1000x1050","name":"Polyester stage platform skirt - straigth 1000x1050","section":"SKIRTS","kg":0.27,"pack":[300,400,50]},{"code":"PSP-S 200x2050","name":"Polyester stage platform skirt - straigth 200x2050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"PSP-S 400x2050","name":"Polyester stage platform skirt - straigth 400x2050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"PSP-S 600x2050","name":"Polyester stage platform skirt - straigth 600x2050","section":"SKIRTS","kg":0.324,"pack":[300,400,50]},{"code":"PSP-S 800x2050","name":"Polyester stage platform skirt - straigth 800x2050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"PSP-S 1000x2050","name":"Polyester stage platform skirt - straigth 1000x2050","section":"SKIRTS","kg":0.54,"pack":[300,400,50]},{"code":"PSP-P 200x1050","name":"Polyester stage platform skirt - pleated 200x1050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"PSP-P 400x1050","name":"Polyester stage platform skirt - pleated 400x1050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"PSP-P 600x1050","name":"Polyester stage platform skirt - pleated 600x1050","section":"SKIRTS","kg":0.324,"pack":[300,400,50]},{"code":"PSP-P 800x1050","name":"Polyester stage platform skirt - pleated 800x1050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"PSP-P 1000x1050","name":"Polyester stage platform skirt - pleated 1000x1050","section":"SKIRTS","kg":0.54,"pack":[300,400,50]},{"code":"PSP-P 200x2050","name":"Polyester stage platform skirt - pleated 200x2050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"PSP-P 400x2050","name":"Polyester stage platform skirt - pleated 400x2050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"PSP-P 600x2050","name":"Polyester stage platform skirt - pleated 600x2050","section":"SKIRTS","kg":0.648,"pack":[300,400,50]},{"code":"PSP-P 800x2050","name":"Polyester stage platform skirt - pleated 800x2050","section":"SKIRTS","kg":0.864,"pack":[300,400,50]},{"code":"PSP-P 1000x2050","name":"Polyester stage platform skirt - pleated 1000x2050","section":"SKIRTS","kg":1.08,"pack":[300,400,50]},{"code":"VSP-S 200x1050","name":"Velvet stage platform skirt - straigth 200x1050","section":"SKIRTS","kg":0.054,"pack":[300,400,50]},{"code":"VSP-S 400x1050","name":"Velvet stage platform skirt - straigth 400x1050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"VSP-S 600x1050","name":"Velvet stage platform skirt - straigth 600x1050","section":"SKIRTS","kg":0.162,"pack":[300,400,50]},{"code":"VSP-S 800x1050","name":"Velvet stage platform skirt - straigth 800x1050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"VSP-S 1000x1050","name":"Velvet stage platform skirt - straigth 1000x1050","section":"SKIRTS","kg":0.27,"pack":[300,400,50]},{"code":"VSP-S 200x2050","name":"Velvet stage platform skirt - straigth 200x2050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"VSP-S 400x2050","name":"Velvet stage platform skirt - straigth 400x2050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"VSP-S 600x2050","name":"Velvet stage platform skirt - straigth 600x2050","section":"SKIRTS","kg":0.324,"pack":[300,400,50]},{"code":"VSP-S 800x2050","name":"Velvet stage platform skirt - straigth 800x2050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"VSP-S 1000x2050","name":"Velvet stage platform skirt - straigth 1000x2050","section":"SKIRTS","kg":0.54,"pack":[300,400,50]},{"code":"VSP-P 200x1050","name":"Velvet stage platform skirt - pleated 200x1050","section":"SKIRTS","kg":0.108,"pack":[300,400,50]},{"code":"VSP-P 400x1050","name":"Velvet stage platform skirt - pleated 400x1050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"VSP-P 600x1050","name":"Velvet stage platform skirt - pleated 600x1050","section":"SKIRTS","kg":0.324,"pack":[300,400,50]},{"code":"VSP-P 800x1050","name":"Velvet stage platform skirt - pleated 800x1050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"VSP-P 1000x1050","name":"Velvet stage platform skirt - pleated 1000x1050","section":"SKIRTS","kg":0.54,"pack":[300,400,50]},{"code":"VSP-P 200x2050","name":"Velvet stage platform skirt - pleated 200x2050","section":"SKIRTS","kg":0.216,"pack":[300,400,50]},{"code":"VSP-P 400x2050","name":"Velvet stage platform skirt - pleated 400x2050","section":"SKIRTS","kg":0.432,"pack":[300,400,50]},{"code":"VSP-P 600x2050","name":"Velvet stage platform skirt - pleated 600x2050","section":"SKIRTS","kg":0.648,"pack":[300,400,50]},{"code":"VSP-P 800x2050","name":"Velvet stage platform skirt - pleated 800x2050","section":"SKIRTS","kg":0.864,"pack":[300,400,50]},{"code":"VSP-P 1000x2050","name":"Velvet stage platform skirt - pleated 1000x2050","section":"SKIRTS","kg":1.08,"pack":[300,400,50]},{"code":"PT750H-2×1","name":"PT 200X100CM Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":35.0,"pack":[2050,1050,100]},{"code":"PT750H-1×1","name":"PT 100X100CM Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":20.0,"pack":[1050,1050,100]},{"code":"PT750H-2×0,5","name":"PT 200X050CM Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":20.0,"pack":[2050,550,100]},{"code":"PT750H-1x0,5","name":"PT 100X050CM Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":14.0,"pack":[1050,550,100]},{"code":"PT750H-0,5x0,5","name":"PT 50X50CM Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":8.5,"pack":[505,505,100]},{"code":"PT750H-2X1T-R","name":"PT 200X100CM Triangle Right Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750H-2X1T-L","name":"PT 200X100CM Triangle Left Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750H-1X1T","name":"PT 100X100CM Triangle Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":15.0,"pack":[1005,1005,100]},{"code":"PT750H-2X1C-R","name":"PT 200X100CM Circle Right Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750H-2X1C-L","name":"PT 200X100CM Circle Left Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750H-1X1C","name":"PT 100X100CM Circle Black Hexa anti-slip Plywood","section":"PL OUTDOOR PRO DECK","kg":15.0,"pack":[1005,1005,100]},{"code":"PT750H-2×1RC","name":"PT 200X100CM Black Hexa anti-slip Plywood with recessed corners","section":"PL OUTDOOR PRO DECK","kg":35.0,"pack":[2050,1050,100]},{"code":"PT750H-1×1RC","name":"PT 100X100CM Black Hexa anti-slip Plywood with recessed corners","section":"PL OUTDOOR PRO DECK","kg":20.0,"pack":[1050,1050,100]},{"code":"PT750H-2×0,5RC","name":"PT 200X050CM Black Hexa anti-slip Plywood with recessed corners","section":"PL OUTDOOR PRO DECK","kg":20.0,"pack":[2050,550,100]},{"code":"PT750H-1x0,5RC","name":"PT 100X050CM Black Hexa anti-slip Plywood with recessed corners","section":"PL OUTDOOR PRO DECK","kg":14.0,"pack":[1050,550,100]},{"code":"PT750W-2x1","name":"PT 200X100CM WOOD Plywood","section":"PL BASIC DECK","kg":35.0,"pack":[2050,1050,100]},{"code":"PT750W-1x1","name":"PT 100X100CM WOOD Plywood","section":"PL BASIC DECK","kg":20.0,"pack":[1050,1050,100]},{"code":"PT750W-2x0,5","name":"PT 200X050CM WOOD Plywood","section":"PL BASIC DECK","kg":20.0,"pack":[2050,550,100]},{"code":"PT750W-1x0,5","name":"PT 100X050CM WOOD Plywood","section":"PL BASIC DECK","kg":14.0,"pack":[1050,550,100]},{"code":"PT750W-0,5x0,5","name":"PT 50X50CM Black WOOD anti-slip Plywood","section":"PL BASIC DECK","kg":8.5,"pack":[505,505,100]},{"code":"PT750W-2X1T-R","name":"PT 200X100CM Triangle Right Black WOOD anti-slip Plywood","section":"PL BASIC DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750W-2X1T-L","name":"PT 200X100CM Triangle Left Black WOOD anti-slip Plywood","section":"PL BASIC DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750W-1X1T","name":"PT 100X100CM Triangle Black Hexa anti-slip Plywood","section":"PL BASIC DECK","kg":15.0,"pack":[1005,1005,100]},{"code":"PT750W-2X1C-R","name":"PT 200X100CM Circle Right Black Hexa anti-slip Plywood","section":"PL BASIC DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750W-2X1C-L","name":"PT 200X100CM Circle Left Black Hexa anti-slip Plywood","section":"PL BASIC DECK","kg":24.0,"pack":[2005,1005,100]},{"code":"PT750W-1X1C","name":"PT 100X100CM Circle Black Hexa anti-slip Plywood","section":"PL BASIC DECK","kg":15.0,"pack":[1005,1005,100]},{"code":"PT750PB-2×1","name":"PT 200X100CM Plexi Black","section":"PL SPECIAL DECK","kg":48.0,"pack":[2050,1050,100]},{"code":"PT750PB-1×1","name":"PT 100X100CM Plexi Black","section":"PL SPECIAL DECK","kg":25.0,"pack":[1050,1050,100]},{"code":"PT750PW-2×1","name":"PT 200X100CM Plexi White","section":"PL SPECIAL DECK","kg":48.0,"pack":[2050,1050,100]},{"code":"PT750PW-1×1","name":"PT 100X100CM Plexi White","section":"PL SPECIAL DECK","kg":25.0,"pack":[1050,1050,100]},{"code":"PT750PT-2×1","name":"PT 200X100CM Plexi Transparent","section":"PL SPECIAL DECK","kg":48.0,"pack":[2050,1050,100]},{"code":"PT750PT-1×1","name":"PT 100X100CM Plexi Transparent","section":"PL SPECIAL DECK","kg":25.0,"pack":[1050,1050,100]},{"code":"EB200","name":"Layher Beam for Decks L=200cm with integrated event deck beam","section":"PL LAYHER ACCESSORIES","kg":10.3,"pack":[2027,191,70]},{"code":"EB100","name":"Layher Beam for Decks L=100cm with integrated event deck beam","section":"PL LAYHER ACCESSORIES","kg":5.1,"pack":[1027,191,70]},{"code":"VPLI","name":"Platform Limiter","section":"PL LAYHER ACCESSORIES","kg":0.4,"pack":[210,40,54]},{"code":"VRL20","name":"ROUND LEG DECK HEIGHT 20CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":1.0,"pack":[110,110,190],"pkg":4},{"code":"VRL30","name":"ROUND LEG DECK HEIGHT 30CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":1.5,"pack":[110,110,290],"pkg":4},{"code":"VRL40","name":"ROUND LEG DECK HEIGHT 40CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":2.0,"pack":[110,110,390],"pkg":4},{"code":"VRL50","name":"ROUND LEG DECK HEIGHT 50CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":2.5,"pack":[110,110,490],"pkg":4},{"code":"VRL60","name":"ROUND LEG DECK HEIGHT 60CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":3.0,"pack":[110,110,590],"pkg":4},{"code":"VRL70","name":"ROUND LEG DECK HEIGHT 70CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":3.5,"pack":[110,110,690],"pkg":4},{"code":"VRL80","name":"ROUND LEG DECK HEIGHT 80CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":4.0,"pack":[110,110,790],"pkg":4},{"code":"VRL90","name":"ROUND LEG DECK HEIGHT 90CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":4.5,"pack":[110,110,890],"pkg":4},{"code":"VRL100","name":"ROUND LEG DECK HEIGHT 100CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":5.0,"pack":[110,110,990],"pkg":4},{"code":"VRL110","name":"ROUND LEG DECK HEIGHT 110CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":5.5,"pack":[110,110,1090],"pkg":4},{"code":"VRL120","name":"ROUND LEG DECK HEIGHT 120CM","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm","kg":6.0,"pack":[110,110,1190],"pkg":4},{"code":"VRLA20","name":"ROUND LEG DECK HEIGHT 20CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":1.0,"pack":[110,110,190],"pkg":4},{"code":"VRLA30","name":"ROUND LEG DECK HEIGHT 30CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":1.5,"pack":[110,110,290],"pkg":4},{"code":"VRLA40","name":"ROUND LEG DECK HEIGHT 40CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":2.0,"pack":[110,110,390],"pkg":4},{"code":"VRLA50","name":"ROUND LEG DECK HEIGHT 50CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":2.5,"pack":[110,110,490],"pkg":4},{"code":"VRLA60","name":"ROUND LEG DECK HEIGHT 60CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":3.0,"pack":[110,110,590],"pkg":4},{"code":"VRLA70","name":"ROUND LEG DECK HEIGHT 70CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":3.5,"pack":[110,110,690],"pkg":4},{"code":"VRLA80","name":"ROUND LEG DECK HEIGHT 80CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":4.0,"pack":[110,110,790],"pkg":4},{"code":"VRLA90","name":"ROUND LEG DECK HEIGHT 90CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":4.5,"pack":[110,110,890],"pkg":4},{"code":"VRLA100","name":"ROUND LEG DECK HEIGHT 100CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":5.0,"pack":[110,110,990],"pkg":4},{"code":"VRLA110","name":"ROUND LEG DECK HEIGHT 110CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":5.5,"pack":[110,110,1090],"pkg":4},{"code":"VRLA120","name":"ROUND LEG DECK HEIGHT 120CM + ADJ FOOT","section":"PL STANDARD ALU ROUND LEGS 48,3x3mm + ADJ FOOT","kg":6.0,"pack":[110,110,1190],"pkg":4},{"code":"VRLT45","name":"ROUND LEG TELESCOPIC 45cm ~60cm","section":"PL ROUND TELESCOPIC LEGS","kg":1.78,"pack":[120,80,500]},{"code":"VRLT60","name":"ROUND LEG TELESCOPIC 60cm ~90cm","section":"PL ROUND TELESCOPIC LEGS","kg":2.37,"pack":[120,80,650]},{"code":"VRLT90","name":"ROUND LEG TELESCOPIC 90cm ~140cm","section":"PL ROUND TELESCOPIC LEGS","kg":3.58,"pack":[120,80,950]},{"code":"VRLT100","name":"ROUND LEG TELESCOPIC 100cm ~160cm","section":"PL ROUND TELESCOPIC LEGS","kg":3.97,"pack":[120,80,1050]},{"code":"VRLT120","name":"ROUND LEG TELESCOPIC 120cm ~190cm","section":"PL ROUND TELESCOPIC LEGS","kg":4.77,"pack":[120,80,1250]},{"code":"VRLT150","name":"ROUND LEG TELESCOPIC 150cm ~220cm","section":"PL ROUND TELESCOPIC LEGS","kg":5.96,"pack":[120,80,1550]},{"code":"VLC-48MM","name":"LEG TO LEG CLAMP Round Leg - single","section":"ACCESSORIES PL SERIES","kg":0.5,"pack":[215,120,21]},{"code":"VLCO-48MM","name":"LEG TO LEG CLAMP Round Leg - overlap","section":"ACCESSORIES PL SERIES","kg":0.5,"pack":[215,120,21]},{"code":"V4LC-48MM","name":"LEG TO LEG CLAMP Round Legs - double","section":"ACCESSORIES PL SERIES","kg":1.0,"pack":[240,210,20]},{"code":"SPHA-1x1","name":"1x1 Spider Deck ALUMINIUM","section":"SPIDER DECK","kg":13.0,"pack":[1050,1050,60]},{"code":"SPHB-1x1","name":"1x1 Spider Deck BLACK","section":"SPIDER DECK","kg":13.0,"pack":[1050,1050,60]},{"code":"SPHA-2x1","name":"2x1 Spider Deck ALUMINIUM","section":"SPIDER DECK","kg":25.0,"pack":[2050,1050,60]},{"code":"SPHB-2x1","name":"2x1 Spider Deck BLACK","section":"SPIDER DECK","kg":25.0,"pack":[2050,1050,60]},{"code":"SPR20A-1x1","name":"Risers 20cm 1 x 1 20cm ALUMINIUM","section":"RISERS","kg":1.6,"pack":[160,160,465]},{"code":"SPR40A-1x1","name":"Risers 40cm 1 x 1 40cm ALUMINIUM","section":"RISERS","kg":2.2,"pack":[160,160,571]},{"code":"SPR60A-1x1","name":"Risers 60cm 1 x 1 60cm ALUMINIUM","section":"RISERS","kg":2.8,"pack":[160,160,721]},{"code":"SPR20B-1x1","name":"Risers 20cm 1 x 1 20cm BLACK","section":"RISERS","kg":1.6,"pack":[160,160,410]},{"code":"SPR40B-1x1","name":"Risers 40cm 1 x 1 40cm BLACK","section":"RISERS","kg":2.2,"pack":[160,160,530]},{"code":"SPR60B-1x1","name":"Risers 60cm 1 x 1 60cm BLACK","section":"RISERS","kg":2.8,"pack":[160,160,700]},{"code":"D2DC","name":"Deck to Deck profile connector","section":"CONNECTORS","kg":0.7,"pack":[125,73,37],"pkg":3},{"code":"VH-2","name":"HANDRAIL 2M","section":"HANDRAILS","kg":7.5,"pack":[1985,1085,55]},{"code":"VH-1","name":"HANDRAIL 1M","section":"HANDRAILS","kg":5.0,"pack":[985,1085,55]},{"code":"VTSP","name":"TRANSPORT system 1 (15pcs)","section":"TRANSPORTATION","kg":15.0,"pack":[1000,1000,200]},{"code":"FLSP","name":"TRANSPORT SYSTEM Flight Case (6pcs)","section":"TRANSPORTATION","kg":20.0,"pack":[1000,770,1170]},{"code":"ER-SE","name":"Starting element","section":"RAMPE","kg":null,"pack":null},{"code":"ER-EE","name":"End element","section":"RAMPE","kg":null,"pack":null},{"code":"VRA-20CM-R","name":"Round feet for 20cm Ramp","section":"RAMPE","kg":null,"pack":null},{"code":"VRA-40CM-R","name":"Round feet for 40cm Ramp","section":"RAMPE","kg":null,"pack":null},{"code":"ER-TCSR","name":"T-connector starting-right","section":"RAMPE","kg":null,"pack":null},{"code":"ER-TCSL","name":"T-connector starting-left","section":"RAMPE","kg":null,"pack":null},{"code":"ER-TCER","name":"T-connector ending-right","section":"RAMPE","kg":null,"pack":null},{"code":"ER-TCEL","name":"T-connector ending-left","section":"RAMPE","kg":null,"pack":null},{"code":"F31-0,6956","name":"Single tube 695,6mm","section":"RAMPE","kg":null,"pack":null},{"code":"F31-0,8145","name":"Single tube 814,5mm","section":"RAMPE","kg":null,"pack":null},{"code":"VRLT-60CM1-R","name":"Round telescopic leg for 60cm Ramp type 1","section":"RAMPE","kg":null,"pack":null},{"code":"VRLT-60CM2-R","name":"Round telescopic leg for 60cm Ramp type 2","section":"RAMPE","kg":null,"pack":null},{"code":"F31-1696","name":"Single tube 1696mm","section":"RAMPE","kg":null,"pack":null},{"code":"VRLT-80CM1-R","name":"Round telescopic leg for 80cm Ramp type 1","section":"RAMPE","kg":null,"pack":null},{"code":"VRLT-80CM2-R","name":"Round telescopic leg for 80cm Ramp type 2","section":"RAMPE","kg":null,"pack":null},{"code":"ER-TCM","name":"T-connector middle","section":"RAMPE","kg":null,"pack":null},{"code":"F31-1820","name":"Single tube 1820mm","section":"RAMPE","kg":null,"pack":null},{"code":"VRLT-120CM2-R","name":"Round telescopic leg for 120cm Ramp type 2","section":"RAMPE","kg":null,"pack":null}],"rampKits":[{"name":"Ramp 20cm","lo":20,"hi":20,"parts":[{"code":"ER-SE","qty":1},{"code":"ER-EE","qty":1},{"code":"VRA-20CM-R","qty":2},{"code":"VS750H-2×1","qty":1}]},{"name":"Ramp 40cm","lo":40,"hi":40,"parts":[{"code":"ER-SE","qty":1},{"code":"ER-EE","qty":1},{"code":"VRA-40CM-R","qty":2},{"code":"VS750H-2×1","qty":1}]},{"name":"Ramp 60cm","lo":60,"hi":60,"parts":[{"code":"ER-TCSR","qty":1},{"code":"ER-TCSL","qty":1},{"code":"ER-TCER","qty":1},{"code":"ER-TCEL","qty":1},{"code":"F31-0,6956","qty":2},{"code":"F31-0,8145","qty":2},{"code":"ER-SE","qty":1},{"code":"ER-EE","qty":1},{"code":"VRLT-60CM1-R","qty":2},{"code":"VRLT-60CM2-R","qty":2},{"code":"VS750H-2×1","qty":1},{"code":"VS750H-1x1","qty":1}]},{"name":"Ramp 80cm-100cm","lo":80,"hi":100,"parts":[{"code":"ER-TCSR","qty":1},{"code":"ER-TCSL","qty":1},{"code":"ER-TCER","qty":1},{"code":"ER-TCEL","qty":1},{"code":"F31-0,8145","qty":2},{"code":"F31-1696","qty":2},{"code":"ER-SE","qty":1},{"code":"ER-EE","qty":1},{"code":"VRLT-80CM1-R","qty":2},{"code":"VRLT-80CM2-R","qty":2},{"code":"VS750H-2×1","qty":2}]},{"name":"Ramp 120cm-140cm","lo":120,"hi":140,"parts":[{"code":"ER-TCSR","qty":1},{"code":"ER-TCSL","qty":1},{"code":"ER-TCM","qty":2},{"code":"ER-TCER","qty":1},{"code":"ER-TCEL","qty":1},{"code":"F31-0,6956","qty":2},{"code":"F31-0,8145","qty":3},{"code":"F31-1820","qty":2},{"code":"ER-SE","qty":1},{"code":"ER-EE","qty":1},{"code":"VRLT-60CM2-R","qty":2},{"code":"VRLT-120CM2-R","qty":4},{"code":"VS750H-1x1","qty":1},{"code":"VS750H-2×1","qty":2}]}]}</script>
+<script>
+"use strict";
+// ==ENGINE-START==
+const GROUPS = ['Piano di calpestio','Appoggi','Collegamenti','Parapetti','Scale e rampe','Mascheratura','Trasporto','Varie'];
+// Carrelli: capacità in m² di deck (VTT 15 deck 2×1, VDT 6 deck 2×1, VTSP 15 deck 1×1, FLSP 6 deck 1×1). VGT: capacità non indicata, uguale a VTT (da verificare).
+const TROLLEYS = {
+  VTT:{label:'VTT carrello deck orizzontale (15 deck 2×1)', cap:30, sys:'stage'},
+  VDT:{label:'VDT carrello deck verticale da porta (6 deck 2×1)', cap:12, sys:'stage'},
+  VGT:{label:'VGT carrello deck con supporto parapetti', cap:30, sys:'stage'},
+  VTSP:{label:'VTSP carrello Spider (15 deck 1×1)', cap:15, sys:'spider'},
+  FLSP:{label:'FLSP flight case Spider (6 deck 1×1 con gambe)', cap:6, sys:'spider'}
+};
+const SKIRT_FABRICS = {'PSP-S':'Poliestere liscio','PSP-P':'Poliestere plissettato','VSP-S':'Velluto liscio','VSP-P':'Velluto plissettato'};
+const SIDE_LABEL = {back:'Retro', front:'Fronte', left:'Sinistra', right:'Destra'};
+const ncode = c => String(c).replace(/\s+/g,'').replace(/×/g,'x').toUpperCase();
+const nf = n => String(Math.round(n*100)/100).replace('.',',');
+const r2 = n => Math.round(n*100)/100;
+
+const SUPPORTS = {
+  legs:'Gambe fisse o telescopiche',
+  roll:'Rollrisers su ruote (30 o 40 cm)',
+  spider:'Spider a traliccio (20, 40 o 60 cm)'
+};
+const FAMILIES = {
+  hexa:  {label:'HEXA nero antiscivolo (esterno)', support:'deck', step:0.5, codes:{'4x2':'VS750H-2x1','2x2':'VS750H-1x1','4x1':'VS750H-2x0,5','2x1':'VS750H-1x0,5','1x1':'VS750H-0,5x0,5'}},
+  wood:  {label:'Legno (interno)', support:'deck', step:0.5, codes:{'4x2':'VS750W-2x1','2x2':'VS750W-1x1','4x1':'VS750W-2x0,5','2x1':'VS750W-1x0,5','1x1':'VS750W-0,5x0,5'}},
+  plexb: {label:'Plexi nero (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PB-2x1','2x2':'VS75PB-1x1'}},
+  plexm: {label:'Plexi latte (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PM-2x1','2x2':'VS750PM-1x1'}},
+  plext: {label:'Plexi trasparente (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PT-2x1','2x2':'VS750PT-1x1'}},
+  spidera:{label:'Spider alluminio (2×1 e 1×1)', support:'spider', step:1, riser:'A', codes:{'4x2':'SPHA-2x1','2x2':'SPHA-1x1'}},
+  spiderb:{label:'Spider nero (2×1 e 1×1)', support:'spider', step:1, riser:'B', codes:{'4x2':'SPHB-2x1','2x2':'SPHB-1x1'}}
+};
+const TRIGGERS = {
+  deck_corner:{label:'per ogni angolo di deck (4 per deck)', group:'Appoggi'},
+  vertex:{label:'per ogni punto d\'angolo distinto', group:'Appoggi'},
+  vertex1:{label:'per ogni angolo con 1 solo deck', group:'Appoggi'},
+  junction2:{label:'per ogni incontro di 2 angoli di deck', group:'Collegamenti'},
+  junction34:{label:'per ogni incontro di 4 angoli di deck', group:'Collegamenti'},
+  joint:{label:'per ogni giunto tra due deck', group:'Collegamenti'},
+  joint_m:{label:'per ogni metro di giunto (per giunto, arrotondato su)', group:'Collegamenti'},
+  deck:{label:'per ogni deck', group:'Varie'},
+  m2:{label:'per ogni m² di palco', group:'Varie'},
+  rail:{label:'per ogni elemento di parapetto', group:'Parapetti'},
+  rail_link:{label:'per ogni unione tra parapetti sullo stesso lato', group:'Parapetti'},
+  rail_corner:{label:'per ogni angolo tra due lati con parapetto', group:'Parapetti'},
+  stair:{label:'per ogni scala', group:'Scale e rampe'},
+  stair_modular:{label:'per ogni scala modulare', group:'Scale e rampe'},
+  stair_modular_rails:{label:'per ogni coppia di gradini modulari, per lato con corrimano', group:'Scale e rampe'},
+  stair_adjustable:{label:'per ogni scala regolabile', group:'Scale e rampe'},
+  stair_adjustable_rail:{label:'per ogni scala regolabile con corrimano (4, 5 o 7 gradini)', group:'Scale e rampe'},
+  stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale e rampe'},
+  fixed:{label:'una sola volta', group:'Varie'}
+};
+// when: 'perDeck' = solo gambe (sempre 4 per deck), 'deck' = gambe o Rollrisers, 'roll', 'spider'
+const DEFAULT_RULES = {
+  v:4,
+  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, skirtDeck:9, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
+  rows:[
+    {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
+    {on:true, label:'Morsetto tra 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'perDeck', note:'Manuale: un morsetto singolo ogni 2 gambe, al massimo 20 cm sotto il deck.'},
+    {on:true, label:'Morsetto tra 4 gambe', trigger:'junction34', code:'V4LC', qty:1, when:'perDeck', note:'Manuale: un morsetto doppio ogni 4 gambe, dove si incontrano 4 angoli di deck.'},
+    {on:true, label:'Connettore deck-deck', trigger:'joint_m', code:'VD2D', qty:1, when:'deckHigh', note:'Regola tua: 1 pezzo per ogni metro di lato connesso (un deck 2×1 collegato su un lato lungo e uno corto ne ha 3). Non per i palchi da 20 cm.'},
+    {on:true, label:'Connettore deck-deck StageDeck da 20 cm', trigger:'joint_m', code:'D2DC', qty:1, when:'deck20', note:'Regola tua: con StageDeck a 20 cm si usa il connettore Spider D2DC al posto del VD2D, 1 pezzo per metro di lato connesso.'},
+    {on:true, label:'Livellatore tra deck', trigger:'joint_m', code:'VDL', qty:1, note:'Regola tua: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.'},
+    {on:true, label:'Connettore deck-deck Spider', trigger:'joint_m', code:'D2DC', qty:1, when:'spider', note:'Regola tua: 1 pezzo per ogni metro di lato connesso, come per StageDeck.'},
+    {on:true, label:'Rollriser con 1 gamba', trigger:'vertex1', code:'@RR1', qty:1, when:'roll', note:'Brochure Rollrisers: ruota con 1, 2 o 4 gambe secondo quanti deck si incontrano nel punto.'},
+    {on:true, label:'Rollriser con 2 gambe', trigger:'junction2', code:'@RR2', qty:1, when:'roll', note:'Come sopra, dove si incontrano 2 deck.'},
+    {on:true, label:'Rollriser con 4 gambe', trigger:'junction34', code:'@RR4', qty:1, when:'roll', note:'Come sopra, dove si incontrano 4 deck.'},
+    {on:true, label:'Connettore tra parapetti', trigger:'rail_link', code:'VHC', qty:1, note:'Manuale: unione dritta tra due parapetti vicini.'},
+    {on:true, label:'Connettore d\'angolo parapetti', trigger:'rail_corner', code:'VHCC', qty:1, note:'Manuale: connettore d\'angolo dove due lati con parapetto si incontrano.'},
+    {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
+    {on:true, label:'Corrimano scala regolabile destro', trigger:'stair_adjustable_rail', code:'VASH-R', qty:1, note:'Brochure: corrimano universale per scale regolabili da 4, 5 e 7 gradini. Un corrimano per ogni scala con corrimano.'},
+    {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
+  ]
+};
+const FIXED_LEGS = {20:'VFL20',40:'VFL40',60:'VFL60',80:'VFL80',100:'VFL100'};
+const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'VTL100']];
+const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
+const STRATS = [{rowMajor:true,preferH:true},{rowMajor:true,preferH:false},{rowMajor:false,preferH:true},{rowMajor:false,preferH:false}];
+
+function pickLeg(h, tele){
+  // Altezze intermedie (30, 50, 70, 90): gamba virtuale a prezzo medio tra le due gambe fisse vicine.
+  if(!tele && !FIXED_LEGS[h] && FIXED_LEGS[h-10] && FIXED_LEGS[h+10])
+    return {code:'VFL'+h, note:`gamba fissa ${h} cm, prezzo medio tra ${FIXED_LEGS[h-10]} e ${FIXED_LEGS[h+10]}`, tele:false, mid:[FIXED_LEGS[h-10], FIXED_LEGS[h+10]]};
+  if(!tele && FIXED_LEGS[h]) return {code:FIXED_LEGS[h], note:'gamba fissa', tele:false};
+  // Le telescopiche si usano solo se richieste (dislivelli del terreno, misure particolari).
+  const t = tele ? TELE_LEGS.find(([a,b]) => h>=a && h<=b) : null;
+  if(t) return {code:t[2], note:`telescopica ${t[0]}–${t[1]} cm, regolata a ${h} cm`, tele:true};
+  if(FIXED_LEGS[h]) return {code:FIXED_LEGS[h], note:'gamba fissa', tele:false};
+  return null;
+}
+// Scala modulare: un gradino ogni 20 cm di altezza (VSM20, VSM40, ... fino all'altezza del palco).
+function pickStair(h, type){
+  const mod = (h>=20 && h<=80 && h%20===0)
+    ? {kind:'modular', steps:h/20, parts:Array.from({length:h/20},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
+  const a = ADJ_STAIRS.find(([x,y]) => h>=x && h<=y);
+  const adj = a ? {kind:'adjustable', steps:0, rails:a[2]!=='VAS-2', parts:[{code:a[2], qty:1}]} : null;
+  if(type==='modular') return mod;
+  if(type==='adjustable') return adj;
+  return mod || adj;
+}
+function tile(Wc, Dc, sizes, st){
+  const g = new Uint8Array(Wc*Dc), out = [], cands = [];
+  for(const [a,b] of sizes){
+    const seen = new Set();
+    for(const [w,h] of (st.preferH ? [[a,b],[b,a]] : [[b,a],[a,b]])){
+      if(seen.has(w+'x'+h)) continue; seen.add(w+'x'+h); cands.push({w,h});
+    }
+  }
+  cands.sort((p,q) => q.w*q.h - p.w*p.h);
+  const fits = (x,y,w,h) => {
+    if(x+w>Wc || y+h>Dc) return false;
+    for(let j=y;j<y+h;j++) for(let i=x;i<x+w;i++) if(g[j*Wc+i]) return false;
+    return true;
+  };
+  const outer = st.rowMajor ? Dc : Wc, inner = st.rowMajor ? Wc : Dc;
+  for(let a=0;a<outer;a++) for(let b=0;b<inner;b++){
+    const x = st.rowMajor ? b : a, y = st.rowMajor ? a : b;
+    if(g[y*Wc+x]) continue;
+    const c = cands.find(c => fits(x,y,c.w,c.h));
+    if(!c) return null;
+    for(let j=y;j<y+c.h;j++) for(let i=x;i<x+c.w;i++) g[j*Wc+i] = 1;
+    out.push({x,y,w:c.w,h:c.h});
+  }
+  return out;
+}
+function railPieces(L, p2, p1){
+  if(L<=0) return {n2:0,n1:0,cover:0};
+  let best = null;
+  for(let n2=0;n2<=Math.ceil(L/2);n2++) for(let n1=0;n1<=2;n1++){
+    const cover = 2*n2+n1;
+    if(cover < L-1e-9) continue;
+    const cost = n2*p2 + n1*p1;
+    if(!best || cost<best.cost-1e-9 || (Math.abs(cost-best.cost)<1e-9 && cover<best.cover)) best = {n2,n1,cover,cost};
+  }
+  return best;
+}
+const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length-5}` : a.join(', ');
+
+function compute(cfg, R, look, kits){
+  const out = {lines:[], warnings:[], notes:[], plan:null, totals:null, info:{}};
+  const warn = (level,text) => out.warnings.push({level,text});
+  const support = SUPPORTS[cfg.support] ? cfg.support : 'legs';
+  let fam = FAMILIES[cfg.family];
+  if(!fam || (support==='spider') !== (fam.support==='spider')) fam = FAMILIES[support==='spider' ? 'spidera' : 'hexa'];
+  let W = +cfg.W, D = +cfg.D, H = Math.round(+cfg.H);
+  if(!(W>0 && D>0)){ warn('bad','Inserisci larghezza e profondità maggiori di zero.'); return out; }
+  if(W>60 || D>60){ warn('bad','Le misure oltre 60 m non sono supportate.'); return out; }
+  if(!(H>0)){ warn('bad','Inserisci l\'altezza del palco.'); return out; }
+  const W2 = Math.ceil(W/fam.step-1e-9)*fam.step, D2 = Math.ceil(D/fam.step-1e-9)*fam.step;
+  if(Math.abs(W2-W)>1e-9 || Math.abs(D2-D)>1e-9) warn('info',`Misure arrotondate a ${nf(W2)} × ${nf(D2)} m: i moduli di questo piano sono multipli di ${fam.step===1?'1 m':'50 cm'}.`);
+  W = W2; D = D2;
+  const Wc = Math.round(W*2), Dc = Math.round(D*2);
+  const P = code => { const it = look.get(ncode(code)); return it && it.price!=null ? it.price : 0; };
+
+  // --- piano
+  const sizes = Object.keys(fam.codes).map(k => k.split('x').map(Number));
+  const sizeKey = (w,h) => Math.max(w,h)+'x'+Math.min(w,h);
+  let best = null;
+  for(const st of STRATS){
+    const t = tile(Wc,Dc,sizes,st);
+    if(!t) continue;
+    const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
+    if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+  }
+  if(!best){ warn('bad','Non riesco a coprire la superficie con i moduli del piano scelto.'); return out; }
+  const decks = best.t;
+  for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
+  const byDeck = new Map();
+  for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
+  for(const [code,qty] of byDeck) out.lines.push({group:'Piano di calpestio', code, qty});
+
+  // --- metriche per le regole
+  const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(W*D-1e-9), fixed:1};
+  const vmap = new Map();
+  for(const d of decks) for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
+    const k = cx+','+cy; vmap.set(k,(vmap.get(k)||0)+1);
+  }
+  M.vertex = vmap.size; M.vertex1 = 0; M.junction2 = 0; M.junction34 = 0;
+  for(const n of vmap.values()){ if(n===1) M.vertex1++; else if(n===2) M.junction2++; else M.junction34++; }
+  const joints = [];
+  for(let i=0;i<decks.length;i++) for(let j=i+1;j<decks.length;j++){
+    const a = decks[i], b = decks[j];
+    if(a.x+a.w===b.x || b.x+b.w===a.x){ const o = Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y); if(o>0) joints.push(o/2); }
+    if(a.y+a.h===b.y || b.y+b.h===a.y){ const o = Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x); if(o>0) joints.push(o/2); }
+  }
+  M.joint = joints.length;
+
+  // --- appoggi: gambe, Rollrisers o Spider
+  let leg = null, rrOK = false;
+  if(support==='legs'){
+    leg = pickLeg(H, cfg.tele);
+    if(leg && leg.mid){
+      const a = look.get(ncode(leg.mid[0])), b = look.get(ncode(leg.mid[1]));
+      if(a && b){
+        look = new Map(look);
+        look.set(ncode(leg.code), {code:leg.code, name:`square leg ${H}cm (prezzo medio tra ${a.code} e ${b.code})`, section:a.section,
+          price: a.price!=null && b.price!=null ? Math.round((a.price+b.price)/2*100)/100 : null,
+          kg: a.kg!=null && b.kg!=null ? Math.round((a.kg+b.kg)/2*1000)/1000 : null, pack: b.pack, pkg: b.pkg||1});
+      }
+    }
+    if(!leg) warn('bad',`Con altezza ${H} cm non ci sono gambe fisse (20–100 cm a passi di 10). Se il cliente le richiede, spunta «Gambe telescopiche» (40–180 cm).`);
+    else{
+      out.notes.push(H<=120
+        ? 'Portata del deck 750 kg/m² (DIN 15921), deck fino a 244 × 122 cm su 4 gambe.'
+        : `Portata ridotta a 500 kg/m² con gambe 60×60 a ${H} cm (tabella Larcher).`);
+      if(leg.tele) out.notes.push('Gambe telescopiche: dopo la regolazione vanno bloccate con il dado autobloccante, è vietato usare il palco senza.');
+      out.notes.push('Morsetti tra le gambe al massimo 20 cm sotto il deck.');
+    }
+  }else if(support==='roll'){
+    rrOK = (H===30 || H===40);
+    if(!rrOK) warn('bad','I Rollrisers esistono solo da 30 o 40 cm.');
+    else out.notes.push('Rollrisers con ruote frenate: frenare tutte le ruote prima dell\'uso.');
+  }else{
+    if(![20,40,60].includes(H)) warn('bad','Lo Spider esiste solo a 20, 40 o 60 cm.');
+    else out.lines.push({group:'Appoggi', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
+  }
+  out.info.leg = leg;
+
+  // --- scale e rampe
+  const nStairs = cfg.stairs.length, nRamps = (cfg.ramps||[]).length;
+  const stair = nStairs ? pickStair(H, cfg.stairType) : null;
+  if(nStairs && !stair) warn('bad',`Nessuna scala del tipo scelto per ${H} cm (modulari 20, 40, 60, 80 cm; regolabili 40–180 cm).`);
+  M.stair = stair ? nStairs : 0;
+  M.stair_modular = stair && stair.kind==='modular' ? nStairs : 0;
+  const sr = cfg.stairs.map(s => s.rails===0 ? 0 : s.rails===1 ? 1 : 2);
+  const srSum = sr.reduce((a,b) => a+b, 0);
+  M.stair_modular_rails = stair && stair.kind==='modular' ? srSum*Math.floor(stair.steps/2) : 0;
+  M.stair_adjustable = stair && stair.kind==='adjustable' ? nStairs : 0;
+  M.stair_adjustable_rail = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=1).length : 0;
+  M.stair_adjustable_rail2 = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=2).length : 0;
+  if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nStairs});
+  let kit = null, rampLen = 0;
+  if(nRamps){
+    kit = (kits||[]).find(k => H>=k.lo && H<=k.hi) || null;
+    if(!kit) warn('bad',`Nessuna rampa nel listino per ${H} cm (disponibili: ${(kits||[]).map(k => k.lo===k.hi ? k.lo : k.lo+'–'+k.hi).join(', ')||'nessuna'} cm).`);
+    else{
+      for(const pt of kit.parts){
+        out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nRamps});
+        const m = /^VS750H-(\d+(?:,\d+)?)[x×]/i.exec(pt.code);
+        if(m) rampLen += parseFloat(m[1].replace(',','.'))*pt.qty;
+      }
+    }
+  }
+  const opening = Math.max(0.5, +R.params.stairOpening || 1), rampOpening = Math.max(0.5, +R.params.rampOpening || 1);
+  const sideLen = {back:W, front:W, left:D, right:D};
+  const stairsOn = {back:0,front:0,left:0,right:0}, rampsOn = {back:0,front:0,left:0,right:0};
+  cfg.stairs.forEach(s => { if(s.side in stairsOn) stairsOn[s.side]++; });
+  (cfg.ramps||[]).forEach(s => { if(s.side in rampsOn) rampsOn[s.side]++; });
+  const taken = s => stairsOn[s]*opening + rampsOn[s]*rampOpening;
+  for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
+
+  // --- parapetti
+  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0';
+  const runs = []; let rails = 0, railLinks = 0;
+  for(const s of ['back','front','left','right']){
+    if(!cfg.rails[s]) continue;
+    const start = Math.min(sideLen[s], taken(s));
+    const L = sideLen[s] - start;
+    if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
+    const pc = railPieces(L, P(c2), P(c1));
+    const n = pc.n2+pc.n1;
+    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, cover:pc.cover});
+    rails += n; railLinks += n-1;
+    if(pc.cover > L+1e-9) warn('info',`Lato ${SIDE_LABEL[s]}: servono ${nf(L)} m di parapetto, gli elementi coprono ${nf(pc.cover)} m (${nf(pc.cover-L)} m in più).`);
+  }
+  const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0);
+  if(tn2) out.lines.push({group:'Parapetti', code:c2, qty:tn2});
+  if(tn1) out.lines.push({group:'Parapetti', code:c1, qty:tn1});
+  M.rail = rails; M.rail_link = railLinks;
+  M.rail_corner = [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
+  if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
+
+  // --- regole accessori
+  let legRules = 0;
+  for(const r of R.rows){
+    if(!r.on) continue;
+    const w = r.when;
+    if(w==='perDeck'){ if(support!=='legs' || !leg) continue; }
+    else if(w==='deck'){ if(support==='spider') continue; }
+    else if(w==='deckHigh'){ if(support==='spider' || +cfg.H===20) continue; }
+    else if(w==='deck20'){ if(support==='spider' || +cfg.H!==20) continue; }
+    else if(w==='roll'){ if(support!=='roll') continue; }
+    else if(w==='spider'){ if(support!=='spider') continue; }
+    const q = +r.qty; if(!(q>0)) continue;
+    let code = r.code, group = null;
+    if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Appoggi'; }
+    else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Appoggi'; }
+    if(!code) continue;
+    if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
+    const n = r.trigger==='joint_m' ? joints.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
+    if(n>0) out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n});
+  }
+  if(support==='legs' && leg && !legRules) warn('warn','Nessuna regola attiva per le gambe: l\'offerta non le include.');
+
+  // --- mascheratura: sul perimetro, per ogni lato di deck un profilo con velcro e un telo della stessa lunghezza.
+  // Lato lungo (2 m) = SKP1970 + telo 2050, lato corto (1 m) = SKP970 + telo 1050. Non dipende da scale e rampe.
+  const sk = cfg.skirt || {};
+  const skSides = ['back','front','left','right'].filter(s => sk.sides && sk.sides[s]);
+  if(skSides.length){
+    const fab = SKIRT_FABRICS[sk.fabric] ? sk.fabric : 'PSP-S';
+    const manual = sk.height && sk.height!=='auto';
+    const need = H + (R.params.skirtDeck!=null ? +R.params.skirtDeck : 9);
+    const sh = manual ? +sk.height : ([20,40,60,80,100].find(x => x>=need-1e-9) || 100);
+    if(!manual && need>100+1e-9) warn('warn',`Altezza palco con deck ${nf(need)} cm: il telo più alto è 100 cm. Gli ho messo 100 cm.`);
+    const PROF = {2:'SKP1970', 1:'SKP970', 0.5:'SKP470'};
+    const lens = {};
+    for(const s of skSides){
+      const horiz = s==='back' || s==='front';
+      let half = 0;
+      for(const d of decks){
+        const on = s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc;
+        if(!on) continue;
+        const L = (horiz ? d.w : d.h)/2;
+        const pc = PROF[L];
+        if(!pc){ warn('warn',`Mascheratura: lato di deck da ${nf(L)} m senza profilo a listino.`); continue; }
+        out.lines.push({group:'Mascheratura', code:pc, qty:1});
+        if(L>=1) out.lines.push({group:'Mascheratura', code:`${fab} ${sh*10}x${L>=2?2050:1050}`, qty:1});
+        else half++;
+      }
+      if(half) out.lines.push({group:'Mascheratura', code:`${fab} ${sh*10}x1050`, qty:Math.ceil(half/2)});
+    }
+    out.notes.push(`Mascheratura ${SKIRT_FABRICS[fab].toLowerCase()} alta ${sh} cm su ${skSides.length} ${skSides.length===1?'lato':'lati'}: profilo con velcro e telo per ogni lato di deck (2 m o 1 m), senza tener conto delle scale.`);
+  }
+  M.skirt_sides = skSides.length;
+
+  // --- carrelli
+  const tr = cfg.trolley || {};
+  if(tr.type && TROLLEYS[tr.type]){
+    const T = TROLLEYS[tr.type];
+    if((T.sys==='spider') !== (support==='spider')) warn('warn',`Il carrello ${tr.type} non è per questo tipo di palco.`);
+    const cap = (R.params.cap && +R.params.cap[tr.type] > 0) ? +R.params.cap[tr.type] : T.cap;
+    const area = decks.reduce((s,d) => s + d.w*d.h/4, 0);
+    const n = +tr.qty > 0 ? Math.round(+tr.qty) : Math.ceil(area/cap-1e-9);
+    if(n>0) out.lines.push({group:'Trasporto', code:tr.type, qty:n});
+    out.notes.push(`Carrelli ${tr.type}: ${+tr.qty>0 ? 'quantità scelta' : `capacità ${nf(cap)} m² di deck ciascuno per ${nf(area)} m² di palco`}.`);
+  }
+
+  // --- voci aggiuntive
+  for(const x of cfg.extras) if(x.code && x.qty>0) out.lines.push({group:'Varie', code:x.code, qty:Math.ceil(x.qty)});
+
+  // --- aggregazione, prezzi, pesi, volumi
+  const agg = new Map();
+  for(const l of out.lines){
+    const k = l.group+'|'+ncode(l.code);
+    if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
+  }
+  const mk = 1 + (+cfg.markup||0)/100;
+  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [];
+  for(const l of agg.values()){
+    const it = look.get(ncode(l.code));
+    if(!it){ warn('bad',`Il codice ${l.code} non è nel listino.`); continue; }
+    if(it.price==null) noPrice.push(it.code);
+    const pr = it.price||0;
+    const unit = r2(pr*mk);
+    // Confezioni (gambe da 4, connettori da 3): prezzo per pezzo, peso e imballo per confezione.
+    const pk = it.pkg||1, qty = Math.ceil(l.qty/pk-1e-9)*pk, sets = qty/pk;
+    if(qty!==l.qty) packNotes.push(`${it.code} ${l.qty}→${qty}`);
+    const kg = it.kg!=null ? it.kg*sets : null;
+    const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
+    if(kg==null) noKg.push(it.code);
+    if(m3==null) noVol.push(it.code);
+    lines.push({group:l.group, code:it.code, name:it.name + (pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, qty, unit, total:r2(unit*qty), cost:r2(pr*qty), kg, m3});
+  }
+  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
+  if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
+  if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
+  if(noVol.length) warn('warn',`Misure dell'imballo mancanti nel listino per: ${listCodes(noVol)}. Il volume totale è parziale.`);
+  const gross = r2(lines.reduce((s,l) => s+l.total,0));
+  const disc = r2(gross*(+cfg.discount||0)/100);
+  const net = r2(gross-disc);
+  const vat = r2(net*(+cfg.vat||0)/100);
+  out.lines = lines;
+  const cost = r2(lines.reduce((s,l) => s+l.cost,0));
+  out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
+    kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
+    pieces: lines.reduce((s,l) => s+l.qty,0), area: W*D};
+  out.plan = {W, D, decks, vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
+    skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair};
+  out.info.metrics = M;
+  out.info.famLabel = fam.label;
+  out.info.support = support;
+  return out;
+}
+// ==ENGINE-END==
+
+/* ================= interfaccia ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = n => n.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
+const dec = (n,d=1) => n.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+const CATALOG = JSON.parse(document.getElementById('catalog').textContent);
+const ITEMS = CATALOG.items;
+const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
+const LOOK = new Map(ITEMS.map(i => [ncode(i.code), i]));
+const BASE_PRICES = ITEMS.some(i => i.price!=null);
+function applyPrices(map){
+  let n = 0;
+  for(const i of ITEMS){
+    if(BASE_PRICES && i.price!=null && !map) { n++; continue; }
+    const v = map ? map[ncode(i.code)] : null;
+    if(!BASE_PRICES) i.price = (typeof v==='number') ? v : null;
+    if(i.price!=null) n++;
+  }
+  return n;
+}
+function loadPrices(){
+  try{ const s = JSON.parse(localStorage.getItem(PKEY) || 'null'); if(s && s.prezzi) return applyPrices(s.prezzi); }catch(e){}
+  return applyPrices(null);
+}
+const KITS = CATALOG.rampKits || [];
+const today = () => new Date().toISOString().slice(0,10);
+
+const DEFAULT_CFG = {
+  cliente:'', progetto:'', numero:'', data:today(),
+  W:4, D:4, H:60, family:'hexa', tele:false,
+  rails:{back:true, left:true, right:true, front:false}, kick:false,
+  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[],
+  markup:0, discount:0, vat:22
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
+
+function load(){
+  try{
+    let s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if(!s){ const o = JSON.parse(localStorage.getItem(OLDKEY) || 'null'); if(o && o.cfg) s = {cfg:o.cfg}; }
+    if(s && s.cfg) cfg = Object.assign(clone(DEFAULT_CFG), s.cfg);
+    cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
+    cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
+    cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
+    if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
+  }catch(e){}
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify({cfg, rules:R})); }catch(e){} }
+
+/* --- scheda offerta --- */
+function fillForm(){
+  $('#support').innerHTML = Object.entries(SUPPORTS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+  $('#support').value = cfg.support;
+  renderFamilies();
+  for(const id of ['cliente','progetto','numero','data','W','D','H','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick;
+  $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
+  renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
+  $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+  $('#skFabric').value = cfg.skirt.fabric; $('#skHeight').value = cfg.skirt.height;
+  $$('[data-skside]').forEach(c => c.checked = !!cfg.skirt.sides[c.dataset.skside]);
+  renderSkSeg(); renderTrolleys();
+}
+function renderSkSeg(){
+  const n = Object.values(cfg.skirt.sides).filter(Boolean).length;
+  $$('#skSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === n)));
+}
+function renderTrolleys(){
+  const spider = cfg.support==='spider';
+  const opts = Object.entries(TROLLEYS).filter(([k,t]) => spider === (t.sys==='spider'));
+  if(cfg.trolley.type && !opts.some(([k]) => k===cfg.trolley.type)) cfg.trolley.type = '';
+  $('#trolleyType').innerHTML = '<option value="">Nessuno</option>' + opts.map(([k,t]) => `<option value="${k}">${t.label}</option>`).join('');
+  $('#trolleyType').value = cfg.trolley.type; $('#trolleyQty').value = cfg.trolley.qty;
+}
+function renderFamilies(){
+  const spider = cfg.support==='spider';
+  const opts = Object.entries(FAMILIES).filter(([k,f]) => spider === (f.support==='spider'));
+  if(!opts.some(([k]) => k===cfg.family)) cfg.family = opts[0][0];
+  $('#family').innerHTML = opts.map(([k,f]) => `<option value="${k}">${f.label}</option>`).join('');
+  $('#family').value = cfg.family;
+  $('#tele').closest('label').hidden = cfg.support!=='legs';
+}
+function renderRailSeg(){
+  const n = Object.values(cfg.rails).filter(Boolean).length;
+  $$('#railSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === n)));
+}
+function renderStairs(){
+  $('#nStairs').value = cfg.stairs.length;
+  $('#stairList').innerHTML = cfg.stairs.map((s,i) => `
+    <div class="row">
+      <select data-stair="${i}" aria-label="Lato della scala ${i+1}">
+        ${Object.entries(SIDE_LABEL).map(([k,v]) => `<option value="${k}" ${s.side===k?'selected':''}>Scala ${i+1} · lato ${v.toLowerCase()}</option>`).join('')}
+      </select>
+      <select data-stairrails="${i}" aria-label="Corrimano della scala ${i+1}">
+        <option value="2" ${s.rails===2?'selected':''}>Corrimano su 2 lati</option>
+        <option value="1" ${s.rails===1?'selected':''}>Corrimano su 1 lato</option>
+        <option value="0" ${s.rails===0?'selected':''}>Senza corrimano</option>
+      </select>
+    </div>`).join('');
+}
+function renderRamps(){
+  $('#rampList').innerHTML = cfg.ramps.map((s,i) => `
+    <div class="item-row">
+      <select data-ramp="${i}" aria-label="Lato della rampa ${i+1}">
+        ${Object.entries(SIDE_LABEL).map(([k,v]) => `<option value="${k}" ${s.side===k?'selected':''}>Rampa ${i+1} · lato ${v.toLowerCase()}</option>`).join('')}
+      </select>
+      <button type="button" class="btn small" data-rmramp="${i}" aria-label="Rimuovi rampa ${i+1}">Rimuovi</button>
+    </div>`).join('') || '<p class="hint">Nessuna rampa.</p>';
+}
+function renderExtras(){
+  $('#extraList').innerHTML = cfg.extras.map((x,i) => {
+    const it = LOOK.get(ncode(x.code));
+    return `<div class="item-row x3"><span><span class="code">${esc(x.code)}</span><br><span class="hint">${esc(it?it.name:'Codice non nel listino')}</span></span>
+      <input type="number" min="1" step="1" value="${x.qty}" data-xqty="${i}" aria-label="Quantità ${esc(x.code)}">
+      <button type="button" class="btn small" data-rmextra="${i}" aria-label="Rimuovi ${esc(x.code)}">Rimuovi</button></div>`;
+  }).join('');
+}
+
+/* --- risultato --- */
+function planSVG(p, H){
+  const W = p.W*100, D = p.D*100, sd = 80;  // sd: profondità disegnata della scala (cm)
+  const ext = side => Math.max(100, p.stairs[side] ? sd+60 : 0, p.ramps[side] ? p.rampLen*100+60 : 0);
+  const mT = ext('back'), mB = ext('front'), mL = ext('left'), mR = ext('right');
+  const vbw = W+mL+mR, vbh = D+mT+mB, px = Math.max(vbw/640, vbh/640*0.8);
+  const fs = 11*px, sq = 7*px;
+  let s = `<svg class="plan" viewBox="${-mL} ${-mT} ${vbw} ${vbh}" role="img" aria-label="Pianta del palco ${nf(p.W)} per ${nf(p.D)} metri">`;
+  for(const d of p.decks){
+    const x = d.x*50, y = d.y*50, w = d.w*50, h = d.h*50;
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--deck)" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    if(Math.min(w,h)/px >= 30) s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle">${nf(d.w/2)}×${nf(d.h/2)}</text>`;
+  }
+  const seg = (x1,y1,x2,y2,col,w) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`;
+  // parapetti
+  for(const r of p.runs){
+    const horiz = r.side==='back' || r.side==='front';
+    const fixed = r.side==='back' ? 0 : r.side==='front' ? D : r.side==='left' ? 0 : W;
+    const lens = [...Array(r.n2).fill(2), ...Array(r.n1).fill(1)];
+    let pos = r.start;
+    const limit = horiz ? p.W : p.D;
+    for(const L of lens){
+      const a = pos*100, b = Math.min(limit,pos+L)*100;
+      if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,'var(--rail)',5) : seg(fixed,a+2*px,fixed,b-2*px,'var(--rail)',5);
+      pos += L;
+    }
+  }
+  // mascheratura (tratteggio fuori dal bordo)
+  for(const sd2 of (p.skirt||[])){
+    const o = 4*px;
+    const l = sd2==='back' ? [0,-o,W,-o] : sd2==='front' ? [0,D+o,W,D+o] : sd2==='left' ? [-o,0,-o,D] : [W+o,0,W+o,D];
+    s += `<line x1="${l[0]}" y1="${l[1]}" x2="${l[2]}" y2="${l[3]}" stroke="var(--ink)" stroke-opacity=".55" stroke-width="3" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`;
+  }
+  // scale e rampe: prima le scale, poi le rampe, a partire dall'inizio del lato
+  const slot = (side, off, len, depth) => {
+    const o = off*100, l = len*100;
+    return side==='back' ? {x:o,y:-depth,w:l,h:depth} : side==='front' ? {x:o,y:D,w:l,h:depth}
+         : side==='left' ? {x:-depth,y:o,w:depth,h:l} : {x:W,y:o,w:depth,h:l};
+  };
+  for(const side of Object.keys(p.stairs)){
+    const horiz = side==='back' || side==='front';
+    for(let i=0;i<p.stairs[side];i++){
+      const {x,y,w,h} = slot(side, i*p.opening, p.opening, sd);
+      const col = p.stairOk ? 'var(--stair)' : 'var(--bad)';
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+      for(let k=1;k<=3;k++){
+        const t = k/4;
+        s += horiz ? seg(x,y+h*t,x+w,y+h*t,col,1) : seg(x+w*t,y,x+w*t,y+h,col,1);
+      }
+    }
+    for(let j=0;j<p.ramps[side];j++){
+      const {x,y,w,h} = slot(side, p.stairs[side]*p.opening + j*p.rampOpening, p.rampOpening, p.rampLen*100);
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--ramp)" fill-opacity=".16" stroke="var(--ramp)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+      s += horiz ? seg(x+w/2,y+(side==='back'?h:0),x+w/2,y+(side==='back'?0:h),'var(--ramp)',1) : seg(x+(side==='left'?w:0),y+h/2,x+(side==='left'?0:w),y+h/2,'var(--ramp)',1);
+      s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle"${horiz ? '' : ` transform="rotate(-90 ${x+w/2} ${y+h/2})"`}>${nf(p.rampLen)} m</text>`;
+    }
+  }
+  // gambe
+  for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  // quote
+  s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
+  s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
+  return s + '</svg>';
+}
+
+function renderResult(){
+  res = compute(cfg, R, LOOK, KITS);
+  const t = res.totals;
+  $('#tiles').innerHTML = t ? `
+    <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
+    <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
+    <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
+    <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
+    <div class="tile"><div class="k">Pezzi</div><div class="v">${t.pieces}</div></div>` : '';
+  $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
+  if(!res.plan){ $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  const p = res.plan;
+  const title = `Palco ${nf(p.W)} × ${nf(p.D)} m · altezza ${cfg.H} cm`;
+  $('#planTitle').textContent = title;
+  $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
+  $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
+  $('#planBox').innerHTML = planSVG(p, cfg.H);
+  let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num">Prezzo €</th><th class="num">Totale €</th><th class="num">Peso kg</th><th class="num">Volume m³</th></tr></thead><tbody>`;
+  for(const g of GROUPS){
+    const ls = res.lines.filter(l => l.group===g);
+    if(!ls.length) continue;
+    html += `<tr class="grp"><td colspan="4">${g}</td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.kg||0),0),1)}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.m3||0),0),3)}</td></tr>`;
+    for(const l of ls) html += `<tr><td class="code">${esc(l.code)}</td><td>${esc(l.name)}</td><td class="num">${l.qty}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td><td class="num">${l.kg==null?'–':dec(l.kg,1)}</td><td class="num">${l.m3==null?'–':dec(l.m3,3)}</td></tr>`;
+  }
+  $('#offerTable').innerHTML = html + '</tbody></table>';
+  $('#techNotes').innerHTML = res.notes.map(n => `<li>${esc(n)}</li>`).join('');
+  $('#sum').innerHTML = `
+    <div class="int"><span>Acquisto (interno)</span><span class="num">${money(t.cost)} €</span></div>
+    <div class="int"><span>Maggiorazione ${dec(+cfg.markup||0,1)}% (interno)</span><span class="num">${money(t.gross-t.cost)} €</span></div>
+    <div><span>Subtotale vendita</span><span class="num">${money(t.gross)} €</span></div>
+    ${t.disc ? `<div><span>Sconto ${dec(+cfg.discount,1)}%</span><span class="num">−${money(t.disc)} €</span></div>` : ''}
+    <div><span>Imponibile</span><span class="num">${money(t.net)} €</span></div>
+    <div><span>IVA ${dec(+cfg.vat||0,0)}%</span><span class="num">${money(t.vat)} €</span></div>
+    <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
+}
+function update(){ save(); renderResult(); }
+
+/* --- copia --- */
+function say(msg){ const s = $('#status'); s.textContent = msg; clearTimeout(say.t); say.t = setTimeout(() => s.textContent = '', 2500); }
+async function copy(text){
+  try{ await navigator.clipboard.writeText(text); say('Copiato'); return; }catch(e){}
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); say('Copiato'); }catch(e){ say('Copia non riuscita'); }
+  ta.remove();
+}
+function offerText(){
+  if(!res || !res.plan) return '';
+  const p = res.plan, t = res.totals, pad = (s,n) => String(s).padEnd(n), lpad = (s,n) => String(s).padStart(n);
+  const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
+  const out = [`OFFERTA PALCO MODULARE${cfg.numero ? ' n. '+cfg.numero : ''}`];
+  if(cfg.cliente) out.push('Cliente: '+cfg.cliente);
+  if(cfg.progetto) out.push('Progetto: '+cfg.progetto);
+  if(d) out.push('Data: '+d);
+  out.push(`Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
+  out.push(pad('Codice',16)+pad('Descrizione',46)+lpad('Q.tà',5)+lpad('Prezzo',11)+lpad('Totale',12));
+  for(const l of res.lines) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
+  out.push('', `Subtotale: ${money(t.gross)} €`);
+  if(t.disc) out.push(`Sconto ${dec(+cfg.discount,1)}%: -${money(t.disc)} €`);
+  out.push(`Imponibile: ${money(t.net)} €`, `IVA ${dec(+cfg.vat||0,0)}%: ${money(t.vat)} €`, `Totale: ${money(t.grand)} €`, '',
+    `Peso totale: ${dec(t.kg,0)} kg · Volume imballi: ${dec(t.m3,2)} m³`);
+  if(res.notes.length) out.push('', ...res.notes.map(n => '- '+n));
+  return out.join('\n');
+}
+/* --- ordine al fornitore: Product Code, Product Name, Quantity (gambe in set da 4, il resto in pezzi) --- */
+function orderRows(){
+  const rows = [['Product Code','Product Name','Quantity','Unit']];
+  if(!res || !res.plan) return rows;
+  for(const l of res.lines){
+    const isSet = l.pkg===4 && /leg/i.test(l.rawName);
+    let name = l.rawName;
+    if(/^VFL\d+$/.test(l.code) && !/^VFL(20|40|60|80|100)$/.test(l.code)) name = `square leg ${l.code.slice(3)}cm (intermediate height)`;
+    rows.push([l.code, name, isSet ? l.qty/l.pkg : l.qty, isSet ? 'set of 4' : 'pcs']);
+  }
+  return rows;
+}
+const CRC_T = (() => { const t = []; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+const crc32 = u => { let c = 0xFFFFFFFF; for(let i=0;i<u.length;i++) c = CRC_T[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; };
+function zipStore(files){
+  const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+  const u16 = n => [n&255,(n>>8)&255], u32 = n => [n&255,(n>>8)&255,(n>>16)&255,(n>>>24)&255];
+  for(const [name,text] of files){
+    const nm = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const lh = new Uint8Array([0x50,0x4b,3,4, ...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21), ...u32(crc),...u32(data.length),...u32(data.length), ...u16(nm.length),...u16(0)]);
+    parts.push(lh, nm, data);
+    cen.push(new Uint8Array([0x50,0x4b,1,2, ...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21), ...u32(crc),...u32(data.length),...u32(data.length), ...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]), nm);
+    off += lh.length + nm.length + data.length;
+  }
+  const cenLen = cen.reduce((s,a) => s+a.length, 0);
+  const end = new Uint8Array([0x50,0x4b,5,6,0,0,0,0, ...u16(files.length),...u16(files.length), ...u32(cenLen),...u32(off), 0,0]);
+  return new Blob([...parts, ...cen, end], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function orderXlsx(rows){
+  const x = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const col = i => String.fromCharCode(65+i);
+  const sheetRows = rows.map((r,ri) => `<row r="${ri+1}">` + r.map((v,ci) => {
+    const ref = col(ci)+(ri+1), st = ri===0 ? ' s="1"' : '';
+    return typeof v==='number' ? `<c r="${ref}"${st} t="n"><v>${v}</v></c>` : `<c r="${ref}"${st} t="inlineStr"><is><t>${x(v)}</t></is></c>`;
+  }).join('') + '</row>').join('');
+  const hdr = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  return zipStore([
+    ['[Content_Types].xml', hdr+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
+    ['_rels/.rels', hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
+    ['xl/workbook.xml', hdr+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Order" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/_rels/workbook.xml.rels', hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
+    ['xl/styles.xml', hdr+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ['xl/worksheets/sheet1.xml', hdr+`<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="20" customWidth="1"/><col min="2" max="2" width="62" customWidth="1"/><col min="3" max="3" width="10" customWidth="1"/><col min="4" max="4" width="10" customWidth="1"/></cols><sheetData>${sheetRows}</sheetData></worksheet>`]
+  ]);
+}
+async function downloadOrder(){
+  const rows = orderRows();
+  if(rows.length<2){ say('Niente da ordinare'); return; }
+  const ref = (cfg.numero || cfg.progetto || cfg.data || 'ordine').toString().replace(/[^\w\-]+/g,'_');
+  const filename = `ordine_fornitore_${ref}.xlsx`;
+  try{
+    const blob = orderXlsx(rows);
+    // dentro Claude (artifact) il salvataggio passa dalla capability downloads
+    let dl = null;
+    try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+    if(dl){ await dl.save({filename, data: blob}); say('Ordine salvato'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    say('Ordine scaricato');
+  }catch(e){
+    if(e && e.code==='declined') return;
+    copy(rows.map(r => r.join('\t')).join('\n'));
+  }
+}
+function offerTsv(){
+  if(!res || !res.plan) return '';
+  const rows = [['Codice','Descrizione','Quantità','Prezzo unitario','Totale','Peso kg','Volume m3']];
+  const c = n => n==null ? '' : String(Math.round(n*1000)/1000).replace('.',',');
+  for(const l of res.lines) rows.push([l.code,l.name,l.qty,c(l.unit),c(l.total),c(l.kg),c(l.m3)]);
+  return rows.map(r => r.join('\t')).join('\n');
+}
+
+/* --- regole --- */
+function ruleHint(r){
+  const code = (r.code==='@LEG' || /^@RR/.test(r.code)) ? null : r.code;
+  const it = code ? LOOK.get(ncode(code)) : null;
+  const when = '';
+  const what = r.code==='@LEG' ? 'Gamba scelta in base all\'altezza' + (it ? ': '+it.name : '') : /^@RR/.test(r.code) ? 'Rollriser scelto in base all\'altezza' : it ? it.name : 'Codice non nel listino';
+  return what + '.' + (r.note ? ' ' + r.note : when);
+}
+function renderRules(){
+  $('#stairOpening').value = R.params.stairOpening;
+  $('#rampOpening').value = R.params.rampOpening;
+  $('#skirtDeck').value = R.params.skirtDeck;
+  $$('[data-cap]').forEach(i => i.value = R.params.cap[i.dataset.cap]);
+  $('#rulesList').innerHTML = R.rows.map((r,i) => `
+    <div class="rule ${r.on?'':'off'}" data-rule="${i}">
+      <input type="checkbox" data-f="on" ${r.on?'checked':''} aria-label="Regola attiva" style="margin-top:9px;width:16px;height:16px;accent-color:var(--accent)">
+      <input type="text" data-f="label" value="${esc(r.label)}" aria-label="Nome regola">
+      <select class="f-trig" data-f="trigger" aria-label="Quando si applica">${Object.entries(TRIGGERS).map(([k,v]) => `<option value="${k}" ${r.trigger===k?'selected':''}>${v.label}</option>`).join('')}</select>
+      <input class="f-code" type="text" data-f="code" list="codeList" value="${esc(r.code)}" aria-label="Codice articolo" autocomplete="off">
+      <input class="f-qty" type="number" data-f="qty" min="0" step="0.5" value="${r.qty}" aria-label="Pezzi per ogni">
+      <button type="button" class="btn small" data-rmrule="${i}" aria-label="Elimina regola" style="margin-top:4px">Elimina</button>
+      <div class="sub" data-hint="${i}">${esc(ruleHint(r))}</div>
+    </div>`).join('');
+}
+
+/* --- listino --- */
+function renderCatalog(){
+  const q = $('#q').value.trim().toLowerCase();
+  const rows = ITEMS.filter(i => !q || (i.code+' '+i.name+' '+i.section).toLowerCase().includes(q));
+  $('#qCount').textContent = `${rows.length} di ${ITEMS.length} articoli`;
+  $('#catTable').innerHTML = `<thead><tr><th>Codice</th><th>Nome</th><th>Gruppo</th><th class="num">Acquisto €</th><th class="num">Peso kg</th><th>Imballo mm</th><th class="num">Volume m³</th></tr></thead><tbody>` +
+    rows.map(i => `<tr><td class="code">${esc(i.code)}</td><td>${esc(i.name)}</td><td>${esc(i.section)}</td><td class="num">${i.price==null?'–':money(i.price)}</td><td class="num">${i.kg==null?'–':dec(i.kg,2)}</td><td class="code">${i.pack?i.pack.join(' × '):'–'}</td><td class="num">${i.pack?dec(i.pack[0]*i.pack[1]*i.pack[2]/1e9,3):'–'}</td></tr>`).join('') + '</tbody>';
+}
+
+/* --- eventi --- */
+function bind(){
+  $('#codeList').innerHTML = ITEMS.map(i => `<option value="${esc(i.code)}">${esc(i.name)}</option>`).join('');
+  $('#listinoName').textContent = 'listino ' + (CATALOG.listino || '');
+  $('#foot').textContent = `Prezzi di acquisto in euro dal ${CATALOG.listino || 'listino'}. Le quantità di connettori e parapetti seguono le regole della sezione Regole: verificale prima di inviare l'offerta.`;
+
+  $$('.tab').forEach(b => b.addEventListener('click', () => {
+    $$('.tab').forEach(x => x.setAttribute('aria-selected', String(x===b)));
+    for(const n of ['offerta','regole','listino']) $('#tab-'+n).hidden = n !== b.dataset.tab;
+  }));
+
+  $('#cfgForm').addEventListener('input', e => {
+    const t = e.target;
+    if(t.id && t.id in cfg && !['stairs','extras','rails','nStairs'].includes(t.id)){
+      cfg[t.id] = t.type==='checkbox' ? t.checked : (t.type==='number' ? (t.value===''?'':+t.value) : t.value);
+      update();
+    }
+    if(t.id==='support'){
+      const h = +cfg.H;
+      if(cfg.support==='roll' && ![30,40].includes(h)) cfg.H = 30;
+      if(cfg.support==='spider' && ![20,40,60].includes(h)) cfg.H = 40;
+      $('#H').value = cfg.H; renderFamilies(); renderTrolleys(); update();
+    }
+    if(t.dataset.skside){ cfg.skirt.sides[t.dataset.skside] = t.checked; renderSkSeg(); update(); }
+    if(t.id==='skFabric'){ cfg.skirt.fabric = t.value; update(); }
+    if(t.id==='skHeight'){ cfg.skirt.height = t.value; update(); }
+    if(t.id==='trolleyType'){ cfg.trolley.type = t.value; update(); }
+    if(t.id==='trolleyQty'){ cfg.trolley.qty = t.value===''?'':Math.max(0,Math.round(+t.value)); update(); }
+    if(t.dataset.ramp!==undefined){ cfg.ramps[+t.dataset.ramp].side = t.value; update(); }
+    if(t.dataset.side){ cfg.rails[t.dataset.side] = t.checked; renderRailSeg(); update(); }
+    if(t.dataset.stair!==undefined){ cfg.stairs[+t.dataset.stair].side = t.value; update(); }
+    if(t.dataset.stairrails!==undefined){ cfg.stairs[+t.dataset.stairrails].rails = +t.value; update(); }
+    if(t.id==='nStairs'){
+      const n = Math.max(0, Math.min(12, Math.round(+t.value||0)));
+      while(cfg.stairs.length<n) cfg.stairs.push({side:'front', rails:2});
+      cfg.stairs.length = n; renderStairs(); update();
+    }
+    if(t.dataset.xqty!==undefined){ cfg.extras[+t.dataset.xqty].qty = Math.max(1, +t.value||1); update(); }
+  });
+  $('#railSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const preset = {0:[], 2:['left','right'], 3:['back','left','right'], 4:['back','front','left','right']}[b.dataset.n];
+    for(const s of Object.keys(SIDE_LABEL)) cfg.rails[s] = preset.includes(s);
+    $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
+    renderRailSeg(); update();
+  });
+  $('#skSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    const preset = {0:[], 2:['front','back'], 3:['front','left','right'], 4:['back','front','left','right']}[b.dataset.n];
+    for(const s of Object.keys(SIDE_LABEL)) cfg.skirt.sides[s] = preset.includes(s);
+    $$('[data-skside]').forEach(c => c.checked = !!cfg.skirt.sides[c.dataset.skside]);
+    renderSkSeg(); update();
+  });
+  $('#mkSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    cfg.markup = +b.dataset.mk; $('#markup').value = cfg.markup; update();
+  });
+  $('#addRamp').addEventListener('click', () => { cfg.ramps.push({side:'back'}); renderRamps(); update(); });
+  $('#rampList').addEventListener('click', e => {
+    const b = e.target.closest('[data-rmramp]'); if(!b) return;
+    cfg.ramps.splice(+b.dataset.rmramp,1); renderRamps(); update();
+  });
+  $('#addExtra').addEventListener('click', () => {
+    const code = $('#xCode').value.trim(), it = LOOK.get(ncode(code));
+    if(!it){ $('#xCode').setCustomValidity('Codice non presente nel listino'); $('#xCode').reportValidity(); setTimeout(() => $('#xCode').setCustomValidity(''), 1500); return; }
+    cfg.extras.push({code:it.code, qty:Math.max(1,Math.round(+$('#xQty').value||1))});
+    $('#xCode').value = ''; $('#xQty').value = 1; renderExtras(); update();
+  });
+  $('#extraList').addEventListener('click', e => {
+    const b = e.target.closest('[data-rmextra]'); if(!b) return;
+    cfg.extras.splice(+b.dataset.rmextra,1); renderExtras(); update();
+  });
+  $('#copyText').addEventListener('click', () => copy(offerText()));
+  $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
+  $('#dlOrder').addEventListener('click', downloadOrder);
+
+  // regole
+  const ruleFromEvent = e => { const row = e.target.closest('[data-rule]'); return row ? +row.dataset.rule : -1; };
+  $('#rulesList').addEventListener('input', e => {
+    const i = ruleFromEvent(e), f = e.target.dataset.f; if(i<0 || !f) return;
+    const r = R.rows[i];
+    r[f] = e.target.type==='checkbox' ? e.target.checked : e.target.type==='number' ? +e.target.value : e.target.value;
+    if(f==='on') e.target.closest('.rule').classList.toggle('off', !r.on);
+    update();
+    const h = document.querySelector(`[data-hint="${i}"]`); if(h) h.textContent = ruleHint(r);
+  });
+  $('#rulesList').addEventListener('click', e => {
+    const b = e.target.closest('[data-rmrule]'); if(!b) return;
+    R.rows.splice(+b.dataset.rmrule,1); renderRules(); update();
+  });
+  $('#addRule').addEventListener('click', () => {
+    R.rows.push({on:true, label:'Nuova regola', trigger:'deck', code:'', qty:1}); renderRules(); update();
+  });
+  $('#resetRules').addEventListener('click', () => { R = clone(DEFAULT_RULES); renderRules(); update(); });
+  $('#stairOpening').addEventListener('input', e => { R.params.stairOpening = +e.target.value || 1; update(); });
+  $('#skirtDeck').addEventListener('input', e => { R.params.skirtDeck = Math.max(0, +e.target.value||0); update(); });
+  $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
+  $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
+  $('#q').addEventListener('input', renderCatalog);
+  $('#priceFile').addEventListener('change', async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const j = JSON.parse(await f.text());
+      if(!j || typeof j.prezzi!=='object') throw new Error('formato');
+      localStorage.setItem(PKEY, JSON.stringify(j));
+      applyPrices(j.prezzi); say('Prezzi caricati');
+    }catch(err){ say('File prezzi non valido'); }
+    e.target.value = ''; pricesInfo(); renderCatalog(); update();
+  });
+  $('#priceClear').addEventListener('click', () => {
+    try{ localStorage.removeItem(PKEY); }catch(e){}
+    if(!BASE_PRICES) for(const i of ITEMS) i.price = null;
+    pricesInfo(); renderCatalog(); update();
+  });
+}
+function pricesInfo(){
+  const n = ITEMS.filter(i => i.price!=null).length;
+  $('#pricesInfo').textContent = n ? `Prezzi di acquisto presenti per ${n} articoli su ${ITEMS.length}.` : 'Prezzi non caricati. Carica il file prezzi.json generato dallo script (resta sul tuo dispositivo, non va su GitHub).';
+  $('#priceClear').hidden = !n || BASE_PRICES;
+}
+
+load();
+loadPrices();
+bind();
+pricesInfo();
+fillForm();
+renderRules();
+renderCatalog();
+renderResult();
+renderRules();
+try{ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {}); }catch(e){}
+</script>
+</body>
+</html>
