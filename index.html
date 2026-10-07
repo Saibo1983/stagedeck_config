@@ -18,7 +18,7 @@
   --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
   --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
-  --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -28,7 +28,7 @@
     --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
     --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-    --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
@@ -36,7 +36,7 @@
   --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
   --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-  --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -130,8 +130,13 @@ tr.mod .qed span{font-weight:600;color:var(--warn)}
 .tbtn{text-align:left;cursor:pointer;font:inherit;color:inherit}
 .tbtn:hover{border-color:var(--accent)}
 .tbtn[aria-expanded="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-#shipPanel table{min-width:560px}
-#shipPanel td:nth-child(2){white-space:nowrap}
+.palgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:14px}
+.palcard{margin:0;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface);break-inside:avoid}
+.pal{width:100%;height:auto;display:block}
+.pal text{font-family:var(--f-mono);fill:var(--muted)}
+.palcard figcaption{font-size:12.5px;display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.palcard figcaption span{color:var(--muted)}
+#shipPanel .tiles{margin-top:10px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -170,12 +175,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
     --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
     --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
-    --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.tabs,footer,#tiles,#notes,#shipPanel,#stairPick,#stairInfo,#stairParts,.qed button,.sum .int{display:none!important}
+  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button,.sum .int{display:none!important}
   .grid2{display:block}
   body{padding:0;background:#fff;color:#000}
   .panel{border:0;padding:0}
@@ -189,7 +194,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   tr.grp{break-after:avoid}
   tr{break-inside:avoid}
   body[data-print="offerta"] #planPanel,body[data-print="offerta"] #stairPanel{display:none!important}
-  body[data-print="disegni"] #offerPanel{display:none!important}
+  body[data-print="disegni"] #offerPanel,body[data-print="disegni"] #shipPanel{display:none!important}
+  #shipPanel .tiles{display:flex!important}
   body[data-print="disegni"] .plan{max-height:none}
 }
 </style>
@@ -334,7 +340,6 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <div class="stack" id="result">
     <div class="printhead" id="printHead"></div>
     <div class="tiles" id="tiles"></div>
-    <div class="panel" id="shipPanel" hidden></div>
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
@@ -373,6 +378,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <span class="status" id="status" role="status" aria-live="polite"></span>
       </div>
     </div>
+    <div class="panel" id="shipPanel" hidden></div>
   </div>
 </section>
 
@@ -550,25 +556,31 @@ function pickStair(h, type, leg){
 }
 // Ingombro della scala a terra (cm). Regolabile: indicativo, dalla lunghezza dell'imballo come lunghezza del cosciale.
 // Spedizione su bancali (stima).
-// Pedane: impilate su bancali 2×1 m, uno strato = la superficie del bancale (1 pedana 2×1, 2 da 1×1, ...),
-// al massimo P.decks strati e P.h cm di altezza. Accessori: su bancali 2×1 m se c'è un pezzo più lungo di 120 cm,
-// altrimenti su bancali 120×80 cm, riempiti per volume (P.fill % del volume utile). I carrelli viaggiano da soli.
+// Pedane impilate su bancali 2×1 m: uno strato = la superficie del bancale (1 pedana 2×1, 2 da 1×1, ...),
+// al massimo P.decks strati e P.h cm di carico (bancale escluso).
+// Accessori: prima sopra le pedane, nello spazio che resta fino a P.h cm; i pezzi più lunghi di 120 cm solo su 2×1.
+// Quello che avanza: pezzi lunghi su un nuovo bancale 2×1, gli altri su bancali EPAL 120×80.
+// Lo spazio per gli accessori è il volume libero del bancale × P.fill %. I carrelli viaggiano da soli.
+const PALLETS = {big:{name:'2×1 m', L:200, W:100}, epal:{name:'EPAL 120×80 cm', L:120, W:80}};
 function shipping(lines, look, P){
-  const maxLayers = Math.max(1, Math.round(+P.decks||20)), Hmax = Math.max(50, +P.h||200)*10, fill = Math.min(1, Math.max(.1, (+P.fill||75)/100));
-  const decks = [], acc = [], carts = [], noDims = new Set();
+  const maxLayers = Math.max(1, Math.round(+P.decks||20)), Hmax = Math.max(50, +P.h||200), fill = Math.min(1, Math.max(.1, (+P.fill||75)/100));
+  const decks = [], units = [], carts = [], noDims = new Set();
   for(const l of lines){
     if(!(l.pieces>0)) continue;
     const it = look.get(ncode(l.code)) || {};
     if(TROLLEYS[it.code]){ carts.push({code:it.code, qty:l.pieces}); continue; }
     if(/PLATFORM|DECK/i.test(it.section||'') && it.pack){
       const [a,b,t] = it.pack, frac = Math.max(1/8, Math.round(a*b/(2005*1005)*8)/8);
-      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, frac:Math.min(1,frac), t, kg:it.kg||0});
+      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, frac:Math.min(1,frac), t:t/10, kg:it.kg||0});
       continue;
     }
-    if(!it.pack || l.m3==null){ noDims.add(it.code||l.code); continue; }
-    acc.push({code:it.code, qty:l.qty, isSet:l.isSet, m3:l.m3, kg:l.kg||0, long:Math.max(...it.pack)>1200});
+    if(!it.pack){ noDims.add(it.code||l.code); continue; }
+    const pk = it.pkg||1, n = Math.round(l.pieces/pk), vol = it.pack[0]*it.pack[1]*it.pack[2]/1e9;
+    const name = l.isSet ? 'set' : pk>1 ? 'conf.' : '';
+    for(let i=0;i<n;i++) units.push({code:it.code, unit:name, vol, kg:it.kg||0, long:Math.max(...it.pack)>1200});
   }
   const pallets = [];
+  const newPallet = kind => { const p = {kind, ...PALLETS[kind], layers:[], deckH:0, decks:{}, deckCount:0, acc:{}, accVol:0, kg:0}; pallets.push(p); return p; };
   // pedane: strati riempiti dalla più grande alla più piccola (misure multiple di 1/8 di 2×1: il riempimento è esatto)
   decks.sort((a,b) => b.frac-a.frac || b.t-a.t);
   const layers = [];
@@ -580,29 +592,37 @@ function shipping(lines, look, P){
   for(const t of [...new Set(layers.map(x => x.t))]){
     const ls = layers.filter(x => x.t===t), per = Math.max(1, Math.min(maxLayers, Math.floor(Hmax/t)));
     for(let i=0;i<ls.length;i+=per){
-      const chunk = ls.slice(i, i+per), items = chunk.flatMap(x => x.items), byCode = {};
-      for(const d of items) byCode[d.code] = (byCode[d.code]||0)+1;
-      pallets.push({type:'2×1 m', kind:'pedane', content:Object.entries(byCode).map(([c,n]) => `${n} × ${c}`).join(', '),
-        count:items.length, h:Math.round(chunk.length*t/10), kg:items.reduce((s,d) => s+d.kg, 0), n:1});
+      const p = newPallet('big');
+      for(const L of ls.slice(i, i+per)){
+        p.layers.push({t:L.t, used:1-Math.max(0,L.free)}); p.deckH += L.t;
+        for(const d of L.items){ p.decks[d.code] = (p.decks[d.code]||0)+1; p.deckCount++; p.kg += d.kg; }
+      }
     }
   }
-  const longCodes = acc.filter(a => a.long).map(a => a.code);
-  if(acc.length){
-    const big = longCodes.length>0, area = big ? 2.0*1.0 : 1.2*0.8;
-    const V = acc.reduce((s,a) => s+a.m3, 0), kg = acc.reduce((s,a) => s+a.kg, 0);
-    const n = Math.max(1, Math.ceil(V/(area*Hmax/1000*fill)-1e-9));
-    pallets.push({type:big ? '2×1 m' : '120×80 cm', kind:'accessori', n, m3:V, kg,
-      content:acc.map(a => `${a.qty}${a.isSet?' set':''} × ${a.code}`).join(', ')});
+  // accessori: i lunghi per primi, poi dal più voluminoso
+  const room = p => p.L*p.W*Math.max(0, Hmax-p.deckH)/1e6*fill - p.accVol;
+  units.sort((a,b) => (b.long-a.long) || b.vol-a.vol);
+  for(const u of units){
+    let p = pallets.find(x => x.kind==='big' && room(x) >= u.vol-1e-9);
+    if(!p && !u.long) p = pallets.find(x => x.kind==='epal' && room(x) >= u.vol-1e-9);
+    if(!p) p = newPallet(u.long ? 'big' : 'epal');
+    const k = u.code + (u.unit ? '|'+u.unit : '');
+    p.acc[k] = (p.acc[k]||0)+1; p.accVol += u.vol; p.kg += u.kg;
   }
-  const count = pallets.reduce((s,p) => s+p.n, 0);
-  return {pallets, count, carts, noDims:[...noDims], longCodes, maxLayers, Hmax:Hmax/10, fill:Math.round(fill*100)};
+  for(const p of pallets) p.accH = p.accVol ? Math.min(Hmax-p.deckH, p.accVol/(p.L*p.W/1e4*fill)*100) : 0;
+  const longCodes = [...new Set(units.filter(u => u.long).map(u => u.code))];
+  return {pallets, count:pallets.length, carts, noDims:[...noDims], longCodes, maxLayers, Hmax, fill:Math.round(fill*100),
+    big:pallets.filter(p => p.kind==='big').length, epal:pallets.filter(p => p.kind==='epal').length};
 }
+const accList = acc => Object.entries(acc).map(([k,n]) => { const [c,u] = k.split('|'); return `${n}${u ? ' '+u : ''} × ${c}`; }).join(', ');
 function shipSummary(sh){
-  const parts = sh.pallets.map(p => p.kind==='pedane' ? null : `${p.n} ${p.n===1?'bancale':'bancali'} ${p.type} di accessori`).filter(Boolean);
-  const dp = sh.pallets.filter(p => p.kind==='pedane');
-  if(dp.length) parts.unshift(`${dp.length} ${dp.length===1?'bancale':'bancali'} 2×1 m con ${dp.reduce((s,p) => s+p.count,0)} pedane`);
+  if(!sh.count && !sh.carts.length) return '';
+  const deckN = sh.pallets.reduce((s,p) => s+p.deckCount, 0);
+  const parts = [];
+  if(sh.big) parts.push(`${sh.big} ${sh.big===1?'bancale':'bancali'} 2×1 m` + (deckN ? ` (${deckN} pedane, accessori sopra)` : ''));
+  if(sh.epal) parts.push(`${sh.epal} EPAL 120×80 cm`);
   if(sh.carts.length) parts.push('carrelli ' + sh.carts.map(c => `${c.qty} × ${c.code}`).join(', ') + ' a parte');
-  return parts.length ? 'Spedizione (stima): ' + parts.join(', ') + '.' : '';
+  return (sh.big && sh.epal ? `Spedizione (stima): ${sh.count} bancali: ` : 'Spedizione (stima): ') + parts.join(', ') + '.';
 }
 function stairGeom(st, h, look){
   if(st.kind==='modular') return {run:st.steps*STAIR_DEPTH, len:null, angle:Math.atan2(20, STAIR_DEPTH)*180/Math.PI};
@@ -1245,32 +1265,75 @@ function renderStair(p){
   $$('#stairPick button').forEach(b => b.addEventListener('click', () => { stairSel = +b.dataset.ssel; renderStair(p); }));
 }
 
-let shipOpen = false;
+/* --- spedizione: riepilogo, bancali disegnati in assonometria e dettaglio --- */
+function palletSVG(p, Hmax){
+  // assonometria isometrica, cm: x = lunghezza (verso destra in basso), y = larghezza (verso sinistra in basso), z = altezza
+  const c30 = Math.cos(Math.PI/6), s30 = 0.5, BASE = 15;
+  const P = (x,y,z) => [(x-y)*c30, (x+y)*s30 - z];
+  const pts = a => a.map(q => q.map(v => v.toFixed(1)).join(',')).join(' ');
+  const box = (x,y,z,dx,dy,dz,top,left,right,extra='') => {
+    const A = P(x,y,z+dz), B = P(x+dx,y,z+dz), C = P(x+dx,y+dy,z+dz), D = P(x,y+dy,z+dz);
+    const E = P(x+dx,y,z), F = P(x+dx,y+dy,z), G = P(x,y+dy,z);
+    return `<polygon points="${pts([A,B,C,D])}" fill="${top}" ${extra}/>`
+      + `<polygon points="${pts([D,C,F,G])}" fill="${left}" ${extra}/>`
+      + `<polygon points="${pts([B,C,F,E])}" fill="${right}" ${extra}/>`;
+  };
+  const st = 'stroke="var(--ink)" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="round"';
+  let s = '';
+  // bancale: 3 travetti e piano
+  for(const yy of [0, p.W/2-5, p.W-10]) s += box(0, yy, 0, p.L, 10, BASE-2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
+  s += box(0, 0, BASE-2.5, p.L, p.W, 2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
+  // pedane, strato per strato (strato incompleto più corto)
+  let z = BASE;
+  for(const L of p.layers){ s += box(0, 0, z, p.L*L.used, p.W, L.t, 'var(--deck)', 'var(--deck-side-l)', 'var(--deck-side-r)', st); z += L.t; }
+  // accessori sopra
+  if(p.accH > 0.5) s += box(4, 4, z, p.L-8, p.W-8, p.accH, 'var(--acc-top)', 'var(--acc-l)', 'var(--acc-r)', st);
+  const top = z + p.accH;
+  // quota dell'altezza totale, a destra
+  const q0 = P(p.L, 0, 0), q1 = P(p.L, 0, top), qx = q0[0] + 14;
+  s += `<line x1="${qx}" y1="${q0[1]}" x2="${qx}" y2="${q1[1]}" stroke="var(--muted)" vector-effect="non-scaling-stroke"/>`
+    + `<text x="${qx+6}" y="${(q0[1]+q1[1])/2}" font-size="13" dominant-baseline="middle">${Math.round(top)} cm</text>`;
+  // vista fissa: stessa scala per tutti i bancali (2×1 m alto Hmax + bancale)
+  const vb0 = P(0, 100, 0)[0]-6, vb1 = P(200, 0, 0)[0]+70, vt = P(0, 0, BASE+Hmax)[1]-10, vbt = P(200, 100, 0)[1]+8;
+  return `<svg class="pal" viewBox="${vb0} ${vt} ${vb1-vb0} ${vbt-vt}" role="img" aria-label="Bancale ${esc(p.name)} alto ${Math.round(top)} cm">${s}</svg>`;
+}
 function renderShip(){
-  const box = $('#shipPanel'), sh = res && res.ship;
-  box.hidden = !shipOpen || !sh;
+  const box = $('#shipPanel'), sh = res && res.ship, t = res && res.totals;
+  box.hidden = !sh || !t;
   if(box.hidden) return;
-  const rows = sh.pallets.map(p => `<tr><td class="num">${p.n}</td><td>Bancale ${p.type}</td><td>${p.kind==='pedane' ? `Pedane: ${esc(p.content)}` : `Accessori${p.n>1?' (divisi sui bancali)':''}: ${esc(p.content)}`}</td>`
-    + `<td class="num">${p.kind==='pedane' ? p.h+' cm' : dec(p.m3/p.n,2)+' m³'}</td><td class="num">${dec(p.kg/p.n,0)} kg</td></tr>`).join('');
+  const cards = sh.pallets.map((p,i) => {
+    const what = [p.deckCount ? `Pedane: ${Object.entries(p.decks).map(([c,n]) => `${n} × ${c}`).join(', ')}` : '', Object.keys(p.acc).length ? `Accessori: ${accList(p.acc)}` : ''].filter(Boolean);
+    return `<figure class="palcard">${palletSVG(p, sh.Hmax)}<figcaption><div><b>${i+1}. Bancale ${esc(p.name)}</b> · ${dec(p.kg,0)} kg`
+      + `${p.deckCount ? ` · ${p.deckCount} pedane, ${Math.round(p.deckH)} cm` : ''}${p.accVol ? ` · accessori ${dec(p.accVol,2)} m³` : ''}</div>`
+      + what.map(w => `<span>${esc(w)}</span>`).join('') + `</figcaption></figure>`;
+  }).join('');
   const notes = [
-    `Pedane: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico per bancale 2×1 m; uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.`,
-    sh.longCodes.length ? `Pezzi più lunghi di 120 cm (${listCodes([...new Set(sh.longCodes)])}): accessori su bancale 2×1 m.` : 'Nessun pezzo più lungo di 120 cm: accessori su bancale 120×80 cm.',
-    `Accessori stimati sul volume degli imballi, riempiendo il ${sh.fill}% del bancale fino a ${sh.Hmax} cm. Peso per bancale senza il bancale stesso.`,
+    `Pedane su bancali 2×1 m: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico, bancale escluso. Uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.`,
+    `Accessori sopra le pedane finché c'è spazio (fino a ${sh.Hmax} cm, riempimento ${sh.fill}% del volume libero); quello che avanza va su EPAL 120×80 cm, i pezzi più lunghi di 120 cm${sh.longCodes.length ? ' ('+listCodes(sh.longCodes)+')' : ''} solo su bancali 2×1 m.`,
+    'Il disegno è indicativo: gli accessori sono un blocco unico con il loro volume. Pesi senza il bancale.',
     sh.carts.length ? `Carrelli a parte: ${sh.carts.map(c => c.qty+' × '+c.code).join(', ')}.` : '',
     sh.noDims.length ? `Senza misure d'imballo, non conteggiati: ${listCodes(sh.noDims)}.` : ''
   ].filter(Boolean);
-  box.innerHTML = `<h2>Bancali per la spedizione</h2>`
-    + (rows ? `<div class="tablewrap"><table><thead><tr><th class="num">N.</th><th>Bancale</th><th>Contenuto</th><th class="num">Altezza / volume</th><th class="num">Peso cad.</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="hint">Nessun articolo da spedire.</p>')
-    + `<ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+  box.innerHTML = `<h2>Spedizione</h2>
+    <div class="tiles">
+      <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
+      <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
+      <div class="tile"><div class="k">Bancali 2×1 m</div><div class="v">${sh.big}</div></div>
+      <div class="tile"><div class="k">EPAL 120×80</div><div class="v">${sh.epal}</div></div>
+    </div>
+    ${cards ? `<div class="palgrid">${cards}</div>` : '<p class="hint">Nessun articolo da spedire.</p>'}
+    <div class="legend"><span><i style="background:var(--pal-l)"></i>Bancale</span><span><i style="background:var(--deck-side-l)"></i>Pedane</span><span><i style="background:var(--acc-l)"></i>Accessori</span></div>
+    <ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
 function renderResult(){
   res = compute(cfg, R, LOOK, KITS);
   const t = res.totals;
+  const sumQ = g => (res.lines||[]).filter(l => l.group===g && /PLATFORM|DECK/i.test((LOOK.get(ncode(l.code))||{}).section||'')).reduce((a,l) => a+l.qty, 0);
+  const nDecks = sumQ('Pedana'), nRampDecks = sumQ('Rampe');
   $('#tiles').innerHTML = t ? `
     <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
     <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
-    <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
-    <button type="button" class="tile tbtn" id="shipBtn" aria-expanded="${shipOpen}" aria-controls="shipPanel"><div class="k">Volume imballi · ${res.ship.count} ${res.ship.count===1?'bancale':'bancali'} ${shipOpen?'▴':'▾'}</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></button>` : '';
+    <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
   renderShip();
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
@@ -1531,7 +1594,6 @@ function bind(){
   });
   $('#copyText').addEventListener('click', () => copy(offerText()));
   $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
-  $('#tiles').addEventListener('click', e => { if(e.target.closest('#shipBtn')){ shipOpen = !shipOpen; renderResult(); } });
   $('#offerTable').addEventListener('click', e => {
     const b = e.target.closest('button[data-adj]'); if(!b) return;
     const k = b.dataset.adj, v = (cfg.adj[k]||0) + (+b.dataset.d);
