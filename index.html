@@ -340,7 +340,6 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="params">
       <label class="field"><span>Apertura scala (m)</span><input type="number" id="stairOpening" min="0.5" step="0.5" inputmode="decimal"></label>
       <label class="field"><span>Apertura rampa (m)</span><input type="number" id="rampOpening" min="0.5" step="0.5" inputmode="decimal"></label>
-      <label class="field"><span>Mascheratura: cm aggiunti all'altezza</span><input type="number" id="skirtDeck" min="0" step="1" inputmode="decimal"></label>
       <label class="field"><span>Capacità VTT (m² di deck)</span><input type="number" data-cap="VTT" min="1" step="1"></label>
       <label class="field"><span>Capacità VDT (m²)</span><input type="number" data-cap="VDT" min="1" step="1"></label>
       <label class="field"><span>Capacità VGT (m²)</span><input type="number" data-cap="VGT" min="1" step="1"></label>
@@ -450,7 +449,7 @@ const TRIGGERS = {
 // when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
 const DEFAULT_RULES = {
   v:5,
-  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, skirtDeck:9, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
+  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
   rows:[
     {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
     {on:true, label:'Connettore per 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe). Sul perimetro, dove si incontrano 2 gambe, un connettore doppio, al massimo 20 cm sotto il deck.'},
@@ -721,9 +720,10 @@ function compute(cfg, R, look, kits){
   if(skSides.length){
     const fab = SKIRT_FABRICS[sk.fabric] ? sk.fabric : 'PSP-S';
     const manual = sk.height && sk.height!=='auto';
-    const need = H + (R.params.skirtDeck!=null ? +R.params.skirtDeck : 9);
-    const sh = manual ? +sk.height : ([20,40,60,80,100].find(x => x>=need-1e-9) || 100);
-    if(!manual && need>100+1e-9) warn('warn',`Altezza palco con deck ${nf(need)} cm: il telo più alto è 100 cm. Gli ho messo 100 cm.`);
+    // L'altezza del palco è quella finita (piano del deck da terra): il telo standard che la copre.
+    const sh = manual ? +sk.height : ([20,40,60,80,100].find(x => x>=H-1e-9) || 100);
+    if(!manual && H>100) warn('warn',`Palco alto ${H} cm: il telo più alto a listino è 100 cm, sotto resta scoperta una fascia di ${H-100} cm.`);
+    if(manual && sh<H) warn('warn',`Telo da ${sh} cm su un palco alto ${H} cm: sotto resta scoperta una fascia di ${H-sh} cm.`);
     const PROF = {2:'SKP1970', 1:'SKP970', 0.5:'SKP470'};
     const lens = {};
     for(const s of skSides){
@@ -1282,7 +1282,6 @@ function ruleHint(r){
 function renderRules(){
   $('#stairOpening').value = R.params.stairOpening;
   $('#rampOpening').value = R.params.rampOpening;
-  $('#skirtDeck').value = R.params.skirtDeck;
   $$('[data-cap]').forEach(i => i.value = R.params.cap[i.dataset.cap]);
   $('#rulesList').innerHTML = R.rows.map((r,i) => `
     <div class="rule ${r.on?'':'off'}" data-rule="${i}">
@@ -1400,7 +1399,6 @@ function bind(){
   });
   $('#resetRules').addEventListener('click', () => { R = clone(DEFAULT_RULES); renderRules(); update(); });
   $('#stairOpening').addEventListener('input', e => { R.params.stairOpening = +e.target.value || 1; update(); });
-  $('#skirtDeck').addEventListener('input', e => { R.params.skirtDeck = Math.max(0, +e.target.value||0); update(); });
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);
