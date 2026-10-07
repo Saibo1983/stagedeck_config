@@ -119,6 +119,14 @@ input:disabled{opacity:.5}
 .stairparts button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
 .stairparts button.on,.stairparts button:hover{border-color:var(--stair);background:var(--accent-soft)}
 .stairparts b{font-family:var(--f-mono);font-weight:500;margin-right:4px}
+.qed{display:inline-flex;align-items:center;gap:4px}
+.qed button{width:24px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;line-height:1;padding:0;font-size:15px}
+.qed button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.qed button:disabled{opacity:.35;cursor:default}
+.qed span{min-width:2.2ch;text-align:right}
+tr.mod td{background:var(--warn-bg)}
+tr.mod .qed span{font-weight:600;color:var(--warn)}
+@media print{.qed button{display:none}}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -326,6 +334,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="btn primary" id="copyText">Copia offerta</button>
         <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
         <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
+        <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
         <span class="status" id="status" role="status" aria-live="polite"></span>
       </div>
     </div>
@@ -396,7 +405,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <script>
 "use strict";
 // ==ENGINE-START==
-const GROUPS = ['Piano di calpestio','Appoggi','Collegamenti','Parapetti','Scale e rampe','Mascheratura','Trasporto','Varie'];
+const GROUPS = ['Piano di calpestio','Appoggi','Collegamenti','Parapetti','Scale','Rampe','Mascheratura','Trasporto','Varie'];
 // Carrelli: capacità in m² di deck (VTT 15 deck 2×1, VDT 6 deck 2×1, VTSP 15 deck 1×1, FLSP 6 deck 1×1). VGT: capacità non indicata, uguale a VTT (da verificare).
 const TROLLEYS = {
   VTT:{label:'VTT carrello deck orizzontale (15 deck 2×1)', cap:30, sys:'stage'},
@@ -438,12 +447,12 @@ const TRIGGERS = {
   rail:{label:'per ogni elemento di parapetto', group:'Parapetti'},
   rail_link:{label:'per ogni unione tra parapetti sullo stesso lato', group:'Parapetti'},
   rail_corner:{label:'per ogni angolo tra due lati con parapetto', group:'Parapetti'},
-  stair:{label:'per ogni scala', group:'Scale e rampe'},
-  stair_modular:{label:'per ogni scala modulare', group:'Scale e rampe'},
-  stair_modular_rails:{label:'per ogni coppia di gradini modulari, per lato con corrimano', group:'Scale e rampe'},
-  stair_adjustable:{label:'per ogni scala regolabile', group:'Scale e rampe'},
-  stair_adjustable_rail:{label:'per ogni scala regolabile con corrimano (4, 5 o 7 gradini)', group:'Scale e rampe'},
-  stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale e rampe'},
+  stair:{label:'per ogni scala', group:'Scale'},
+  stair_modular:{label:'per ogni scala modulare', group:'Scale'},
+  stair_modular_rails:{label:'per ogni coppia di gradini modulari, per lato con corrimano', group:'Scale'},
+  stair_adjustable:{label:'per ogni scala regolabile', group:'Scale'},
+  stair_adjustable_rail:{label:'per ogni scala regolabile con corrimano (4, 5 o 7 gradini)', group:'Scale'},
+  stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale'},
   fixed:{label:'una sola volta', group:'Varie'}
 };
 // when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
@@ -648,14 +657,14 @@ function compute(cfg, R, look, kits){
   M.stair_adjustable = stair && stair.kind==='adjustable' ? nStairs : 0;
   M.stair_adjustable_rail = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=1).length : 0;
   M.stair_adjustable_rail2 = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=2).length : 0;
-  if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nStairs});
+  if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale', code:pt.code, qty:pt.qty*nStairs});
   let kit = null, rampLen = 0;
   if(nRamps){
     kit = (kits||[]).find(k => H>=k.lo && H<=k.hi) || null;
     if(!kit) warn('bad',`Nessuna rampa nel listino per ${H} cm (disponibili: ${(kits||[]).map(k => k.lo===k.hi ? k.lo : k.lo+'–'+k.hi).join(', ')||'nessuna'} cm).`);
     else{
       for(const pt of kit.parts){
-        out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nRamps});
+        out.lines.push({group:'Rampe', code:pt.code, qty:pt.qty*nRamps});
         const m = /^VS750H-(\d+(?:,\d+)?)[x×]/i.exec(pt.code);
         if(m) rampLen += parseFloat(m[1].replace(',','.'))*pt.qty;
       }
@@ -767,24 +776,30 @@ function compute(cfg, R, look, kits){
     if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
   }
   const mk = 1 + (+cfg.markup||0)/100;
-  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [];
+  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [];
+  const adjMap = cfg.adj || {};
   for(const l of agg.values()){
     const it = look.get(ncode(l.code));
     if(!it){ warn('bad',`Il codice ${l.code} non è nel listino.`); continue; }
     if(it.price==null) noPrice.push(it.code);
     const pr = it.price||0;
     // Confezioni: le gambe sono vendute a set da 4 (qui qty e prezzo sono per set); i connettori da 3 restano a pezzi.
-    const pk = it.pkg||1, pieces = Math.ceil(l.qty/pk-1e-9)*pk, sets = pieces/pk;
+    const pk = it.pkg||1, autoPieces = Math.ceil(l.qty/pk-1e-9)*pk;
     const isSet = pk===4 && /leg/i.test(it.name);
-    if(pieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${pieces}`);
+    if(autoPieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${autoPieces}`);
+    // Quantità modificata a mano con + e −: un passo = 1 pezzo, o 1 confezione per gli articoli in confezione.
+    const key = l.group+'|'+ncode(l.code), adj = Math.max(-autoPieces/pk, Math.round(+adjMap[key]||0));
+    const pieces = autoPieces + adj*pk, sets = pieces/pk;
+    if(adj) adjNotes.push(`${it.code} ${adj>0?'+':'−'}${Math.abs(adj)*(isSet?1:pk)}${isSet?' set':''}`);
     const qty = isSet ? sets : pieces, unit = r2(pr*mk*(isSet ? pk : 1));
     const kg = it.kg!=null ? it.kg*sets : null;
     const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
     if(kg==null) noKg.push(it.code);
     if(m3==null) noVol.push(it.code);
-    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3});
+    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3});
   }
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
   if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
   if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
@@ -842,7 +857,7 @@ const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
   W:4, D:4, H:60, family:'hexa', tele:false,
   rails:{back:true, left:true, right:true, front:false}, kick:false,
-  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[],
+  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
   markup:0, discount:0, vat:22
 };
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -855,6 +870,7 @@ function load(){
     if(s && s.cfg) cfg = Object.assign(clone(DEFAULT_CFG), s.cfg);
     cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
     cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
+    cfg.adj = (cfg.adj && typeof cfg.adj==='object') ? cfg.adj : {};
     cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
     if(s && s.rules && s.rules.rows && s.rules.v===4){
       s.rules.v = 5;
@@ -1155,9 +1171,13 @@ function renderResult(){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="4">${g}</td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.kg||0),0),1)}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.m3||0),0),3)}</td></tr>`;
-    for(const l of ls) html += `<tr><td class="code">${esc(l.code)}</td><td>${esc(l.name)}</td><td class="num">${l.qty}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td><td class="num">${l.kg==null?'–':dec(l.kg,1)}</td><td class="num">${l.m3==null?'–':dec(l.m3,3)}</td></tr>`;
+    for(const l of ls) html += `<tr${l.adj ? ' class="mod"' : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}</td><td class="num"><span class="qed">`
+      + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
+      + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
+      + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td><td class="num">${l.kg==null?'–':dec(l.kg,1)}</td><td class="num">${l.m3==null?'–':dec(l.m3,3)}</td></tr>`;
   }
   $('#offerTable').innerHTML = html + '</tbody></table>';
+  $('#adjReset').hidden = !res.lines.some(l => l.adj);
   $('#techNotes').innerHTML = res.notes.map(n => `<li>${esc(n)}</li>`).join('');
   $('#sum').innerHTML = `
     <div class="int"><span>Acquisto (interno)</span><span class="num">${money(t.cost)} €</span></div>
@@ -1189,7 +1209,7 @@ function offerText(){
   if(d) out.push('Data: '+d);
   out.push(`Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
   out.push(pad('Codice',16)+pad('Descrizione',46)+lpad('Q.tà',5)+lpad('Prezzo',11)+lpad('Totale',12));
-  for(const l of res.lines) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
+  for(const l of res.lines.filter(l => l.qty>0)) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
   out.push('', `Subtotale: ${money(t.gross)} €`);
   if(t.disc) out.push(`Sconto ${dec(+cfg.discount,1)}%: -${money(t.disc)} €`);
   out.push(`Imponibile: ${money(t.net)} €`, `IVA ${dec(+cfg.vat||0,0)}%: ${money(t.vat)} €`, `Totale: ${money(t.grand)} €`, '',
@@ -1202,6 +1222,7 @@ function orderRows(){
   const rows = [['Product Code','Product Name','Quantity','Unit']];
   if(!res || !res.plan) return rows;
   for(const l of res.lines){
+    if(l.qty<=0) continue;
     const isSet = l.isSet;
     let name = l.rawName;
     if(/^VFL\d+$/.test(l.code) && !/^VFL(20|40|60|80|100)$/.test(l.code)) name = `square leg ${l.code.slice(3)}cm (intermediate height)`;
@@ -1267,7 +1288,7 @@ function offerTsv(){
   if(!res || !res.plan) return '';
   const rows = [['Codice','Descrizione','Quantità','Prezzo unitario','Totale','Peso kg','Volume m3']];
   const c = n => n==null ? '' : String(Math.round(n*1000)/1000).replace('.',',');
-  for(const l of res.lines) rows.push([l.code,l.name,l.qty,c(l.unit),c(l.total),c(l.kg),c(l.m3)]);
+  for(const l of res.lines.filter(l => l.qty>0)) rows.push([l.code,l.name,l.qty,c(l.unit),c(l.total),c(l.kg),c(l.m3)]);
   return rows.map(r => r.join('\t')).join('\n');
 }
 
@@ -1378,6 +1399,15 @@ function bind(){
   });
   $('#copyText').addEventListener('click', () => copy(offerText()));
   $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
+  $('#offerTable').addEventListener('click', e => {
+    const b = e.target.closest('button[data-adj]'); if(!b) return;
+    const k = b.dataset.adj, v = (cfg.adj[k]||0) + (+b.dataset.d);
+    if(v) cfg.adj[k] = v; else delete cfg.adj[k];
+    update();
+    const again = $(`#offerTable button[data-adj="${CSS.escape(k)}"][data-d="${b.dataset.d}"]`);
+    if(again && !again.disabled) again.focus();
+  });
+  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; update(); });
   $('#dlOrder').addEventListener('click', downloadOrder);
 
   // regole
