@@ -41,3 +41,8 @@ Nel listino gambe (set da 4) e connettori VD2D, VDL, D2DC (set da 3) hanno prezz
 
 ## Ordine al fornitore
 Il pulsante «Ordine fornitore (Excel)» scarica un .xlsx con Product Code, Product Name, Quantity e Unit. Le gambe sono in set da 4, tutto il resto in pezzi.
+
+## Scale
+- Scala modulare: elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...). L'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm servono VSM20 + VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; per altre altezze l'app usa la scala regolabile (o avvisa, se è scelta «Modulare»). Un palco da 20 cm non ha scala.
+- Scala regolabile: il modello va abbinato alla gamba telescopica con la stessa escursione (VAS-2↔VTL40, VAS-4↔VTL60, VAS-5↔VTL80, VAS-7↔VTL100). Con le gambe telescopiche l'app sceglie la scala dello stesso modello; con le gambe fisse lo segnala.
+- Il riquadro «Scala in offerta» mostra la scala vista di lato con i pezzi messi in offerta: tocca un pezzo (o il suo codice) per vedere cos'è. L'ingombro a terra della scala regolabile è indicativo.

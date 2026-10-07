@@ -102,6 +102,23 @@ input:disabled{opacity:.5}
 .plan{width:100%;height:auto;display:block;max-height:560px}
 .panel>h2{margin-bottom:10px}
 .plan text{font-family:var(--f-mono);fill:var(--muted)}
+#stairPick{margin-bottom:10px;flex-wrap:wrap}
+#stairPick button{flex:1 1 120px}
+.side{width:100%;height:auto;display:block;max-height:380px}
+.side text{font-family:var(--f-mono);fill:var(--muted)}
+.side .sp{cursor:pointer}
+.side .sp .b{fill:var(--stair);fill-opacity:.14;stroke:var(--stair)}
+.side .sp .l{stroke:var(--stair);fill:none}
+.side .sp:hover .b,.side .sp.on .b{fill-opacity:.45}
+.side .sp:hover .l,.side .sp.on .l{stroke:var(--rail)}
+.side .sp:focus{outline:none}
+.side .sp:focus-visible .b{stroke:var(--rail)}
+.stairinfo{min-height:1.5em;margin:8px 0 6px;font-size:13px}
+.stairinfo .code{margin-right:6px}
+.stairparts{display:flex;flex-wrap:wrap;gap:6px}
+.stairparts button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.stairparts button.on,.stairparts button:hover{border-color:var(--stair);background:var(--accent-soft)}
+.stairparts b{font-family:var(--f-mono);font-weight:500;margin-right:4px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -291,6 +308,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <span>Retro in alto, fronte in basso</span>
       </div>
     </div>
+    <div class="panel" id="stairPanel" hidden>
+      <h2>Scala in offerta</h2>
+      <div class="seg" id="stairPick" role="group" aria-label="Scegli la scala da vedere"></div>
+      <div id="stairBox"></div>
+      <p class="stairinfo" id="stairInfo" aria-live="polite"></p>
+      <div class="stairparts" id="stairParts"></div>
+    </div>
     <div class="panel">
       <h2 id="offerTitle">Offerta</h2>
       <div class="tablewrap" id="offerTable"></div>
@@ -332,7 +356,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <ul class="assump">
       <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
       <li>Ogni deck ha le sue 4 gambe. Dove si incontrano 2 gambe serve un morsetto singolo, dove se ne incontrano 4 uno doppio (manuale Larcher). I giunti sono i lati in comune tra due deck.</li>
-      <li>Le scale modulari hanno un gradino ogni 20 cm: per un palco da 60 cm sono VSM20, VSM40 e VSM60. Sopra 80 cm si usa la scala regolabile, che non ha corrimano a 2 gradini.</li>
+      <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
+      <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
       <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
@@ -458,15 +483,27 @@ function pickLeg(h, tele){
   if(FIXED_LEGS[h]) return {code:FIXED_LEGS[h], note:'gamba fissa', tele:false};
   return null;
 }
-// Scala modulare: un gradino ogni 20 cm di altezza (VSM20, VSM40, ... fino all'altezza del palco).
-function pickStair(h, type){
-  const mod = (h>=20 && h<=80 && h%20===0)
-    ? {kind:'modular', steps:h/20, parts:Array.from({length:h/20},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
-  const a = ADJ_STAIRS.find(([x,y]) => h>=x && h<=y);
-  const adj = a ? {kind:'adjustable', steps:0, rails:a[2]!=='VAS-2', parts:[{code:a[2], qty:1}]} : null;
+// Scala modulare: elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...). L'ultimo gradino è 20 cm sotto il palco,
+// quindi per un palco da H servono VSM20 ... VSM(H-20). Solo per altezze multiple di 20, da 40 a 100 cm.
+// Scala regolabile: il modello va abbinato alla gamba telescopica con la stessa escursione (VTL40↔VAS-2, VTL60↔VAS-4, ...).
+const STAIR_DEPTH = 29;   // cm, profondità di un elemento modulare (imballo VSM: 915 × 290 mm)
+function pickStair(h, type, leg){
+  const mod = (h>=40 && h<=100 && h%20===0)
+    ? {kind:'modular', steps:h/20-1, parts:Array.from({length:h/20-1},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
+  const ti = leg && leg.tele ? TELE_LEGS.findIndex(t => t[2]===leg.code) : -1;
+  const a = ti>=0 ? ADJ_STAIRS[ti] : ADJ_STAIRS.find(([x,y]) => h>=x && h<=y);
+  const adj = a ? {kind:'adjustable', model:a[2], lo:a[0], hi:a[1], steps:+a[2].split('-')[1], legCode:TELE_LEGS[ADJ_STAIRS.indexOf(a)][2],
+    rails:a[2]!=='VAS-2', parts:[{code:a[2], qty:1}]} : null;
   if(type==='modular') return mod;
   if(type==='adjustable') return adj;
   return mod || adj;
+}
+// Ingombro della scala a terra (cm). Regolabile: indicativo, dalla lunghezza dell'imballo come lunghezza del cosciale.
+function stairGeom(st, h, look){
+  if(st.kind==='modular') return {run:st.steps*STAIR_DEPTH, len:null, angle:Math.atan2(20, STAIR_DEPTH)*180/Math.PI};
+  const it = look.get(ncode(st.model)), L = it && it.pack ? it.pack[0]/10 : (st.steps+1)*30;
+  const run = Math.sqrt(Math.max(L*L - h*h, (L*0.3)**2));
+  return {run, len:L, angle:Math.atan2(h, run)*180/Math.PI};
 }
 function tile(Wc, Dc, sizes, st){
   const g = new Uint8Array(Wc*Dc), out = [], cands = [];
@@ -588,8 +625,17 @@ function compute(cfg, R, look, kits){
 
   // --- scale e rampe
   const nStairs = cfg.stairs.length, nRamps = (cfg.ramps||[]).length;
-  const stair = nStairs ? pickStair(H, cfg.stairType) : null;
-  if(nStairs && !stair) warn('bad',`Nessuna scala del tipo scelto per ${H} cm (modulari 20, 40, 60, 80 cm; regolabili 40–180 cm).`);
+  const stair = nStairs && H>20 ? pickStair(H, cfg.stairType, leg) : null;
+  if(nStairs && H<=20) out.notes.push('Palco da 20 cm: la scala non serve (l\'ultimo gradino sarebbe a 0 cm).');
+  else if(nStairs && !stair) warn('bad', cfg.stairType==='modular'
+    ? `La scala modulare ha elementi da 20 cm e l'ultimo gradino sta 20 cm sotto il palco: si compone solo per palchi da 40, 60, 80 o 100 cm. Con ${H} cm scegli la scala regolabile.`
+    : `Nessuna scala del tipo scelto per ${H} cm (modulari per palchi da 40 a 100 cm a passi di 20; regolabili 40–180 cm).`);
+  if(stair && stair.kind==='modular') out.notes.push(`Scala modulare: ${stair.parts.map(p => p.code).join(' + ')}, ultimo gradino a ${H-20} cm, 20 cm sotto il palco.`);
+  if(stair && stair.kind==='adjustable'){
+    if(H<stair.lo || H>stair.hi) warn('bad',`La scala ${stair.model} va da ${stair.lo} a ${stair.hi} cm: con ${H} cm non si monta.`);
+    out.notes.push(`Scala regolabile ${stair.model} (${stair.lo}–${stair.hi} cm), da abbinare alle gambe telescopiche ${stair.legCode}.`);
+    if(leg && !leg.tele) warn('warn',`La scala regolabile ${stair.model} va abbinata alle gambe telescopiche ${stair.legCode}, ma il palco è su gambe fisse ${leg.code}.`);
+  }
   M.stair = stair ? nStairs : 0;
   M.stair_modular = stair && stair.kind==='modular' ? nStairs : 0;
   const sr = cfg.stairs.map(s => s.rails===0 ? 0 : s.rails===1 ? 1 : 2);
@@ -747,7 +793,8 @@ function compute(cfg, R, look, kits){
     kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
     pieces: lines.reduce((s,l) => s+l.pieces,0), area: W*D};
   out.plan = {W, D, decks, vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
-    skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair};
+    skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
+    stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
   out.info.famLabel = fam.label;
   out.info.support = support;
@@ -878,7 +925,16 @@ function renderExtras(){
 
 /* --- risultato --- */
 function planSVG(p, H){
-  const W = p.W*100, D = p.D*100, sd = 80;  // sd: profondità disegnata della scala (cm)
+  const W = p.W*100, D = p.D*100, sd = p.stair ? Math.max(30, p.stair.run) : 80;  // sd: profondità della scala (cm)
+  // pedate in pianta, come distanze [a,b] dal bordo del palco (cm)
+  const treads = [];
+  if(p.stair){
+    const n = p.stair.steps;
+    for(let k=1;k<=n;k++){
+      if(p.stair.kind==='modular') treads.push({k, a:(n-k)*STAIR_DEPTH, b:(n-k+1)*STAIR_DEPTH});
+      else{ const c = sd*(1-k/(n+1)), tw = Math.min(30, sd/(n+1)*1.1); treads.push({k, a:c-tw/2, b:c+tw/2}); }
+    }
+  }
   const ext = side => Math.max(100, p.stairs[side] ? sd+60 : 0, p.ramps[side] ? p.rampLen*100+60 : 0);
   const mT = ext('back'), mB = ext('front'), mL = ext('left'), mR = ext('right');
   const vbw = W+mL+mR, vbh = D+mT+mB, px = Math.max(vbw/640, vbh/640*0.8);
@@ -920,10 +976,14 @@ function planSVG(p, H){
     for(let i=0;i<p.stairs[side];i++){
       const {x,y,w,h} = slot(side, i*p.opening, p.opening, sd);
       const col = p.stairOk ? 'var(--stair)' : 'var(--bad)';
-      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
-      for(let k=1;k<=3;k++){
-        const t = k/4;
-        s += horiz ? seg(x,y+h*t,x+w,y+h*t,col,1) : seg(x+w*t,y,x+w*t,y+h,col,1);
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".08" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+      // pedate: una per gradino, alla distanza dal bordo del palco che hanno nella vista laterale (1 = la più bassa)
+      for(const tr of treads){
+        const a = tr.a, b = tr.b;
+        const r = side==='back' ? {x, y:-b, w, h:b-a} : side==='front' ? {x, y:D+a, w, h:b-a}
+                : side==='left' ? {x:-b, y, w:b-a, h} : {x:W+a, y, w:b-a, h};
+        s += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+        if((b-a)/px >= 11) s += `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+fs*.3}" font-size="${fs*.85}" text-anchor="middle">${tr.k}</text>`;
       }
     }
     for(let j=0;j<p.ramps[side];j++){
@@ -941,6 +1001,105 @@ function planSVG(p, H){
   return s + '</svg>';
 }
 
+/* --- scala in offerta: vista laterale interattiva (palco a destra, scala a sinistra, misure in cm) --- */
+let stairSel = 0;
+function stairPieces(st, rails){
+  const rule = trig => R.rows.find(r => r.on && r.trigger===trig && +r.qty>0);
+  const out = st.parts.map(p => ({code:p.code, qty:p.qty}));
+  const add = (r, n) => { if(r && n>0) out.push({code:r.code, qty:Math.ceil(n*r.qty-1e-9), rail:true}); };
+  if(st.kind==='modular') add(rule('stair_modular_rails'), rails*Math.floor(st.steps/2));
+  else if(st.rails){ if(rails>=1) add(rule('stair_adjustable_rail'), 1); if(rails>=2) add(rule('stair_adjustable_rail2'), 1); }
+  return out;
+}
+function stairSVG(st, rails){
+  const H = st.H, run = st.run, DW = 120, RH = 90;   // DW: tratto di palco disegnato, RH: altezza corrimano
+  const x0 = -run-30, x1 = DW+45, y0 = -H-RH-35, y1 = 45;
+  const px = Math.max((x1-x0)/640, (y1-y0)/340), fs = 11*px;
+  const ln = (a,b,c,d,cl='l',w=1.5,extra='') => `<line class="${cl}" x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke-width="${w}" vector-effect="non-scaling-stroke"${extra}/>`;
+  const hit = (a,b,c,d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="transparent" stroke-width="18" vector-effect="non-scaling-stroke"/>`;  // area da toccare
+  const piece = (code, inner, label) => `<g class="sp" data-code="${esc(code)}" tabindex="0" role="button" aria-label="${esc(label)}">${inner}</g>`;
+  let s = `<svg class="side" viewBox="${x0} ${y0} ${x1-x0} ${y1-y0}" role="img" aria-label="Vista laterale della scala">`;
+  // terreno e palco
+  s += `<line x1="${x0}" y1="0" x2="${x1}" y2="0" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  s += `<rect x="0" y="${-H}" width="${DW}" height="9" fill="var(--deck)" stroke="var(--deck-line)" vector-effect="non-scaling-stroke"/>`;
+  if(H>9) for(const lx of [3, DW-9]) s += `<rect x="${lx}" y="${-H+9}" width="6" height="${H-9}" fill="var(--leg)"/>`;
+  if(st.kind==='modular'){
+    const n = st.steps, d = STAIR_DEPTH;
+    st.parts.forEach((p,i) => {
+      const h = 20*(i+1), x = -(n-i)*d;
+      const name = (LOOK.get(ncode(p.code))||{}).name || p.code;
+      s += piece(p.code, `<rect class="b" x="${x}" y="${-h}" width="${d}" height="${h}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`+ln(x,-h,x+d,-h,'l',3)
+        + (d/px>26 ? `<text x="${x+d/2}" y="${-h/2+fs*.35}" font-size="${fs*.9}" text-anchor="middle">${i+1}°</text>` : ''), `${p.code}, ${name}`);
+    });
+    // corrimano: uno ogni 2 gradini adiacenti, partendo dal basso
+    const hr = stairPieces(st, rails).find(p => p.rail);
+    if(hr) for(let j=0;j+1<n;j+=2){
+      const xa = -(n-j)*d + d/2, ya = -20*(j+1)-RH, xb = -(n-j-1)*d + d/2, yb = -20*(j+2)-RH;
+      s += piece(hr.code, hit(xa,ya,xb,yb)+ln(xa,ya,xb,yb,'l',3)+ln(xa,ya,xa,-20*(j+1))+ln(xb,yb,xb,-20*(j+2)), `${hr.code}, corrimano`);
+    }
+    s += `<text x="${-n*d/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">${n*d} cm</text>`;
+    s += `<text x="${-d*n-6*px}" y="${-H+20+fs*.35}" font-size="${fs}" text-anchor="end">ultimo gradino ${H-20} cm</text>`;
+    s += ln(-d*n, -H+20, 0, -H+20, '', 1, ' stroke="var(--muted)" stroke-dasharray="3 3"');
+  }else{
+    const n = st.steps, L = st.len;
+    let inner = ln(-run, 0, 0, -H, 'l', 4);
+    for(let k=1;k<=n;k++){
+      const t = k/(n+1), x = -run*(1-t), y = -H*t, tw = Math.min(30, run/(n+1)*1.1);
+      inner += ln(x-tw/2, y, x+tw/2, y, 'l', 3);
+    }
+    s += piece(st.model, `<polygon points="${-run},0 0,0 0,${-H}" fill="transparent"/>` + inner, `${st.model}, scala regolabile`);
+    // 2 corrimano: quello sul lato lontano un po' più indietro e tratteggiato
+    stairPieces(st, rails).filter(p => p.rail).forEach((hr, i) => {
+      const o = i*12, da = i ? ' stroke-dasharray="6 4"' : '';
+      s += piece(hr.code, hit(-run+o, -RH-o*.4, o, -H-RH-o*.4)+ln(-run+o, -RH-o*.4, o, -H-RH-o*.4, 'l', 3, da)+ln(-run+o,-RH-o*.4,-run+o,0,'l',1.5,da)+ln(o,-H-RH-o*.4,o,-H,'l',1.5,da), `${hr.code}, corrimano`);
+    });
+    s += `<text x="${-run/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">a terra circa ${Math.round(run)} cm · ${Math.round(st.angle)}°</text>`;
+    s += `<text x="${-run/2}" y="${fs*3}" font-size="${fs*.9}" text-anchor="middle">${n} gradini · cosciale ${Math.round(L)} cm</text>`;
+  }
+  // quota altezza palco
+  const qx = DW+18;
+  s += ln(qx, 0, qx, -H, '', 1, ' stroke="var(--muted)"') + ln(qx-5*px,-H,qx+5*px,-H,'',1,' stroke="var(--muted)"') + ln(qx-5*px,0,qx+5*px,0,'',1,' stroke="var(--muted)"');
+  s += `<text transform="translate(${qx+fs*1.2} ${-H/2}) rotate(-90)" font-size="${fs}" text-anchor="middle">${H} cm</text>`;
+  s += `<text x="${DW/2}" y="${-H-6*px}" font-size="${fs}" text-anchor="middle">palco</text>`;
+  return s + '</svg>';
+}
+function renderStair(p){
+  const st = p.stair, box = $('#stairPanel');
+  box.hidden = !st;
+  if(!st) return;
+  if(stairSel >= st.list.length) stairSel = 0;
+  const railTxt = r => r===0 ? 'senza corrimano' : r===1 ? 'corrimano 1 lato' : 'corrimano 2 lati';
+  $('#stairPick').hidden = st.list.length < 2;
+  $('#stairPick').innerHTML = st.list.map((x,i) => `<button type="button" data-ssel="${i}" aria-pressed="${i===stairSel}">Scala ${i+1} · ${SIDE_LABEL[x.side].toLowerCase()}</button>`).join('');
+  const cur = st.list[stairSel];
+  $('#stairBox').innerHTML = stairSVG(st, cur.rails);
+  const pcs = stairPieces(st, cur.rails);
+  const nameOf = c => (LOOK.get(ncode(c))||{}).name || c;
+  $('#stairParts').innerHTML = pcs.map(x => `<button type="button" data-spart="${esc(x.code)}"><b>${esc(x.code)}</b>× ${x.qty}</button>`).join('');
+  const head = st.kind==='modular'
+    ? `Scala modulare, ${st.steps} ${st.steps===1?'elemento':'elementi'} da 20 cm, ${railTxt(cur.rails)}.`
+    : `Scala regolabile ${st.model} (${st.lo}–${st.hi} cm) con gambe telescopiche ${st.legCode}, ${st.rails ? railTxt(cur.rails) : 'senza corrimano (non previsto per VAS-2)'}.`;
+  const info = $('#stairInfo');
+  info.textContent = head + ' Tocca un pezzo per vedere cos\'è.';
+  const show = code => {
+    $$('#stairBox .sp').forEach(g => g.classList.toggle('on', g.dataset.code===code));
+    $$('#stairParts button').forEach(b => b.classList.toggle('on', b.dataset.spart===code));
+    const pc = pcs.find(x => x.code===code);
+    info.innerHTML = code ? `<span class="code">${esc(code)}</span>${esc(nameOf(code))}${pc ? ` · ${pc.qty} ${pc.qty===1?'pezzo':'pezzi'} per questa scala` : ''}` : esc(head);
+  };
+  $$('#stairBox .sp').forEach(g => {
+    g.addEventListener('mouseenter', () => show(g.dataset.code));
+    g.addEventListener('focus', () => show(g.dataset.code));
+    g.addEventListener('click', () => show(g.dataset.code));
+    g.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); show(g.dataset.code); } });
+  });
+  $$('#stairParts button').forEach(b => {
+    b.addEventListener('mouseenter', () => show(b.dataset.spart));
+    b.addEventListener('click', () => show(b.dataset.spart));
+  });
+  $$('#stairPick button').forEach(b => b.addEventListener('click', () => { stairSel = +b.dataset.ssel; renderStair(p); }));
+}
+
 function renderResult(){
   res = compute(cfg, R, LOOK, KITS);
   const t = res.totals;
@@ -951,13 +1110,14 @@ function renderResult(){
     <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
     <div class="tile"><div class="k">Pezzi</div><div class="v">${t.pieces}</div></div>` : '';
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
-  if(!res.plan){ $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   const title = `Palco ${nf(p.W)} × ${nf(p.D)} m · altezza ${cfg.H} cm`;
   $('#planTitle').textContent = title;
   $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
   $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planBox').innerHTML = planSVG(p, cfg.H);
+  renderStair(p);
   let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num">Prezzo €</th><th class="num">Totale €</th><th class="num">Peso kg</th><th class="num">Volume m³</th></tr></thead><tbody>`;
   for(const g of GROUPS){
     const ls = res.lines.filter(l => l.group===g);
