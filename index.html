@@ -15,7 +15,7 @@
 /* Layout: sinistra pannello di configurazione, destra pianta e offerta; su telefono tutto in colonna.
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
-  --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+  --bg:#F7E4E4; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
   --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
   --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
@@ -25,7 +25,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+    --bg:#1E1316; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
     --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
     --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
@@ -33,7 +33,7 @@
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+  --bg:#1E1316; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
   --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
   --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
@@ -49,7 +49,7 @@ h3{font-size:17px;line-height:1.15}
 button,input,select{font:inherit;color:inherit}
 .top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:20px 14px;border-bottom:1px solid var(--line);margin-bottom:20px}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.brand h1{font-size:34px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.brand h1{font-size:34px;line-height:1;letter-spacing:.03em;text-transform:uppercase;color:var(--brand)}
 .brand .sub{color:var(--muted);font-size:13px}
 .tabs{display:flex;gap:4px}
 .tab{background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:500}
@@ -160,10 +160,32 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .assump li{margin-bottom:4px}
 footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
 [hidden]{display:none!important}
+.printhead{display:none}
 @media print{
-  .top,.config,.actions,.tabs{display:none!important}
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+    --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+    --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3; --warn:#80500A; --warn-bg:#FFFFFF;
+    --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+    color-scheme:light;
+  }
+  @page{margin:12mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button,.sum .int{display:none!important}
   .grid2{display:block}
   body{padding:0;background:#fff;color:#000}
+  .panel{border:0;padding:0}
+  #planPanel,#stairPanel{break-inside:avoid}
+  .stack{gap:10mm}
+  .printhead{display:block;border-bottom:2px solid var(--brand);padding-bottom:6px}
+  .ph-brand{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.03em;text-transform:uppercase;color:var(--brand)}
+  .ph-title{font-weight:600;font-size:15px}
+  .ph-meta{color:var(--muted);font-size:12px}
+  table{min-width:0}
+  tr.grp{break-after:avoid}
+  tr{break-inside:avoid}
+  body[data-print="offerta"] #planPanel,body[data-print="offerta"] #stairPanel{display:none!important}
+  body[data-print="disegni"] #offerPanel{display:none!important}
+  body[data-print="disegni"] .plan{max-height:none}
 }
 </style>
 </head>
@@ -203,7 +225,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="180" step="5" inputmode="numeric"></label>
       </div>
       <label class="field"><span>Struttura</span><select id="support"></select></label>
-      <label class="field"><span>Piano di calpestio</span><select id="family"></select></label>
+      <label class="field"><span>Pedana</span><select id="family"></select></label>
       <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
       <p class="hint" id="legHint"></p>
     </div>
@@ -298,12 +320,17 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="10">10</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
       <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione si applica a ogni riga e dà il prezzo di vendita. Lo sconto si applica al totale.</p>
     </div>
+    <div class="sec">
+      <button type="button" class="btn" id="resetAll">Nuova offerta: azzera tutto</button>
+      <p class="hint">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive e quantità modificate; dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.</p>
+    </div>
   </form>
 
   <div class="stack" id="result">
+    <div class="printhead" id="printHead"></div>
     <div class="tiles" id="tiles"></div>
     <div class="notes" id="notes"></div>
-    <div class="panel">
+    <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
       <div id="planBox"></div>
       <div class="legend">
@@ -325,13 +352,15 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <p class="stairinfo" id="stairInfo" aria-live="polite"></p>
       <div class="stairparts" id="stairParts"></div>
     </div>
-    <div class="panel">
+    <div class="panel" id="offerPanel">
       <h2 id="offerTitle">Offerta</h2>
       <div class="tablewrap" id="offerTable"></div>
       <div class="sum" id="sum"></div>
       <ul class="techs" id="techNotes"></ul>
       <div class="actions">
-        <button type="button" class="btn primary" id="copyText">Copia offerta</button>
+        <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
+        <button type="button" class="btn primary" id="pdfDraw">PDF disegni</button>
+        <button type="button" class="btn" id="copyText">Copia offerta</button>
         <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
         <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
         <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
@@ -405,7 +434,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <script>
 "use strict";
 // ==ENGINE-START==
-const GROUPS = ['Piano di calpestio','Appoggi','Collegamenti','Parapetti','Scale','Rampe','Mascheratura','Trasporto','Varie'];
+const GROUPS = ['Pedana','Gambe','Collegamenti','Parapetti','Scale','Rampe','Mascheratura','Trasporto','Varie'];
 // Carrelli: capacità in m² di deck (VTT 15 deck 2×1, VDT 6 deck 2×1, VTSP 15 deck 1×1, FLSP 6 deck 1×1). VGT: capacità non indicata, uguale a VTT (da verificare).
 const TROLLEYS = {
   VTT:{label:'VTT carrello deck orizzontale (15 deck 2×1)', cap:30, sys:'stage'},
@@ -435,9 +464,9 @@ const FAMILIES = {
   spiderb:{label:'Spider nero (2×1 e 1×1)', support:'spider', step:1, riser:'B', codes:{'4x2':'SPHB-2x1','2x2':'SPHB-1x1'}}
 };
 const TRIGGERS = {
-  deck_corner:{label:'per ogni angolo di deck (4 per deck)', group:'Appoggi'},
-  vertex:{label:'per ogni punto d\'angolo distinto', group:'Appoggi'},
-  vertex1:{label:'per ogni angolo con 1 solo deck', group:'Appoggi'},
+  deck_corner:{label:'per ogni angolo di deck (4 per deck)', group:'Gambe'},
+  vertex:{label:'per ogni punto d\'angolo distinto', group:'Gambe'},
+  vertex1:{label:'per ogni angolo con 1 solo deck', group:'Gambe'},
   junction2:{label:'per ogni incontro di 2 angoli di deck', group:'Collegamenti'},
   junction34:{label:'per ogni incontro di 4 angoli di deck', group:'Collegamenti'},
   joint:{label:'per ogni giunto tra due deck', group:'Collegamenti'},
@@ -586,7 +615,7 @@ function compute(cfg, R, look, kits){
   for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
   const byDeck = new Map();
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
-  for(const [code,qty] of byDeck) out.lines.push({group:'Piano di calpestio', code, qty});
+  for(const [code,qty] of byDeck) out.lines.push({group:'Pedana', code, qty});
 
   // --- metriche per le regole
   const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(W*D-1e-9), fixed:1};
@@ -631,7 +660,7 @@ function compute(cfg, R, look, kits){
     else out.notes.push('Rollrisers con ruote frenate: frenare tutte le ruote prima dell\'uso.');
   }else{
     if(![20,40,60].includes(H)) warn('bad','Lo Spider esiste solo a 20, 40 o 60 cm.');
-    else out.lines.push({group:'Appoggi', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
+    else out.lines.push({group:'Gambe', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
   }
   out.info.leg = leg;
   const legLong = !!(leg && legLongFn(leg, H));
@@ -713,8 +742,8 @@ function compute(cfg, R, look, kits){
     else if(w==='spider'){ if(support!=='spider') continue; }
     const q = +r.qty; if(!(q>0)) continue;
     let code = r.code, group = null;
-    if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Appoggi'; }
-    else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Appoggi'; }
+    if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Gambe'; }
+    else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Gambe'; }
     if(!code) continue;
     if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
     const n = r.trigger==='joint_m' ? joints.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
@@ -861,6 +890,8 @@ const DEFAULT_CFG = {
   markup:0, discount:0, vat:22
 };
 const clone = o => JSON.parse(JSON.stringify(o));
+// "Azzera tutto": impostazioni iniziali senza accessori
+const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, markup:0, discount:0});
 let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
 
 function load(){
@@ -1154,8 +1185,7 @@ function renderResult(){
     <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
     <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
     <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
-    <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
-    <div class="tile"><div class="k">Pezzi</div><div class="v">${t.pieces}</div></div>` : '';
+    <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>` : '';
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
@@ -1189,6 +1219,21 @@ function renderResult(){
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
 function update(){ save(); renderResult(); }
+
+/* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
+function printPart(part){
+  if(!res || !res.plan){ say('Niente da stampare'); return; }
+  const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
+  const head = [cfg.numero ? 'Offerta n. '+cfg.numero : 'Offerta', cfg.cliente, cfg.progetto, d].filter(Boolean);
+  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`Palco ${nf(res.plan.W)} × ${nf(res.plan.D)} m, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>`;
+  const oldTitle = document.title;
+  // il titolo diventa il nome proposto per il file PDF
+  document.title = [part==='offerta' ? 'Offerta' : 'Disegni', cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
+  document.body.dataset.print = part;
+  const done = () => { document.title = oldTitle; delete document.body.dataset.print; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
 
 /* --- copia --- */
 function say(msg){ const s = $('#status'); s.textContent = msg; clearTimeout(say.t); say.t = setTimeout(() => s.textContent = '', 2500); }
@@ -1408,6 +1453,12 @@ function bind(){
     if(again && !again.disabled) again.focus();
   });
   $('#adjReset').addEventListener('click', () => { cfg.adj = {}; update(); });
+  $('#resetAll').addEventListener('click', () => {
+    if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
+    cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
+  });
+  $('#pdfOffer').addEventListener('click', () => printPart('offerta'));
+  $('#pdfDraw').addEventListener('click', () => printPart('disegni'));
   $('#dlOrder').addEventListener('click', downloadOrder);
 
   // regole
