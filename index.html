@@ -729,6 +729,12 @@ function compute(cfg, R, look, kits){
     const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
     if(kg==null) noKg.push(it.code);
     if(m3==null) noVol.push(it.code);
+    // Gambe: in offerta in set da 4 (un set per deck), prezzo per set.
+    if(pk===4 && /leg/i.test(it.name)){
+      const setUnit = r2(pr*pk*mk);
+      lines.push({group:l.group, code:it.code, name:it.name + ' (set da 4)', rawName:it.name, pkg:pk, isSet:true, qty:sets, unit:setUnit, total:r2(setUnit*sets), cost:r2(pr*qty), kg, m3});
+      continue;
+    }
     lines.push({group:l.group, code:it.code, name:it.name + (pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, qty, unit, total:r2(unit*qty), cost:r2(pr*qty), kg, m3});
   }
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
@@ -1009,10 +1015,9 @@ function orderRows(){
   const rows = [['Product Code','Product Name','Quantity','Unit']];
   if(!res || !res.plan) return rows;
   for(const l of res.lines){
-    const isSet = l.pkg===4 && /leg/i.test(l.rawName);
     let name = l.rawName;
     if(/^VFL\d+$/.test(l.code) && !/^VFL(20|40|60|80|100)$/.test(l.code)) name = `square leg ${l.code.slice(3)}cm (intermediate height)`;
-    rows.push([l.code, name, isSet ? l.qty/l.pkg : l.qty, isSet ? 'set of 4' : 'pcs']);
+    rows.push([l.code, name, l.qty, l.isSet ? 'set of 4' : 'pcs']);
   }
   return rows;
 }
