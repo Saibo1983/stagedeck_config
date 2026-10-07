@@ -926,7 +926,15 @@ function renderExtras(){
 /* --- risultato --- */
 function planSVG(p, H){
   const W = p.W*100, D = p.D*100, sd = p.stair ? Math.max(30, p.stair.run) : 80;  // sd: profondità della scala (cm)
-  const nTread = p.stair ? (p.stair.kind==='modular' ? p.stair.steps-1 : p.stair.steps) : 3;  // linee dei gradini in pianta
+  // pedate in pianta, come distanze [a,b] dal bordo del palco (cm)
+  const treads = [];
+  if(p.stair){
+    const n = p.stair.steps;
+    for(let k=1;k<=n;k++){
+      if(p.stair.kind==='modular') treads.push({k, a:(n-k)*STAIR_DEPTH, b:(n-k+1)*STAIR_DEPTH});
+      else{ const c = sd*(1-k/(n+1)), tw = Math.min(30, sd/(n+1)*1.1); treads.push({k, a:c-tw/2, b:c+tw/2}); }
+    }
+  }
   const ext = side => Math.max(100, p.stairs[side] ? sd+60 : 0, p.ramps[side] ? p.rampLen*100+60 : 0);
   const mT = ext('back'), mB = ext('front'), mL = ext('left'), mR = ext('right');
   const vbw = W+mL+mR, vbh = D+mT+mB, px = Math.max(vbw/640, vbh/640*0.8);
@@ -968,10 +976,14 @@ function planSVG(p, H){
     for(let i=0;i<p.stairs[side];i++){
       const {x,y,w,h} = slot(side, i*p.opening, p.opening, sd);
       const col = p.stairOk ? 'var(--stair)' : 'var(--bad)';
-      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
-      for(let k=1;k<=nTread;k++){
-        const t = k/(nTread+1);
-        s += horiz ? seg(x,y+h*t,x+w,y+h*t,col,1) : seg(x+w*t,y,x+w*t,y+h,col,1);
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".08" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+      // pedate: una per gradino, alla distanza dal bordo del palco che hanno nella vista laterale (1 = la più bassa)
+      for(const tr of treads){
+        const a = tr.a, b = tr.b;
+        const r = side==='back' ? {x, y:-b, w, h:b-a} : side==='front' ? {x, y:D+a, w, h:b-a}
+                : side==='left' ? {x:-b, y, w:b-a, h} : {x:W+a, y, w:b-a, h};
+        s += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+        if((b-a)/px >= 11) s += `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+fs*.3}" font-size="${fs*.85}" text-anchor="middle">${tr.k}</text>`;
       }
     }
     for(let j=0;j<p.ramps[side];j++){
