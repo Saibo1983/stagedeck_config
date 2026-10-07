@@ -24,7 +24,7 @@ Le regole dei pezzi accessori (morsetti, connettori, corrimano) sono modificabil
 
 
 ## Prezzi e maggiorazione
-I prezzi del listino sono di acquisto. Nel campo Maggiorazione % (o con i tasti rapidi) si imposta il ricarico: ogni riga dell'offerta è il prezzo di vendita. Acquisto e maggiorazione compaiono solo nel riepilogo a schermo (voci «interno»), non nel testo copiato.
+I prezzi del listino sono di acquisto. La maggiorazione è fissa al 37% (il campo Maggiorazione % resta modificabile). L'offerta mostra per ogni riga acquisto, maggiorazione, prezzo di vendita e totale; sotto, totale acquisto, maggiorazione, subtotale vendita, sconto, imponibile, IVA e totale. Nel PDF dell'offerta acquisto e maggiorazione compaiono solo se è spuntato «Prezzi di acquisto nel PDF»; nel testo copiato non compaiono mai.
 
 ## Regole confermate
 - Connettori tra le gambe solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe): sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC.
