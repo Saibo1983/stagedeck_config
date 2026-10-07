@@ -127,6 +127,11 @@ input:disabled{opacity:.5}
 tr.mod td{background:var(--warn-bg)}
 tr.mod .qed span{font-weight:600;color:var(--warn)}
 @media print{.qed button{display:none}}
+.tbtn{text-align:left;cursor:pointer;font:inherit;color:inherit}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn[aria-expanded="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+#shipPanel table{min-width:560px}
+#shipPanel td:nth-child(2){white-space:nowrap}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -170,7 +175,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button,.sum .int{display:none!important}
+  .top,.config,.actions,.tabs,footer,#tiles,#notes,#shipPanel,#stairPick,#stairInfo,#stairParts,.qed button,.sum .int{display:none!important}
   .grid2{display:block}
   body{padding:0;background:#fff;color:#000}
   .panel{border:0;padding:0}
@@ -329,6 +334,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <div class="stack" id="result">
     <div class="printhead" id="printHead"></div>
     <div class="tiles" id="tiles"></div>
+    <div class="panel" id="shipPanel" hidden></div>
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
@@ -378,6 +384,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="params">
       <label class="field"><span>Apertura scala (m)</span><input type="number" id="stairOpening" min="0.5" step="0.5" inputmode="decimal"></label>
       <label class="field"><span>Apertura rampa (m)</span><input type="number" id="rampOpening" min="0.5" step="0.5" inputmode="decimal"></label>
+      <label class="field"><span>Bancale: pedane impilate al massimo</span><input type="number" data-pal="decks" min="1" step="1" inputmode="numeric"></label>
+      <label class="field"><span>Bancale: altezza massima carico (cm)</span><input type="number" data-pal="h" min="50" step="10" inputmode="numeric"></label>
+      <label class="field"><span>Bancale accessori: riempimento %</span><input type="number" data-pal="fill" min="10" max="100" step="5" inputmode="numeric"></label>
       <label class="field"><span>Capacità VTT (m² di deck)</span><input type="number" data-cap="VTT" min="1" step="1"></label>
       <label class="field"><span>Capacità VDT (m²)</span><input type="number" data-cap="VDT" min="1" step="1"></label>
       <label class="field"><span>Capacità VGT (m²)</span><input type="number" data-cap="VGT" min="1" step="1"></label>
@@ -487,7 +496,7 @@ const TRIGGERS = {
 // when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
 const DEFAULT_RULES = {
   v:5,
-  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
+  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, pal:{decks:20, h:200, fill:75}, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
   rows:[
     {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
     {on:true, label:'Connettore per 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe). Sul perimetro, dove si incontrano 2 gambe, un connettore doppio, al massimo 20 cm sotto il deck.'},
@@ -540,6 +549,61 @@ function pickStair(h, type, leg){
   return mod || adj;
 }
 // Ingombro della scala a terra (cm). Regolabile: indicativo, dalla lunghezza dell'imballo come lunghezza del cosciale.
+// Spedizione su bancali (stima).
+// Pedane: impilate su bancali 2×1 m, uno strato = la superficie del bancale (1 pedana 2×1, 2 da 1×1, ...),
+// al massimo P.decks strati e P.h cm di altezza. Accessori: su bancali 2×1 m se c'è un pezzo più lungo di 120 cm,
+// altrimenti su bancali 120×80 cm, riempiti per volume (P.fill % del volume utile). I carrelli viaggiano da soli.
+function shipping(lines, look, P){
+  const maxLayers = Math.max(1, Math.round(+P.decks||20)), Hmax = Math.max(50, +P.h||200)*10, fill = Math.min(1, Math.max(.1, (+P.fill||75)/100));
+  const decks = [], acc = [], carts = [], noDims = new Set();
+  for(const l of lines){
+    if(!(l.pieces>0)) continue;
+    const it = look.get(ncode(l.code)) || {};
+    if(TROLLEYS[it.code]){ carts.push({code:it.code, qty:l.pieces}); continue; }
+    if(/PLATFORM|DECK/i.test(it.section||'') && it.pack){
+      const [a,b,t] = it.pack, frac = Math.max(1/8, Math.round(a*b/(2005*1005)*8)/8);
+      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, frac:Math.min(1,frac), t, kg:it.kg||0});
+      continue;
+    }
+    if(!it.pack || l.m3==null){ noDims.add(it.code||l.code); continue; }
+    acc.push({code:it.code, qty:l.qty, isSet:l.isSet, m3:l.m3, kg:l.kg||0, long:Math.max(...it.pack)>1200});
+  }
+  const pallets = [];
+  // pedane: strati riempiti dalla più grande alla più piccola (misure multiple di 1/8 di 2×1: il riempimento è esatto)
+  decks.sort((a,b) => b.frac-a.frac || b.t-a.t);
+  const layers = [];
+  for(const d of decks){
+    let L = layers.find(x => x.t===d.t && x.free >= d.frac-1e-9);
+    if(!L){ L = {t:d.t, free:1, items:[]}; layers.push(L); }
+    L.free -= d.frac; L.items.push(d);
+  }
+  for(const t of [...new Set(layers.map(x => x.t))]){
+    const ls = layers.filter(x => x.t===t), per = Math.max(1, Math.min(maxLayers, Math.floor(Hmax/t)));
+    for(let i=0;i<ls.length;i+=per){
+      const chunk = ls.slice(i, i+per), items = chunk.flatMap(x => x.items), byCode = {};
+      for(const d of items) byCode[d.code] = (byCode[d.code]||0)+1;
+      pallets.push({type:'2×1 m', kind:'pedane', content:Object.entries(byCode).map(([c,n]) => `${n} × ${c}`).join(', '),
+        count:items.length, h:Math.round(chunk.length*t/10), kg:items.reduce((s,d) => s+d.kg, 0), n:1});
+    }
+  }
+  const longCodes = acc.filter(a => a.long).map(a => a.code);
+  if(acc.length){
+    const big = longCodes.length>0, area = big ? 2.0*1.0 : 1.2*0.8;
+    const V = acc.reduce((s,a) => s+a.m3, 0), kg = acc.reduce((s,a) => s+a.kg, 0);
+    const n = Math.max(1, Math.ceil(V/(area*Hmax/1000*fill)-1e-9));
+    pallets.push({type:big ? '2×1 m' : '120×80 cm', kind:'accessori', n, m3:V, kg,
+      content:acc.map(a => `${a.qty}${a.isSet?' set':''} × ${a.code}`).join(', ')});
+  }
+  const count = pallets.reduce((s,p) => s+p.n, 0);
+  return {pallets, count, carts, noDims:[...noDims], longCodes, maxLayers, Hmax:Hmax/10, fill:Math.round(fill*100)};
+}
+function shipSummary(sh){
+  const parts = sh.pallets.map(p => p.kind==='pedane' ? null : `${p.n} ${p.n===1?'bancale':'bancali'} ${p.type} di accessori`).filter(Boolean);
+  const dp = sh.pallets.filter(p => p.kind==='pedane');
+  if(dp.length) parts.unshift(`${dp.length} ${dp.length===1?'bancale':'bancali'} 2×1 m con ${dp.reduce((s,p) => s+p.count,0)} pedane`);
+  if(sh.carts.length) parts.push('carrelli ' + sh.carts.map(c => `${c.qty} × ${c.code}`).join(', ') + ' a parte');
+  return parts.length ? 'Spedizione (stima): ' + parts.join(', ') + '.' : '';
+}
 function stairGeom(st, h, look){
   if(st.kind==='modular') return {run:st.steps*STAIR_DEPTH, len:null, angle:Math.atan2(20, STAIR_DEPTH)*180/Math.PI};
   const it = look.get(ncode(st.model)), L = it && it.pack ? it.pack[0]/10 : (st.steps+1)*30;
@@ -842,6 +906,9 @@ function compute(cfg, R, look, kits){
   out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
     kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
     pieces: lines.reduce((s,l) => s+l.pieces,0), area: W*D};
+  out.ship = shipping(lines, look, R.params.pal || {});
+  const shTxt = shipSummary(out.ship);
+  if(shTxt) out.notes.push(shTxt);
   const onLegs = support==='legs' && !!leg;
   out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
     skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
@@ -910,7 +977,7 @@ function load(){
         Object.assign(r, {when:'legsHigh', label:d.label, note:d.note});
       }
     }
-    if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
+    if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.pal = Object.assign(clone(DEFAULT_RULES.params.pal), R.params.pal||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
   }catch(e){}
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({cfg, rules:R})); }catch(e){} }
@@ -1178,6 +1245,24 @@ function renderStair(p){
   $$('#stairPick button').forEach(b => b.addEventListener('click', () => { stairSel = +b.dataset.ssel; renderStair(p); }));
 }
 
+let shipOpen = false;
+function renderShip(){
+  const box = $('#shipPanel'), sh = res && res.ship;
+  box.hidden = !shipOpen || !sh;
+  if(box.hidden) return;
+  const rows = sh.pallets.map(p => `<tr><td class="num">${p.n}</td><td>Bancale ${p.type}</td><td>${p.kind==='pedane' ? `Pedane: ${esc(p.content)}` : `Accessori${p.n>1?' (divisi sui bancali)':''}: ${esc(p.content)}`}</td>`
+    + `<td class="num">${p.kind==='pedane' ? p.h+' cm' : dec(p.m3/p.n,2)+' m³'}</td><td class="num">${dec(p.kg/p.n,0)} kg</td></tr>`).join('');
+  const notes = [
+    `Pedane: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico per bancale 2×1 m; uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.`,
+    sh.longCodes.length ? `Pezzi più lunghi di 120 cm (${listCodes([...new Set(sh.longCodes)])}): accessori su bancale 2×1 m.` : 'Nessun pezzo più lungo di 120 cm: accessori su bancale 120×80 cm.',
+    `Accessori stimati sul volume degli imballi, riempiendo il ${sh.fill}% del bancale fino a ${sh.Hmax} cm. Peso per bancale senza il bancale stesso.`,
+    sh.carts.length ? `Carrelli a parte: ${sh.carts.map(c => c.qty+' × '+c.code).join(', ')}.` : '',
+    sh.noDims.length ? `Senza misure d'imballo, non conteggiati: ${listCodes(sh.noDims)}.` : ''
+  ].filter(Boolean);
+  box.innerHTML = `<h2>Bancali per la spedizione</h2>`
+    + (rows ? `<div class="tablewrap"><table><thead><tr><th class="num">N.</th><th>Bancale</th><th>Contenuto</th><th class="num">Altezza / volume</th><th class="num">Peso cad.</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="hint">Nessun articolo da spedire.</p>')
+    + `<ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+}
 function renderResult(){
   res = compute(cfg, R, LOOK, KITS);
   const t = res.totals;
@@ -1185,7 +1270,8 @@ function renderResult(){
     <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
     <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
     <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
-    <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>` : '';
+    <button type="button" class="tile tbtn" id="shipBtn" aria-expanded="${shipOpen}" aria-controls="shipPanel"><div class="k">Volume imballi · ${res.ship.count} ${res.ship.count===1?'bancale':'bancali'} ${shipOpen?'▴':'▾'}</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></button>` : '';
+  renderShip();
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
@@ -1347,6 +1433,7 @@ function ruleHint(r){
 }
 function renderRules(){
   $('#stairOpening').value = R.params.stairOpening;
+  $$('[data-pal]').forEach(i => i.value = R.params.pal[i.dataset.pal]);
   $('#rampOpening').value = R.params.rampOpening;
   $$('[data-cap]').forEach(i => i.value = R.params.cap[i.dataset.cap]);
   $('#rulesList').innerHTML = R.rows.map((r,i) => `
@@ -1444,6 +1531,7 @@ function bind(){
   });
   $('#copyText').addEventListener('click', () => copy(offerText()));
   $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
+  $('#tiles').addEventListener('click', e => { if(e.target.closest('#shipBtn')){ shipOpen = !shipOpen; renderResult(); } });
   $('#offerTable').addEventListener('click', e => {
     const b = e.target.closest('button[data-adj]'); if(!b) return;
     const k = b.dataset.adj, v = (cfg.adj[k]||0) + (+b.dataset.d);
@@ -1480,6 +1568,7 @@ function bind(){
   });
   $('#resetRules').addEventListener('click', () => { R = clone(DEFAULT_RULES); renderRules(); update(); });
   $('#stairOpening').addEventListener('input', e => { R.params.stairOpening = +e.target.value || 1; update(); });
+  $$('[data-pal]').forEach(i => i.addEventListener('input', e => { const v = +e.target.value; if(v>0){ R.params.pal[i.dataset.pal] = v; update(); } }));
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);

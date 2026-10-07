@@ -54,3 +54,10 @@ Nell'offerta ogni riga ha i tasti − e + per cambiare la quantità (per esempio
 ## PDF e nuova offerta
 - «PDF offerta» e «PDF disegni» aprono la stampa del browser con solo quella parte e un'intestazione con numero, cliente, progetto e data: scegli «Salva come PDF». Il nome del file proposto è «Offerta …» o «Disegni …». Nel PDF dell'offerta non compaiono le voci interne (acquisto e maggiorazione).
 - «Nuova offerta: azzera tutto», in fondo ai dati, riporta il palco 4 × 4 m a 60 cm su gambe senza accessori, dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.
+
+## Bancali per la spedizione
+Toccando il riquadro «Volume imballi» si apre il calcolo dei bancali (stima):
+- Pedane impilate su bancali 2×1 m: al massimo 20 strati e 200 cm di carico; uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.
+- Accessori: se c'è almeno un pezzo più lungo di 120 cm (parapetti da 2 m, profili mascheratura 1970, scale regolabili, ...) vanno su bancali 2×1 m, altrimenti su bancali 120×80 cm. Il numero di bancali viene dal volume degli imballi, riempiendo il 75% del bancale fino a 200 cm.
+- I carrelli viaggiano a parte. Gli articoli senza misure d'imballo (rampe, Rollrisers) non sono conteggiati.
+- Il riepilogo «Spedizione (stima)» compare anche nelle note dell'offerta. I tre valori (strati, altezza, riempimento) si cambiano nella scheda Regole.
