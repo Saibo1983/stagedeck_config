@@ -18,7 +18,7 @@
   --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
   --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
-  --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -28,7 +28,7 @@
     --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
     --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-    --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
@@ -36,7 +36,7 @@
   --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
   --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-  --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -301,7 +301,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="legend">
         <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
         <span><i style="background:var(--leg);height:8px;width:8px"></i>Gamba</span>
-        <span><i style="background:var(--rail)"></i>Parapetto</span>
+        <span id="lgConn"><i style="background:color-mix(in srgb, var(--conn) 25%, transparent);border:2px solid var(--conn);height:10px;width:16px"></i>Connettore gambe (2 o 4)</span>
+        <span><i style="background:var(--rail)"></i>Parapetto 2 m</span>
+        <span><i style="background:var(--rail1)"></i>Parapetto 1 m</span>
         <span><i style="background:var(--ink);opacity:.55"></i>Mascheratura</span>
         <span><i style="background:var(--stair);opacity:.5"></i>Scala</span>
         <span><i style="background:var(--ramp);opacity:.5"></i>Rampa</span>
@@ -462,7 +464,7 @@ const DEFAULT_RULES = {
     {on:true, label:'Rollriser con 4 gambe', trigger:'junction34', code:'@RR4', qty:1, when:'roll', note:'Come sopra, dove si incontrano 4 deck.'},
     {on:true, label:'Connettore tra parapetti', trigger:'rail_link', code:'VHC', qty:1, note:'Manuale: unione dritta tra due parapetti vicini.'},
     {on:true, label:'Connettore d\'angolo parapetti', trigger:'rail_corner', code:'VHCC', qty:1, note:'Manuale: connettore d\'angolo dove due lati con parapetto si incontrano.'},
-    {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
+    {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, a partire dall\'alto (con 3 gradini va sul 2° e 3°), per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
     {on:true, label:'Corrimano scala regolabile destro', trigger:'stair_adjustable_rail', code:'VASH-R', qty:1, note:'Brochure: corrimano universale per scale regolabili da 4, 5 e 7 gradini. Un corrimano per ogni scala con corrimano.'},
     {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
   ]
@@ -690,7 +692,7 @@ function compute(cfg, R, look, kits){
   if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
 
   // --- regole accessori
-  let legRules = 0;
+  let legRules = 0; const trigUsed = new Set();
   for(const r of R.rows){
     if(!r.on) continue;
     const w = r.when;
@@ -708,7 +710,7 @@ function compute(cfg, R, look, kits){
     if(!code) continue;
     if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
     const n = r.trigger==='joint_m' ? joints.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
-    if(n>0) out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n});
+    if(n>0){ out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n}); trigUsed.add(r.trigger+'|'+r.when); }
   }
   if(support==='legs' && leg && !legRules) warn('warn','Nessuna regola attiva per le gambe: l\'offerta non le include.');
 
@@ -796,7 +798,8 @@ function compute(cfg, R, look, kits){
   out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
     kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
     pieces: lines.reduce((s,l) => s+l.pieces,0), area: W*D};
-  out.plan = {W, D, decks, vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
+  const onLegs = support==='legs' && !!leg;
+  out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
     skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
@@ -966,7 +969,8 @@ function planSVG(p, H){
     const limit = horiz ? p.W : p.D;
     for(const L of lens){
       const a = pos*100, b = Math.min(limit,pos+L)*100;
-      if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,'var(--rail)',5) : seg(fixed,a+2*px,fixed,b-2*px,'var(--rail)',5);
+      const rc = L===2 ? 'var(--rail)' : 'var(--rail1)';  // 2 m e 1 m con colori diversi
+      if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,rc,5) : seg(fixed,a+2*px,fixed,b-2*px,rc,5);
       pos += L;
     }
   }
@@ -1004,8 +1008,23 @@ function planSVG(p, H){
       s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle"${horiz ? '' : ` transform="rotate(-90 ${x+w/2} ${y+h/2})"`}>${nf(p.rampLen)} m</text>`;
     }
   }
-  // gambe
-  for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  // gambe: 4 per deck, un quadrato appena dentro ogni spigolo
+  if(p.legs){
+    const ins = sq*1.5;  // distanza del centro della gamba dallo spigolo, verso l'interno del deck
+    const legAt = (cx, cy, sx, sy) => [cx*50 + sx*ins, cy*50 + sy*ins];
+    const corners = new Map();
+    for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
+      const k = cx+','+cy; if(!corners.has(k)) corners.set(k, []); corners.get(k).push(legAt(cx,cy,sx,sy));
+    }
+    // connettori: una cornice intorno alle gambe che collega (doppio = 2 gambe, quadro = 4)
+    for(const pts of corners.values()){
+      if(!(pts.length===2 && p.conn2) && !(pts.length>=3 && p.conn4)) continue;
+      const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), pad = sq*0.95;
+      const x = Math.min(...xs)-pad, y = Math.min(...ys)-pad, w = Math.max(...xs)-Math.min(...xs)+2*pad, h = Math.max(...ys)-Math.min(...ys)+2*pad;
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${sq*.4}" fill="var(--conn)" fill-opacity=".25" stroke="var(--conn)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    }
+    for(const pts of corners.values()) for(const [x,y] of pts) s += `<rect x="${x-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  }else for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
   // quote
   s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
   s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
@@ -1042,11 +1061,12 @@ function stairSVG(st, rails){
       s += piece(p.code, `<rect class="b" x="${x}" y="${-h}" width="${d}" height="${h}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`+ln(x,-h,x+d,-h,'l',3)
         + (d/px>26 ? `<text x="${x+d/2}" y="${-h/2+fs*.35}" font-size="${fs*.9}" text-anchor="middle">${i+1}°</text>` : ''), `${p.code}, ${name}`);
     });
-    // corrimano: uno ogni 2 gradini adiacenti, partendo dal basso
+    // corrimano: uno ogni 2 gradini adiacenti, partendo dall'alto (con 3 gradini sta sul 2° e 3°),
+    // dall'inizio del gradino basso alla fine di quello alto
     const hr = stairPieces(st, rails).find(p => p.rail);
-    if(hr) for(let j=0;j+1<n;j+=2){
-      const xa = -(n-j)*d + d/2, ya = -20*(j+1)-RH, xb = -(n-j-1)*d + d/2, yb = -20*(j+2)-RH;
-      s += piece(hr.code, hit(xa,ya,xb,yb)+ln(xa,ya,xb,yb,'l',3)+ln(xa,ya,xa,-20*(j+1))+ln(xb,yb,xb,-20*(j+2)), `${hr.code}, corrimano`);
+    if(hr) for(let up=n; up-1>=1; up-=2){
+      const lo = up-1, xa = -(n-lo+1)*d + 2, ya = -20*lo-RH, xb = -(n-up)*d - 2, yb = -20*up-RH;
+      s += piece(hr.code, hit(xa,ya,xb,yb)+ln(xa,ya,xb,yb,'l',3)+ln(xa,ya,xa,-20*lo)+ln(xb,yb,xb,-20*up), `${hr.code}, corrimano gradini ${lo}° e ${up}°`);
     }
     s += `<text x="${-n*d/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">${n*d} cm</text>`;
     s += `<text x="${-d*n-6*px}" y="${-H+20+fs*.35}" font-size="${fs}" text-anchor="end">ultimo gradino ${H-20} cm</text>`;
@@ -1128,6 +1148,7 @@ function renderResult(){
   $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
   $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planBox').innerHTML = planSVG(p, cfg.H);
+  $('#lgConn').hidden = !(p.conn2 || p.conn4);
   renderStair(p);
   let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num">Prezzo €</th><th class="num">Totale €</th><th class="num">Peso kg</th><th class="num">Volume m³</th></tr></thead><tbody>`;
   for(const g of GROUPS){
