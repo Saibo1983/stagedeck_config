@@ -50,3 +50,7 @@ Il pulsante «Ordine fornitore (Excel)» scarica un .xlsx con Product Code, Prod
 
 ## Quantità modificate a mano
 Nell'offerta ogni riga ha i tasti − e + per cambiare la quantità (per esempio 2 parapetti da 1 m al posto di uno da 2 m). Un passo vale 1 pezzo, 1 set per le gambe, 1 confezione per gli articoli in confezione. Le righe modificate sono evidenziate, un avviso le elenca e «Ripristina quantità calcolate» le riporta ai valori dell'app. Le modifiche restano salvate finché non le ripristini, anche se cambi misure o altezza. Scale e rampe sono in due gruppi separati.
+
+## PDF e nuova offerta
+- «PDF offerta» e «PDF disegni» aprono la stampa del browser con solo quella parte e un'intestazione con numero, cliente, progetto e data: scegli «Salva come PDF». Il nome del file proposto è «Offerta …» o «Disegni …». Nel PDF dell'offerta non compaiono le voci interne (acquisto e maggiorazione).
+- «Nuova offerta: azzera tutto», in fondo ai dati, riporta il palco 4 × 4 m a 60 cm su gambe senza accessori, dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.
