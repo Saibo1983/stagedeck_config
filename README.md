@@ -36,7 +36,7 @@ I prezzi del listino sono di acquisto. Nel campo Maggiorazione % (o con i tasti 
 Nel listino gambe (set da 4) e connettori VD2D, VDL, D2DC (set da 3) hanno prezzo unitario per pezzo, mentre peso e misure dell'imballo sono della confezione. L'app divide di conseguenza e arrotonda la quantità per eccesso a confezioni intere (sulla riga compare «conf. da N»). Le gambe in offerta sono espresse in set da 4, con prezzo per set: un set per ogni deck.
 
 ## Mascheratura e carrelli
-- Mascheratura: si scelgono i lati (come per i parapetti), la stoffa (poliestere o velluto, liscio o plissettato) e l'altezza del telo. Per ogni lato di deck sul perimetro: lato lungo = profilo SKP1970 + telo da 2050, lato corto = SKP970 + telo da 1050. Non dipende dalle scale. Altezza automatica: il telo standard (20-100 cm) che copre altezza palco + 9 cm di deck (modificabile in Regole).
+- Mascheratura: si scelgono i lati (come per i parapetti), la stoffa (poliestere o velluto, liscio o plissettato) e l'altezza del telo. Per ogni lato di deck sul perimetro: lato lungo = profilo SKP1970 + telo da 2050, lato corto = SKP970 + telo da 1050. Non dipende dalle scale. Altezza automatica: il telo standard (20-100 cm) che copre l'altezza del palco, che è l'altezza finita (piano del deck da terra).
 - Carrelli: VTT, VDT, VGT per StageDeck, VTSP e FLSP per Spider. Quantità automatica dalla capacità (modificabile in Regole) oppure scelta a mano.
 - Dopo aver aggiornato il listino ricarica `prezzi.json` nell'app: contiene anche i codici dei teli.
 
