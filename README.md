@@ -27,6 +27,7 @@ Le regole dei pezzi accessori (morsetti, connettori, corrimano) sono modificabil
 I prezzi del listino sono di acquisto. Nel campo Maggiorazione % (o con i tasti rapidi) si imposta il ricarico: ogni riga dell'offerta è il prezzo di vendita. Acquisto e maggiorazione compaiono solo nel riepilogo a schermo (voci «interno»), non nel testo copiato.
 
 ## Regole confermate
+- Connettori tra le gambe solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe): sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC.
 - Connettori e livellatori: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.
 - Scale: numero, lato e corrimano (1 o 2 lati) si scelgono nei dati generali.
 - Imballo Spider deck: spessore 60 mm.
