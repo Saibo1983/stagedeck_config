@@ -64,7 +64,7 @@ def parse(xlsx):
             "code": code,
             "name": re.sub(r"\s+", " ", name),
             "section": sezione,
-            "price": round(num(price), 2),
+            "price": round(num(price), 4),
             "kg": num(kg),
             "pack": dims(p1) or dims(p2),
         }
@@ -98,7 +98,7 @@ def parse_rampe(xlsx, gia):
             if key not in gia:
                 gia.add(key)
                 articoli.append({"code": code, "name": re.sub(r"\s+", " ", str(desc).strip()), "section": "RAMPE",
-                                 "price": round(num(price), 2), "kg": None, "pack": None})
+                                 "price": round(num(price), 4), "kg": None, "pack": None})
         kit.append({"name": ws.title.strip(), "lo": numeri[0], "hi": numeri[-1], "parts": parti})
     return articoli, kit
 
