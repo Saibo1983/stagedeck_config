@@ -187,13 +187,14 @@ function create(canvas){
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
     const cy = ty - Math.min(170, ty*0.45);
     const v4 = [], v2 = [];
+    const conn4 = plan.conn4!==false, conn2 = plan.conn2!==false;   // connettori solo dove l'offerta li mette (gambe oltre 80 cm)
     for(const p of legPts.values()){
-      if(p.n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[p.x, cy, p.z]});
+      if(conn4 && p.n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[p.x, cy, p.z]});
     }
     // coppie da 2: lungo i lati di deck dove si incontrano solo 2 angoli
     const seen = new Set();
     for(const p of legPts.values()){
-      if(p.n!==2) continue;
+      if(!conn2 || p.n!==2) continue;
       // direzione: dai deck che condividono il vertice
       const dk = plan.decks.filter(d => [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]].some(([a,b]) => a*500===p.x && b*500===p.z));
       if(dk.length!==2) continue;
@@ -206,10 +207,10 @@ function create(canvas){
     if(v2.length) addBatch(plain('vlc'), v2);
 
     // --- ringhiere
-    const r2 = [], r1 = [], ry = ty + 63.5;
+    const r2 = [], r1 = [], r05 = [], ry = ty + 63.5;
     for(const run of plan.runs){
       let pos = run.start;
-      const lens = [...Array(run.n2).fill(2), ...Array(run.n1).fill(1)];
+      const lens = run.pieces || [...Array(run.n2).fill(2), ...Array(run.n1).fill(1), ...Array(run.n05||0).fill(0.5)];
       const side = run.side, limit = (side==='back'||side==='front') ? plan.W : plan.D;
       for(const Lm of lens){
         const s = pos*1000, L = Math.min(Lm, limit-pos)*1000;
@@ -218,12 +219,13 @@ function create(canvas){
         else if(side==='back')  T = {r:[0,0,-1, 0,1,0, 1,0,0], t:[s+L-50, ry, 0]};
         else if(side==='right') T = {r:RY(Math.PI), t:[Wmm, ry, s+L-50]};
         else                    T = {r:[0,0,1, 0,1,0, -1,0,0], t:[s+50, ry, Dmm]};
-        (Lm===2 ? r2 : r1).push(T);
+        (Lm===2 ? r2 : Lm===1 ? r1 : r05).push(T);
         pos += Lm;
       }
     }
     if(r2.length) addBatch(plain('rail2'), r2);
     if(r1.length) addBatch(plain('rail1'), r1);
+    if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
     // --- scale
     const OUT = {back:[0,0,-1], front:[0,0,1], left:[-1,0,0], right:[1,0,0]};

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0A5F7E">
+<meta name="theme-color" content="#B3261E">
 <title>StageDeck</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -15,28 +15,28 @@
 /* Layout: sinistra pannello di configurazione, destra pianta e offerta; su telefono tutto in colonna.
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
-  --bg:#EDF0F2; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-  --accent:#0A5F7E; --accent-ink:#FFFFFF; --accent-soft:#D6EBF3;
+  --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
-  --deck:#DCE4E9; --deck-line:#7B8F9C; --rail:#C4560F; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-    --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+    --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-    --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0E161C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-  --accent:#5CC2E3; --accent-ink:#06222C; --accent-soft:#17394A;
+  --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-  --deck:#22313C; --deck-line:#5C7486; --rail:#F08A4B; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -49,7 +49,7 @@ h3{font-size:17px;line-height:1.15}
 button,input,select{font:inherit;color:inherit}
 .top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:20px 14px;border-bottom:1px solid var(--line);margin-bottom:20px}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.brand h1{font-size:34px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.brand h1{font-size:34px;line-height:1;letter-spacing:.03em;text-transform:uppercase;color:var(--brand)}
 .brand .sub{color:var(--muted);font-size:13px}
 .tabs{display:flex;gap:4px}
 .tab{background:transparent;border:1px solid transparent;border-radius:6px;padding:7px 14px;cursor:pointer;color:var(--muted);font-weight:500}
@@ -102,6 +102,41 @@ input:disabled{opacity:.5}
 .plan{width:100%;height:auto;display:block;max-height:560px}
 .panel>h2{margin-bottom:10px}
 .plan text{font-family:var(--f-mono);fill:var(--muted)}
+#stairPick{margin-bottom:10px;flex-wrap:wrap}
+#stairPick button{flex:1 1 120px}
+.side{width:100%;height:auto;display:block;max-height:380px}
+.side text{font-family:var(--f-mono);fill:var(--muted)}
+.side .sp{cursor:pointer}
+.side .sp .b{fill:var(--stair);fill-opacity:.14;stroke:var(--stair)}
+.side .sp .l{stroke:var(--stair);fill:none}
+.side .sp:hover .b,.side .sp.on .b{fill-opacity:.45}
+.side .sp:hover .l,.side .sp.on .l{stroke:var(--rail)}
+.side .sp:focus{outline:none}
+.side .sp:focus-visible .b{stroke:var(--rail)}
+.stairinfo{min-height:1.5em;margin:8px 0 6px;font-size:13px}
+.stairinfo .code{margin-right:6px}
+.stairparts{display:flex;flex-wrap:wrap;gap:6px}
+.stairparts button{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.stairparts button.on,.stairparts button:hover{border-color:var(--stair);background:var(--accent-soft)}
+.stairparts b{font-family:var(--f-mono);font-weight:500;margin-right:4px}
+.qed{display:inline-flex;align-items:center;gap:4px}
+.qed button{width:24px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;line-height:1;padding:0;font-size:15px}
+.qed button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.qed button:disabled{opacity:.35;cursor:default}
+.qed span{min-width:2.2ch;text-align:right}
+tr.mod td{background:var(--warn-bg)}
+tr.mod .qed span{font-weight:600;color:var(--warn)}
+@media print{.qed button{display:none}}
+.tbtn{text-align:left;cursor:pointer;font:inherit;color:inherit}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn[aria-expanded="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.palgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:14px}
+.palcard{margin:0;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface);break-inside:avoid}
+.pal{width:100%;height:auto;display:block}
+.pal text{font-family:var(--f-mono);fill:var(--muted)}
+.palcard figcaption{font-size:12.5px;display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.palcard figcaption span{color:var(--muted)}
+#shipPanel .tiles{margin-top:10px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -118,7 +153,7 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .sum{margin-left:auto;margin-top:14px;width:min(100%,360px);display:flex;flex-direction:column;gap:4px}
 .sum div{display:flex;justify-content:space-between;gap:12px}
 .sum .num{font-size:14px}
-.sum .int{color:var(--muted);font-size:13px;font-style:italic}
+.sum .c-cost{color:var(--muted)}
 .sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .status{color:var(--ok);font-size:13px;align-self:center;min-height:1em}
@@ -135,10 +170,39 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .assump li{margin-bottom:4px}
 footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
 [hidden]{display:none!important}
+.printhead{display:none}
 @media print{
-  .top,.config,.actions,.tabs{display:none!important}
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+    --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
+    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+    color-scheme:light;
+  }
+  @page{margin:12mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  body:not([data-cost="1"]) .c-cost{display:none!important}
+  .pdfopt{display:none!important}
   .grid2{display:block}
   body{padding:0;background:#fff;color:#000}
+  .panel{border:0;padding:0}
+  #planPanel,#stairPanel{break-inside:avoid}
+  .stack{gap:10mm}
+  .printhead{display:block;border-bottom:2px solid var(--brand);padding-bottom:6px}
+  .ph-brand{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.03em;text-transform:uppercase;color:var(--brand)}
+  .ph-title{font-weight:600;font-size:15px}
+  .ph-meta{color:var(--muted);font-size:12px}
+  table{min-width:0}
+  tr.grp{break-after:avoid}
+  tr{break-inside:avoid}
+  body[data-print="offerta"] #planPanel,body[data-print="offerta"] #stairPanel{display:none!important}
+  body[data-print="disegni"] #offerPanel,body[data-print="disegni"] #shipPanel{display:none!important}
+  #shipPanel .tiles{display:flex!important}
+  #shipPanel{break-before:page}
+  body[data-print="disegni"] .plan{max-height:none}
+  body[data-print="offerta"] #v3Panel,#v3Off,#v3Note{display:none!important}
+  #v3Panel:has(#v3On[hidden]){display:none!important}
+  #v3Panel{break-inside:avoid}
 }
 </style>
 </head>
@@ -178,7 +242,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="180" step="5" inputmode="numeric"></label>
       </div>
       <label class="field"><span>Struttura</span><select id="support"></select></label>
-      <label class="field"><span>Piano di calpestio</span><select id="family"></select></label>
+      <label class="field"><span>Pedana</span><select id="family"></select></label>
       <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
       <p class="hint" id="legHint"></p>
     </div>
@@ -270,26 +334,41 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="field"><span>Sconto %</span><input type="number" id="discount" step="0.5" min="0" max="100" inputmode="decimal"></label>
         <label class="field"><span>IVA %</span><input type="number" id="vat" step="1" min="0" inputmode="decimal"></label>
       </div>
-      <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="10">10</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
-      <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione si applica a ogni riga e dà il prezzo di vendita. Lo sconto si applica al totale.</p>
+      <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="37">37</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
+      <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione (fissa 37%, modificabile) si applica a ogni riga e dà il prezzo di vendita. Lo sconto si applica al totale.</p>
+    </div>
+    <div class="sec">
+      <button type="button" class="btn" id="resetAll">Nuova offerta: azzera tutto</button>
+      <p class="hint">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive e quantità modificate; dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.</p>
     </div>
   </form>
 
   <div class="stack" id="result">
+    <div class="printhead" id="printHead"></div>
     <div class="tiles" id="tiles"></div>
     <div class="notes" id="notes"></div>
-    <div class="panel">
+    <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
       <div id="planBox"></div>
       <div class="legend">
         <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
         <span><i style="background:var(--leg);height:8px;width:8px"></i>Gamba</span>
-        <span><i style="background:var(--rail)"></i>Parapetto</span>
+        <span id="lgConn"><i style="background:color-mix(in srgb, var(--conn) 25%, transparent);border:2px solid var(--conn);height:10px;width:16px"></i>Connettore gambe (2 o 4)</span>
+        <span><i style="background:var(--rail)"></i>Parapetto 2 m</span>
+        <span><i style="background:var(--rail1)"></i>Parapetto 1 m</span>
+        <span><i style="background:var(--rail05)"></i>Parapetto 0,5 m</span>
         <span><i style="background:var(--ink);opacity:.55"></i>Mascheratura</span>
         <span><i style="background:var(--stair);opacity:.5"></i>Scala</span>
         <span><i style="background:var(--ramp);opacity:.5"></i>Rampa</span>
         <span>Retro in alto, fronte in basso</span>
       </div>
+    </div>
+    <div class="panel" id="stairPanel" hidden>
+      <h2>Scala in offerta</h2>
+      <div class="seg" id="stairPick" role="group" aria-label="Scegli la scala da vedere"></div>
+      <div id="stairBox"></div>
+      <p class="stairinfo" id="stairInfo" aria-live="polite"></p>
+      <div class="stairparts" id="stairParts"></div>
     </div>
     <div class="panel" id="v3Panel">
       <h2>Vista 3D</h2>
@@ -301,18 +380,23 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: Spider Deck e Rollrisers sono mostrati con gambe e pedane StageDeck.</p>
       </div>
     </div>
-    <div class="panel">
+    <div class="panel" id="offerPanel">
       <h2 id="offerTitle">Offerta</h2>
       <div class="tablewrap" id="offerTable"></div>
       <div class="sum" id="sum"></div>
       <ul class="techs" id="techNotes"></ul>
       <div class="actions">
-        <button type="button" class="btn primary" id="copyText">Copia offerta</button>
+        <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
+        <label class="check pdfopt"><input type="checkbox" id="pdfCost"> Prezzi di acquisto nel PDF</label>
+        <button type="button" class="btn primary" id="pdfDraw">PDF disegni</button>
+        <button type="button" class="btn" id="copyText">Copia offerta</button>
         <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
         <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
+        <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
         <span class="status" id="status" role="status" aria-live="polite"></span>
       </div>
     </div>
+    <div class="panel" id="shipPanel" hidden></div>
   </div>
 </section>
 
@@ -324,7 +408,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="params">
       <label class="field"><span>Apertura scala (m)</span><input type="number" id="stairOpening" min="0.5" step="0.5" inputmode="decimal"></label>
       <label class="field"><span>Apertura rampa (m)</span><input type="number" id="rampOpening" min="0.5" step="0.5" inputmode="decimal"></label>
-      <label class="field"><span>Mascheratura: cm aggiunti all'altezza</span><input type="number" id="skirtDeck" min="0" step="1" inputmode="decimal"></label>
+      <label class="field"><span>Bancale: pedane impilate al massimo</span><input type="number" data-pal="decks" min="1" step="1" inputmode="numeric"></label>
+      <label class="field"><span>Bancale: altezza massima carico (cm)</span><input type="number" data-pal="h" min="50" step="10" inputmode="numeric"></label>
+      <label class="field"><span>Bancale accessori: riempimento %</span><input type="number" data-pal="fill" min="10" max="100" step="5" inputmode="numeric"></label>
       <label class="field"><span>Capacità VTT (m² di deck)</span><input type="number" data-cap="VTT" min="1" step="1"></label>
       <label class="field"><span>Capacità VDT (m²)</span><input type="number" data-cap="VDT" min="1" step="1"></label>
       <label class="field"><span>Capacità VGT (m²)</span><input type="number" data-cap="VGT" min="1" step="1"></label>
@@ -341,9 +427,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <h3>Come vengono contati i pezzi</h3>
     <ul class="assump">
       <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
-      <li>Ogni deck ha le sue 4 gambe. Dove si incontrano 2 gambe serve un morsetto singolo, dove se ne incontrano 4 uno doppio (manuale Larcher). I giunti sono i lati in comune tra due deck.</li>
-      <li>Le scale modulari hanno un gradino ogni 20 cm: per un palco da 60 cm sono VSM20, VSM40 e VSM60. Sopra 80 cm si usa la scala regolabile, che non ha corrimano a 2 gradini.</li>
-      <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
+      <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
+      <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
+      <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
+      <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m; se avanza mezzo metro (2,5, 3,5 m...) un elemento da 0,5 m, sulla pedana da mezzo metro del bordo.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
@@ -380,7 +467,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <script>
 "use strict";
 // ==ENGINE-START==
-const GROUPS = ['Piano di calpestio','Appoggi','Collegamenti','Parapetti','Scale e rampe','Mascheratura','Trasporto','Varie'];
+const GROUPS = ['Pedana','Gambe','Collegamenti','Parapetti','Scale','Rampe','Mascheratura','Trasporto','Varie'];
 // Carrelli: capacità in m² di deck (VTT 15 deck 2×1, VDT 6 deck 2×1, VTSP 15 deck 1×1, FLSP 6 deck 1×1). VGT: capacità non indicata, uguale a VTT (da verificare).
 const TROLLEYS = {
   VTT:{label:'VTT carrello deck orizzontale (15 deck 2×1)', cap:30, sys:'stage'},
@@ -410,9 +497,9 @@ const FAMILIES = {
   spiderb:{label:'Spider nero (2×1 e 1×1)', support:'spider', step:1, riser:'B', codes:{'4x2':'SPHB-2x1','2x2':'SPHB-1x1'}}
 };
 const TRIGGERS = {
-  deck_corner:{label:'per ogni angolo di deck (4 per deck)', group:'Appoggi'},
-  vertex:{label:'per ogni punto d\'angolo distinto', group:'Appoggi'},
-  vertex1:{label:'per ogni angolo con 1 solo deck', group:'Appoggi'},
+  deck_corner:{label:'per ogni angolo di deck (4 per deck)', group:'Gambe'},
+  vertex:{label:'per ogni punto d\'angolo distinto', group:'Gambe'},
+  vertex1:{label:'per ogni angolo con 1 solo deck', group:'Gambe'},
   junction2:{label:'per ogni incontro di 2 angoli di deck', group:'Collegamenti'},
   junction34:{label:'per ogni incontro di 4 angoli di deck', group:'Collegamenti'},
   joint:{label:'per ogni giunto tra due deck', group:'Collegamenti'},
@@ -422,22 +509,22 @@ const TRIGGERS = {
   rail:{label:'per ogni elemento di parapetto', group:'Parapetti'},
   rail_link:{label:'per ogni unione tra parapetti sullo stesso lato', group:'Parapetti'},
   rail_corner:{label:'per ogni angolo tra due lati con parapetto', group:'Parapetti'},
-  stair:{label:'per ogni scala', group:'Scale e rampe'},
-  stair_modular:{label:'per ogni scala modulare', group:'Scale e rampe'},
-  stair_modular_rails:{label:'per ogni coppia di gradini modulari, per lato con corrimano', group:'Scale e rampe'},
-  stair_adjustable:{label:'per ogni scala regolabile', group:'Scale e rampe'},
-  stair_adjustable_rail:{label:'per ogni scala regolabile con corrimano (4, 5 o 7 gradini)', group:'Scale e rampe'},
-  stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale e rampe'},
+  stair:{label:'per ogni scala', group:'Scale'},
+  stair_modular:{label:'per ogni scala modulare', group:'Scale'},
+  stair_modular_rails:{label:'per ogni coppia di gradini modulari, per lato con corrimano', group:'Scale'},
+  stair_adjustable:{label:'per ogni scala regolabile', group:'Scale'},
+  stair_adjustable_rail:{label:'per ogni scala regolabile con corrimano (4, 5 o 7 gradini)', group:'Scale'},
+  stair_adjustable_rail2:{label:'per ogni scala regolabile con corrimano su 2 lati', group:'Scale'},
   fixed:{label:'una sola volta', group:'Varie'}
 };
-// when: 'perDeck' = solo gambe (sempre 4 per deck), 'deck' = gambe o Rollrisers, 'roll', 'spider'
+// when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
 const DEFAULT_RULES = {
-  v:4,
-  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, skirtDeck:9, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
+  v:5,
+  params:{legMode:'perDeck', stairOpening:1, rampOpening:1, pal:{decks:20, h:200, fill:75}, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
   rows:[
     {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
-    {on:true, label:'Morsetto tra 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'perDeck', note:'Manuale: un morsetto singolo ogni 2 gambe, al massimo 20 cm sotto il deck.'},
-    {on:true, label:'Morsetto tra 4 gambe', trigger:'junction34', code:'V4LC', qty:1, when:'perDeck', note:'Manuale: un morsetto doppio ogni 4 gambe, dove si incontrano 4 angoli di deck.'},
+    {on:true, label:'Connettore per 2 gambe', trigger:'junction2', code:'VLC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe). Sul perimetro, dove si incontrano 2 gambe, un connettore doppio, al massimo 20 cm sotto il deck.'},
+    {on:true, label:'Connettore per 4 gambe', trigger:'junction34', code:'V4LC', qty:1, when:'legsHigh', note:'Regola tua: solo con gambe oltre 80 cm, come sopra. All\'interno, dove si incontrano 4 gambe, un connettore quadro.'},
     {on:true, label:'Connettore deck-deck', trigger:'joint_m', code:'VD2D', qty:1, when:'deckHigh', note:'Regola tua: 1 pezzo per ogni metro di lato connesso (un deck 2×1 collegato su un lato lungo e uno corto ne ha 3). Non per i palchi da 20 cm.'},
     {on:true, label:'Connettore deck-deck StageDeck da 20 cm', trigger:'joint_m', code:'D2DC', qty:1, when:'deck20', note:'Regola tua: con StageDeck a 20 cm si usa il connettore Spider D2DC al posto del VD2D, 1 pezzo per metro di lato connesso.'},
     {on:true, label:'Livellatore tra deck', trigger:'joint_m', code:'VDL', qty:1, note:'Regola tua: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.'},
@@ -447,7 +534,7 @@ const DEFAULT_RULES = {
     {on:true, label:'Rollriser con 4 gambe', trigger:'junction34', code:'@RR4', qty:1, when:'roll', note:'Come sopra, dove si incontrano 4 deck.'},
     {on:true, label:'Connettore tra parapetti', trigger:'rail_link', code:'VHC', qty:1, note:'Manuale: unione dritta tra due parapetti vicini.'},
     {on:true, label:'Connettore d\'angolo parapetti', trigger:'rail_corner', code:'VHCC', qty:1, note:'Manuale: connettore d\'angolo dove due lati con parapetto si incontrano.'},
-    {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
+    {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, a partire dall\'alto (con 3 gradini va sul 2° e 3°), per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
     {on:true, label:'Corrimano scala regolabile destro', trigger:'stair_adjustable_rail', code:'VASH-R', qty:1, note:'Brochure: corrimano universale per scale regolabili da 4, 5 e 7 gradini. Un corrimano per ogni scala con corrimano.'},
     {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
   ]
@@ -457,6 +544,8 @@ const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'V
 const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
 const STRATS = [{rowMajor:true,preferH:true},{rowMajor:true,preferH:false},{rowMajor:false,preferH:true},{rowMajor:false,preferH:false}];
 
+// Gamba più lunga di 80 cm: fissa sopra 80 cm, oppure telescopica VTL60 (60–100) o più lunga.
+function legLongFn(leg, h){ return leg.tele ? leg.code!=='VTL40' : h>80; }
 function pickLeg(h, tele){
   // Altezze intermedie (30, 50, 70, 90): gamba virtuale a prezzo medio tra le due gambe fisse vicine.
   if(!tele && !FIXED_LEGS[h] && FIXED_LEGS[h-10] && FIXED_LEGS[h+10])
@@ -468,15 +557,96 @@ function pickLeg(h, tele){
   if(FIXED_LEGS[h]) return {code:FIXED_LEGS[h], note:'gamba fissa', tele:false};
   return null;
 }
-// Scala modulare: un gradino ogni 20 cm di altezza (VSM20, VSM40, ... fino all'altezza del palco).
-function pickStair(h, type){
-  const mod = (h>=20 && h<=80 && h%20===0)
-    ? {kind:'modular', steps:h/20, parts:Array.from({length:h/20},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
-  const a = ADJ_STAIRS.find(([x,y]) => h>=x && h<=y);
-  const adj = a ? {kind:'adjustable', steps:0, rails:a[2]!=='VAS-2', parts:[{code:a[2], qty:1}]} : null;
+// Scala modulare: elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...). L'ultimo gradino è 20 cm sotto il palco,
+// quindi per un palco da H servono VSM20 ... VSM(H-20). Solo per altezze multiple di 20, da 40 a 100 cm.
+// Scala regolabile: il modello va abbinato alla gamba telescopica con la stessa escursione (VTL40↔VAS-2, VTL60↔VAS-4, ...).
+const STAIR_DEPTH = 29;   // cm, profondità di un elemento modulare (imballo VSM: 915 × 290 mm)
+function pickStair(h, type, leg){
+  const mod = (h>=40 && h<=100 && h%20===0)
+    ? {kind:'modular', steps:h/20-1, parts:Array.from({length:h/20-1},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
+  const ti = leg && leg.tele ? TELE_LEGS.findIndex(t => t[2]===leg.code) : -1;
+  const a = ti>=0 ? ADJ_STAIRS[ti] : ADJ_STAIRS.find(([x,y]) => h>=x && h<=y);
+  const adj = a ? {kind:'adjustable', model:a[2], lo:a[0], hi:a[1], steps:+a[2].split('-')[1], legCode:TELE_LEGS[ADJ_STAIRS.indexOf(a)][2],
+    rails:a[2]!=='VAS-2', parts:[{code:a[2], qty:1}]} : null;
   if(type==='modular') return mod;
   if(type==='adjustable') return adj;
   return mod || adj;
+}
+// Ingombro della scala a terra (cm). Regolabile: indicativo, dalla lunghezza dell'imballo come lunghezza del cosciale.
+// Spedizione su bancali (stima).
+// Pedane impilate su bancali 2×1 m: uno strato = la superficie del bancale (1 pedana 2×1, 2 da 1×1, ...),
+// al massimo P.decks strati e P.h cm di carico (bancale escluso).
+// Accessori: prima sopra le pedane, nello spazio che resta fino a P.h cm; i pezzi più lunghi di 120 cm solo su 2×1.
+// Quello che avanza: pezzi lunghi su un nuovo bancale 2×1, gli altri su bancali EPAL 120×80.
+// Lo spazio per gli accessori è il volume libero del bancale × P.fill %. I carrelli viaggiano da soli.
+const PALLETS = {big:{name:'2×1 m', L:200, W:100}, epal:{name:'EPAL 120×80 cm', L:120, W:80}};
+function shipping(lines, look, P){
+  const maxLayers = Math.max(1, Math.round(+P.decks||20)), Hmax = Math.max(50, +P.h||200), fill = Math.min(1, Math.max(.1, (+P.fill||75)/100));
+  const decks = [], units = [], carts = [], noDims = new Set();
+  for(const l of lines){
+    if(!(l.pieces>0)) continue;
+    const it = look.get(ncode(l.code)) || {};
+    if(TROLLEYS[it.code]){ carts.push({code:it.code, qty:l.pieces}); continue; }
+    if(/PLATFORM|DECK/i.test(it.section||'') && it.pack){
+      const [a,b,t] = it.pack, frac = Math.max(1/8, Math.round(a*b/(2005*1005)*8)/8);
+      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, frac:Math.min(1,frac), t:t/10, kg:it.kg||0});
+      continue;
+    }
+    if(!it.pack){ noDims.add(it.code||l.code); continue; }
+    const pk = it.pkg||1, n = Math.round(l.pieces/pk), vol = it.pack[0]*it.pack[1]*it.pack[2]/1e9;
+    const name = l.isSet ? 'set' : pk>1 ? 'conf.' : '';
+    for(let i=0;i<n;i++) units.push({code:it.code, unit:name, vol, kg:it.kg||0, long:Math.max(...it.pack)>1200});
+  }
+  const pallets = [];
+  const newPallet = kind => { const p = {kind, ...PALLETS[kind], layers:[], deckH:0, decks:{}, deckCount:0, acc:{}, accVol:0, kg:0}; pallets.push(p); return p; };
+  // pedane: strati riempiti dalla più grande alla più piccola (misure multiple di 1/8 di 2×1: il riempimento è esatto)
+  decks.sort((a,b) => b.frac-a.frac || b.t-a.t);
+  const layers = [];
+  for(const d of decks){
+    let L = layers.find(x => x.t===d.t && x.free >= d.frac-1e-9);
+    if(!L){ L = {t:d.t, free:1, items:[]}; layers.push(L); }
+    L.free -= d.frac; L.items.push(d);
+  }
+  for(const t of [...new Set(layers.map(x => x.t))]){
+    const ls = layers.filter(x => x.t===t), per = Math.max(1, Math.min(maxLayers, Math.floor(Hmax/t)));
+    for(let i=0;i<ls.length;i+=per){
+      const p = newPallet('big');
+      for(const L of ls.slice(i, i+per)){
+        p.layers.push({t:L.t, used:1-Math.max(0,L.free)}); p.deckH += L.t;
+        for(const d of L.items){ p.decks[d.code] = (p.decks[d.code]||0)+1; p.deckCount++; p.kg += d.kg; }
+      }
+    }
+  }
+  // accessori: i lunghi per primi, poi dal più voluminoso
+  const room = p => p.L*p.W*Math.max(0, Hmax-p.deckH)/1e6*fill - p.accVol;
+  units.sort((a,b) => (b.long-a.long) || b.vol-a.vol);
+  for(const u of units){
+    let p = pallets.find(x => x.kind==='big' && room(x) >= u.vol-1e-9);
+    if(!p && !u.long) p = pallets.find(x => x.kind==='epal' && room(x) >= u.vol-1e-9);
+    if(!p) p = newPallet(u.long ? 'big' : 'epal');
+    const k = u.code + (u.unit ? '|'+u.unit : '');
+    p.acc[k] = (p.acc[k]||0)+1; p.accVol += u.vol; p.kg += u.kg;
+  }
+  for(const p of pallets) p.accH = p.accVol ? Math.min(Hmax-p.deckH, p.accVol/(p.L*p.W/1e4*fill)*100) : 0;
+  const longCodes = [...new Set(units.filter(u => u.long).map(u => u.code))];
+  return {pallets, count:pallets.length, carts, noDims:[...noDims], longCodes, maxLayers, Hmax, fill:Math.round(fill*100),
+    big:pallets.filter(p => p.kind==='big').length, epal:pallets.filter(p => p.kind==='epal').length};
+}
+const accList = acc => Object.entries(acc).map(([k,n]) => { const [c,u] = k.split('|'); return `${n}${u ? ' '+u : ''} × ${c}`; }).join(', ');
+function shipSummary(sh){
+  if(!sh.count && !sh.carts.length) return '';
+  const deckN = sh.pallets.reduce((s,p) => s+p.deckCount, 0);
+  const parts = [];
+  if(sh.big) parts.push(`${sh.big} ${sh.big===1?'bancale':'bancali'} 2×1 m` + (deckN ? ` (${deckN} pedane, accessori sopra)` : ''));
+  if(sh.epal) parts.push(`${sh.epal} EPAL 120×80 cm`);
+  if(sh.carts.length) parts.push('carrelli ' + sh.carts.map(c => `${c.qty} × ${c.code}`).join(', ') + ' a parte');
+  return (sh.big && sh.epal ? `Spedizione (stima): ${sh.count} bancali: ` : 'Spedizione (stima): ') + parts.join(', ') + '.';
+}
+function stairGeom(st, h, look){
+  if(st.kind==='modular') return {run:st.steps*STAIR_DEPTH, len:null, angle:Math.atan2(20, STAIR_DEPTH)*180/Math.PI};
+  const it = look.get(ncode(st.model)), L = it && it.pack ? it.pack[0]/10 : (st.steps+1)*30;
+  const run = Math.sqrt(Math.max(L*L - h*h, (L*0.3)**2));
+  return {run, len:L, angle:Math.atan2(h, run)*180/Math.PI};
 }
 function tile(Wc, Dc, sizes, st){
   const g = new Uint8Array(Wc*Dc), out = [], cands = [];
@@ -503,16 +673,25 @@ function tile(Wc, Dc, sizes, st){
   }
   return out;
 }
-function railPieces(L, p2, p1){
-  if(L<=0) return {n2:0,n1:0,cover:0};
-  let best = null;
-  for(let n2=0;n2<=Math.ceil(L/2);n2++) for(let n1=0;n1<=2;n1++){
-    const cover = 2*n2+n1;
-    if(cover < L-1e-9) continue;
-    const cost = n2*p2 + n1*p1;
-    if(!best || cost<best.cost-1e-9 || (Math.abs(cost-best.cost)<1e-9 && cover<best.cover)) best = {n2,n1,cover,cost};
+function railPieces(L){
+  // Elementi da 2 m su tutto il lato; se avanza 1 m un elemento da 1 m, se avanza mezzo metro un elemento da 0,5 m.
+  if(L<=0) return {n2:0,n1:0,n05:0,cover:0};
+  let n2 = Math.floor(L/2+1e-9), n1 = 0, n05 = 0;
+  let rest = L-2*n2;
+  if(rest >= 1-1e-9){ n1 = 1; rest -= 1; }
+  if(rest > 1e-9){ if(rest <= 0.5+1e-9) n05 = 1; else n1++; }
+  return {n2, n1, n05, cover:2*n2+n1+0.5*n05};
+}
+// Ordine dei pezzi sul lato: il pezzo da 0,5 m va sulla pedana da mezzo metro del bordo (edges: inizi dei tratti da 0,5 m).
+function railOrder(pc, start, edges){
+  const rest = [...Array(pc.n2).fill(2), ...Array(pc.n1).fill(1)];
+  if(!pc.n05) return rest;
+  for(const e of edges){
+    const off = e-start;
+    for(let a=0;a<=pc.n2;a++) for(let b=0;b<=pc.n1;b++) if(Math.abs(2*a+b-off)<1e-9)
+      return [...Array(a).fill(2), ...Array(b).fill(1), 0.5, ...Array(pc.n2-a).fill(2), ...Array(pc.n1-b).fill(1)];
   }
-  return best;
+  return [...rest, 0.5];
 }
 const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length-5}` : a.join(', ');
 
@@ -547,7 +726,7 @@ function compute(cfg, R, look, kits){
   for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
   const byDeck = new Map();
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
-  for(const [code,qty] of byDeck) out.lines.push({group:'Piano di calpestio', code, qty});
+  for(const [code,qty] of byDeck) out.lines.push({group:'Pedana', code, qty});
 
   // --- metriche per le regole
   const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(W*D-1e-9), fixed:1};
@@ -584,7 +763,7 @@ function compute(cfg, R, look, kits){
         ? 'Portata del deck 750 kg/m² (DIN 15921), deck fino a 244 × 122 cm su 4 gambe.'
         : `Portata ridotta a 500 kg/m² con gambe 60×60 a ${H} cm (tabella Larcher).`);
       if(leg.tele) out.notes.push('Gambe telescopiche: dopo la regolazione vanno bloccate con il dado autobloccante, è vietato usare il palco senza.');
-      out.notes.push('Morsetti tra le gambe al massimo 20 cm sotto il deck.');
+      if(legLongFn(leg, H)) out.notes.push('Gambe oltre 80 cm: connettori tra le gambe (doppi sul perimetro, quadri all\'interno), al massimo 20 cm sotto il deck.');
     }
   }else if(support==='roll'){
     rrOK = (H===30 || H===40);
@@ -592,14 +771,24 @@ function compute(cfg, R, look, kits){
     else out.notes.push('Rollrisers con ruote frenate: frenare tutte le ruote prima dell\'uso.');
   }else{
     if(![20,40,60].includes(H)) warn('bad','Lo Spider esiste solo a 20, 40 o 60 cm.');
-    else out.lines.push({group:'Appoggi', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
+    else out.lines.push({group:'Gambe', code:`SPR${H}${fam.riser}-1x1`, qty:M.m2});
   }
   out.info.leg = leg;
+  const legLong = !!(leg && legLongFn(leg, H));
 
   // --- scale e rampe
   const nStairs = cfg.stairs.length, nRamps = (cfg.ramps||[]).length;
-  const stair = nStairs ? pickStair(H, cfg.stairType) : null;
-  if(nStairs && !stair) warn('bad',`Nessuna scala del tipo scelto per ${H} cm (modulari 20, 40, 60, 80 cm; regolabili 40–180 cm).`);
+  const stair = nStairs && H>20 ? pickStair(H, cfg.stairType, leg) : null;
+  if(nStairs && H<=20) out.notes.push('Palco da 20 cm: la scala non serve (l\'ultimo gradino sarebbe a 0 cm).');
+  else if(nStairs && !stair) warn('bad', cfg.stairType==='modular'
+    ? `La scala modulare ha elementi da 20 cm e l'ultimo gradino sta 20 cm sotto il palco: si compone solo per palchi da 40, 60, 80 o 100 cm. Con ${H} cm scegli la scala regolabile.`
+    : `Nessuna scala del tipo scelto per ${H} cm (modulari per palchi da 40 a 100 cm a passi di 20; regolabili 40–180 cm).`);
+  if(stair && stair.kind==='modular') out.notes.push(`Scala modulare: ${stair.parts.map(p => p.code).join(' + ')}, ultimo gradino a ${H-20} cm, 20 cm sotto il palco.`);
+  if(stair && stair.kind==='adjustable'){
+    if(H<stair.lo || H>stair.hi) warn('bad',`La scala ${stair.model} va da ${stair.lo} a ${stair.hi} cm: con ${H} cm non si monta.`);
+    out.notes.push(`Scala regolabile ${stair.model} (${stair.lo}–${stair.hi} cm), da abbinare alle gambe telescopiche ${stair.legCode}.`);
+    if(leg && !leg.tele) warn('warn',`La scala regolabile ${stair.model} va abbinata alle gambe telescopiche ${stair.legCode}, ma il palco è su gambe fisse ${leg.code}.`);
+  }
   M.stair = stair ? nStairs : 0;
   M.stair_modular = stair && stair.kind==='modular' ? nStairs : 0;
   const sr = cfg.stairs.map(s => s.rails===0 ? 0 : s.rails===1 ? 1 : 2);
@@ -608,14 +797,14 @@ function compute(cfg, R, look, kits){
   M.stair_adjustable = stair && stair.kind==='adjustable' ? nStairs : 0;
   M.stair_adjustable_rail = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=1).length : 0;
   M.stair_adjustable_rail2 = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=2).length : 0;
-  if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nStairs});
+  if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale', code:pt.code, qty:pt.qty*nStairs});
   let kit = null, rampLen = 0;
   if(nRamps){
     kit = (kits||[]).find(k => H>=k.lo && H<=k.hi) || null;
     if(!kit) warn('bad',`Nessuna rampa nel listino per ${H} cm (disponibili: ${(kits||[]).map(k => k.lo===k.hi ? k.lo : k.lo+'–'+k.hi).join(', ')||'nessuna'} cm).`);
     else{
       for(const pt of kit.parts){
-        out.lines.push({group:'Scale e rampe', code:pt.code, qty:pt.qty*nRamps});
+        out.lines.push({group:'Rampe', code:pt.code, qty:pt.qty*nRamps});
         const m = /^VS750H-(\d+(?:,\d+)?)[x×]/i.exec(pt.code);
         if(m) rampLen += parseFloat(m[1].replace(',','.'))*pt.qty;
       }
@@ -630,32 +819,36 @@ function compute(cfg, R, look, kits){
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
 
   // --- parapetti
-  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0';
+  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0', c05 = cfg.kick ? 'VHK0.5' : 'VH0.5';
+  const halfEdges = s => decks.filter(d => s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc)
+    .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
   const runs = []; let rails = 0, railLinks = 0;
   for(const s of ['back','front','left','right']){
     if(!cfg.rails[s]) continue;
     const start = Math.min(sideLen[s], taken(s));
     const L = sideLen[s] - start;
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
-    const pc = railPieces(L, P(c2), P(c1));
-    const n = pc.n2+pc.n1;
-    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, cover:pc.cover});
+    const pc = railPieces(L);
+    const n = pc.n2+pc.n1+pc.n05;
+    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
     rails += n; railLinks += n-1;
     if(pc.cover > L+1e-9) warn('info',`Lato ${SIDE_LABEL[s]}: servono ${nf(L)} m di parapetto, gli elementi coprono ${nf(pc.cover)} m (${nf(pc.cover-L)} m in più).`);
   }
-  const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0);
+  const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0), tn05 = runs.reduce((s,r) => s+r.n05,0);
   if(tn2) out.lines.push({group:'Parapetti', code:c2, qty:tn2});
   if(tn1) out.lines.push({group:'Parapetti', code:c1, qty:tn1});
+  if(tn05) out.lines.push({group:'Parapetti', code:c05, qty:tn05});
   M.rail = rails; M.rail_link = railLinks;
   M.rail_corner = [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
   if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
 
   // --- regole accessori
-  let legRules = 0;
+  let legRules = 0; const trigUsed = new Set();
   for(const r of R.rows){
     if(!r.on) continue;
     const w = r.when;
     if(w==='perDeck'){ if(support!=='legs' || !leg) continue; }
+    else if(w==='legsHigh'){ if(support!=='legs' || !leg || !legLong) continue; }
     else if(w==='deck'){ if(support==='spider') continue; }
     else if(w==='deckHigh'){ if(support==='spider' || +cfg.H===20) continue; }
     else if(w==='deck20'){ if(support==='spider' || +cfg.H!==20) continue; }
@@ -663,12 +856,12 @@ function compute(cfg, R, look, kits){
     else if(w==='spider'){ if(support!=='spider') continue; }
     const q = +r.qty; if(!(q>0)) continue;
     let code = r.code, group = null;
-    if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Appoggi'; }
-    else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Appoggi'; }
+    if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Gambe'; }
+    else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Gambe'; }
     if(!code) continue;
     if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
     const n = r.trigger==='joint_m' ? joints.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
-    if(n>0) out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n});
+    if(n>0){ out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n}); trigUsed.add(r.trigger+'|'+r.when); }
   }
   if(support==='legs' && leg && !legRules) warn('warn','Nessuna regola attiva per le gambe: l\'offerta non le include.');
 
@@ -680,9 +873,10 @@ function compute(cfg, R, look, kits){
   if(skSides.length){
     const fab = SKIRT_FABRICS[sk.fabric] ? sk.fabric : 'PSP-S';
     const manual = sk.height && sk.height!=='auto';
-    const need = H + (R.params.skirtDeck!=null ? +R.params.skirtDeck : 9);
-    const sh = manual ? +sk.height : ([20,40,60,80,100].find(x => x>=need-1e-9) || 100);
-    if(!manual && need>100+1e-9) warn('warn',`Altezza palco con deck ${nf(need)} cm: il telo più alto è 100 cm. Gli ho messo 100 cm.`);
+    // L'altezza del palco è quella finita (piano del deck da terra): il telo standard che la copre.
+    const sh = manual ? +sk.height : ([20,40,60,80,100].find(x => x>=H-1e-9) || 100);
+    if(!manual && H>100) warn('warn',`Palco alto ${H} cm: il telo più alto a listino è 100 cm, sotto resta scoperta una fascia di ${H-100} cm.`);
+    if(manual && sh<H) warn('warn',`Telo da ${sh} cm su un palco alto ${H} cm: sotto resta scoperta una fascia di ${H-sh} cm.`);
     skirtH = sh;
     const PROF = {2:'SKP1970', 1:'SKP970', 0.5:'SKP470'};
     const lens = {};
@@ -727,24 +921,30 @@ function compute(cfg, R, look, kits){
     if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
   }
   const mk = 1 + (+cfg.markup||0)/100;
-  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [];
+  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [];
+  const adjMap = cfg.adj || {};
   for(const l of agg.values()){
     const it = look.get(ncode(l.code));
     if(!it){ warn('bad',`Il codice ${l.code} non è nel listino.`); continue; }
     if(it.price==null) noPrice.push(it.code);
     const pr = it.price||0;
     // Confezioni: le gambe sono vendute a set da 4 (qui qty e prezzo sono per set); i connettori da 3 restano a pezzi.
-    const pk = it.pkg||1, pieces = Math.ceil(l.qty/pk-1e-9)*pk, sets = pieces/pk;
+    const pk = it.pkg||1, autoPieces = Math.ceil(l.qty/pk-1e-9)*pk;
     const isSet = pk===4 && /leg/i.test(it.name);
-    if(pieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${pieces}`);
+    if(autoPieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${autoPieces}`);
+    // Quantità modificata a mano con + e −: un passo = 1 pezzo, o 1 confezione per gli articoli in confezione.
+    const key = l.group+'|'+ncode(l.code), adj = Math.max(-autoPieces/pk, Math.round(+adjMap[key]||0));
+    const pieces = autoPieces + adj*pk, sets = pieces/pk;
+    if(adj) adjNotes.push(`${it.code} ${adj>0?'+':'−'}${Math.abs(adj)*(isSet?1:pk)}${isSet?' set':''}`);
     const qty = isSet ? sets : pieces, unit = r2(pr*mk*(isSet ? pk : 1));
     const kg = it.kg!=null ? it.kg*sets : null;
     const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
     if(kg==null) noKg.push(it.code);
     if(m3==null) noVol.push(it.code);
-    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3});
+    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3});
   }
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
   if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
   if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
@@ -758,8 +958,13 @@ function compute(cfg, R, look, kits){
   out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
     kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
     pieces: lines.reduce((s,l) => s+l.pieces,0), area: W*D};
-  out.plan = {W, D, decks, vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
-    skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair};
+  out.ship = shipping(lines, look, R.params.pal || {});
+  const shTxt = shipSummary(out.ship);
+  if(shTxt) out.notes.push(shTxt);
+  const onLegs = support==='legs' && !!leg;
+  out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
+    skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
+    stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
   out.info.famLabel = fam.label;
   out.info.support = support;
@@ -776,6 +981,9 @@ const dec = (n,d=1) => n.toLocaleString('it-IT',{minimumFractionDigits:d,maximum
 
 const CATALOG = JSON.parse(document.getElementById('catalog').textContent);
 const ITEMS = CATALOG.items;
+// Parapetti da 0,5 m: non sono nel listino Everdeck, li aggiungo senza prezzo, peso e imballo (prezzo da prezzi.json se c'è).
+for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VHK0.5', name:'0,5m handrail with kickboard (fuori listino)'}])
+  if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
 const LOOK = new Map(ITEMS.map(i => [ncode(i.code), i]));
 const BASE_PRICES = ITEMS.some(i => i.price!=null);
@@ -800,10 +1008,12 @@ const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
   W:4, D:4, H:60, family:'hexa', tele:false,
   rails:{back:true, left:true, right:true, front:false}, kick:false,
-  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[],
-  markup:0, discount:0, vat:22
+  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
+  markup:37, discount:0, vat:22, pdfCost:false
 };
 const clone = o => JSON.parse(JSON.stringify(o));
+// "Azzera tutto": impostazioni iniziali senza accessori
+const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, markup:37, discount:0});
 let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
 
 function load(){
@@ -813,8 +1023,17 @@ function load(){
     if(s && s.cfg) cfg = Object.assign(clone(DEFAULT_CFG), s.cfg);
     cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
     cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
+    cfg.adj = (cfg.adj && typeof cfg.adj==='object') ? cfg.adj : {};
+    if(!cfg.mk37){ cfg.markup = 37; cfg.mk37 = true; }   // una volta: maggiorazione fissa 37%
     cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
-    if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
+    if(s && s.rules && s.rules.rows && s.rules.v===4){
+      s.rules.v = 5;
+      for(const r of s.rules.rows) if(r.when==='perDeck' && (r.trigger==='junction2' || r.trigger==='junction34')){
+        const d = DEFAULT_RULES.rows.find(x => x.trigger===r.trigger && x.when==='legsHigh');
+        Object.assign(r, {when:'legsHigh', label:d.label, note:d.note});
+      }
+    }
+    if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.pal = Object.assign(clone(DEFAULT_RULES.params.pal), R.params.pal||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
   }catch(e){}
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({cfg, rules:R})); }catch(e){} }
@@ -825,7 +1044,7 @@ function fillForm(){
   $('#support').value = cfg.support;
   renderFamilies();
   for(const id of ['cliente','progetto','numero','data','W','D','H','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
-  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick;
+  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#pdfCost').checked = !!cfg.pdfCost;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
   $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
@@ -890,7 +1109,16 @@ function renderExtras(){
 
 /* --- risultato --- */
 function planSVG(p, H){
-  const W = p.W*100, D = p.D*100, sd = 80;  // sd: profondità disegnata della scala (cm)
+  const W = p.W*100, D = p.D*100, sd = p.stair ? Math.max(30, p.stair.run) : 80;  // sd: profondità della scala (cm)
+  // pedate in pianta, come distanze [a,b] dal bordo del palco (cm)
+  const treads = [];
+  if(p.stair){
+    const n = p.stair.steps;
+    for(let k=1;k<=n;k++){
+      if(p.stair.kind==='modular') treads.push({k, a:(n-k)*STAIR_DEPTH, b:(n-k+1)*STAIR_DEPTH});
+      else{ const c = sd*(1-k/(n+1)), tw = Math.min(30, sd/(n+1)*1.1); treads.push({k, a:c-tw/2, b:c+tw/2}); }
+    }
+  }
   const ext = side => Math.max(100, p.stairs[side] ? sd+60 : 0, p.ramps[side] ? p.rampLen*100+60 : 0);
   const mT = ext('back'), mB = ext('front'), mL = ext('left'), mR = ext('right');
   const vbw = W+mL+mR, vbh = D+mT+mB, px = Math.max(vbw/640, vbh/640*0.8);
@@ -906,12 +1134,13 @@ function planSVG(p, H){
   for(const r of p.runs){
     const horiz = r.side==='back' || r.side==='front';
     const fixed = r.side==='back' ? 0 : r.side==='front' ? D : r.side==='left' ? 0 : W;
-    const lens = [...Array(r.n2).fill(2), ...Array(r.n1).fill(1)];
+    const lens = r.pieces;
     let pos = r.start;
     const limit = horiz ? p.W : p.D;
     for(const L of lens){
       const a = pos*100, b = Math.min(limit,pos+L)*100;
-      if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,'var(--rail)',5) : seg(fixed,a+2*px,fixed,b-2*px,'var(--rail)',5);
+      const rc = L===2 ? 'var(--rail)' : L===1 ? 'var(--rail1)' : 'var(--rail05)';  // 2 m, 1 m e 0,5 m con colori diversi
+      if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,rc,5) : seg(fixed,a+2*px,fixed,b-2*px,rc,5);
       pos += L;
     }
   }
@@ -932,10 +1161,14 @@ function planSVG(p, H){
     for(let i=0;i<p.stairs[side];i++){
       const {x,y,w,h} = slot(side, i*p.opening, p.opening, sd);
       const col = p.stairOk ? 'var(--stair)' : 'var(--bad)';
-      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".16" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
-      for(let k=1;k<=3;k++){
-        const t = k/4;
-        s += horiz ? seg(x,y+h*t,x+w,y+h*t,col,1) : seg(x+w*t,y,x+w*t,y+h,col,1);
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".08" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+      // pedate: una per gradino, alla distanza dal bordo del palco che hanno nella vista laterale (1 = la più bassa)
+      for(const tr of treads){
+        const a = tr.a, b = tr.b;
+        const r = side==='back' ? {x, y:-b, w, h:b-a} : side==='front' ? {x, y:D+a, w, h:b-a}
+                : side==='left' ? {x:-b, y, w:b-a, h} : {x:W+a, y, w:b-a, h};
+        s += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${col}" fill-opacity=".22" stroke="${col}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+        if((b-a)/px >= 11) s += `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+fs*.3}" font-size="${fs*.85}" text-anchor="middle">${tr.k}</text>`;
       }
     }
     for(let j=0;j<p.ramps[side];j++){
@@ -945,25 +1178,201 @@ function planSVG(p, H){
       s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle"${horiz ? '' : ` transform="rotate(-90 ${x+w/2} ${y+h/2})"`}>${nf(p.rampLen)} m</text>`;
     }
   }
-  // gambe
-  for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  // gambe: 4 per deck, un quadrato appena dentro ogni spigolo
+  if(p.legs){
+    const ins = sq*1.5;  // distanza del centro della gamba dallo spigolo, verso l'interno del deck
+    const legAt = (cx, cy, sx, sy) => [cx*50 + sx*ins, cy*50 + sy*ins];
+    const corners = new Map();
+    for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
+      const k = cx+','+cy; if(!corners.has(k)) corners.set(k, []); corners.get(k).push(legAt(cx,cy,sx,sy));
+    }
+    // connettori: una cornice intorno alle gambe che collega (doppio = 2 gambe, quadro = 4)
+    for(const pts of corners.values()){
+      if(!(pts.length===2 && p.conn2) && !(pts.length>=3 && p.conn4)) continue;
+      const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), pad = sq*0.95;
+      const x = Math.min(...xs)-pad, y = Math.min(...ys)-pad, w = Math.max(...xs)-Math.min(...xs)+2*pad, h = Math.max(...ys)-Math.min(...ys)+2*pad;
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${sq*.4}" fill="var(--conn)" fill-opacity=".25" stroke="var(--conn)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    }
+    for(const pts of corners.values()) for(const [x,y] of pts) s += `<rect x="${x-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  }else for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
   // quote
   s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
   s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
   return s + '</svg>';
 }
 
+/* --- scala in offerta: vista laterale interattiva (palco a destra, scala a sinistra, misure in cm) --- */
+let stairSel = 0;
+function stairPieces(st, rails){
+  const rule = trig => R.rows.find(r => r.on && r.trigger===trig && +r.qty>0);
+  const out = st.parts.map(p => ({code:p.code, qty:p.qty}));
+  const add = (r, n) => { if(r && n>0) out.push({code:r.code, qty:Math.ceil(n*r.qty-1e-9), rail:true}); };
+  if(st.kind==='modular') add(rule('stair_modular_rails'), rails*Math.floor(st.steps/2));
+  else if(st.rails){ if(rails>=1) add(rule('stair_adjustable_rail'), 1); if(rails>=2) add(rule('stair_adjustable_rail2'), 1); }
+  return out;
+}
+function stairSVG(st, rails){
+  const H = st.H, run = st.run, DW = 120, RH = 90;   // DW: tratto di palco disegnato, RH: altezza corrimano
+  const x0 = -run-30, x1 = DW+45, y0 = -H-RH-35, y1 = 45;
+  const px = Math.max((x1-x0)/640, (y1-y0)/340), fs = 11*px;
+  const ln = (a,b,c,d,cl='l',w=1.5,extra='') => `<line class="${cl}" x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke-width="${w}" vector-effect="non-scaling-stroke"${extra}/>`;
+  const hit = (a,b,c,d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="transparent" stroke-width="18" vector-effect="non-scaling-stroke"/>`;  // area da toccare
+  const piece = (code, inner, label) => `<g class="sp" data-code="${esc(code)}" tabindex="0" role="button" aria-label="${esc(label)}">${inner}</g>`;
+  let s = `<svg class="side" viewBox="${x0} ${y0} ${x1-x0} ${y1-y0}" role="img" aria-label="Vista laterale della scala">`;
+  // terreno e palco
+  s += `<line x1="${x0}" y1="0" x2="${x1}" y2="0" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  s += `<rect x="0" y="${-H}" width="${DW}" height="9" fill="var(--deck)" stroke="var(--deck-line)" vector-effect="non-scaling-stroke"/>`;
+  if(H>9) for(const lx of [3, DW-9]) s += `<rect x="${lx}" y="${-H+9}" width="6" height="${H-9}" fill="var(--leg)"/>`;
+  if(st.kind==='modular'){
+    const n = st.steps, d = STAIR_DEPTH;
+    st.parts.forEach((p,i) => {
+      const h = 20*(i+1), x = -(n-i)*d;
+      const name = (LOOK.get(ncode(p.code))||{}).name || p.code;
+      s += piece(p.code, `<rect class="b" x="${x}" y="${-h}" width="${d}" height="${h}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`+ln(x,-h,x+d,-h,'l',3)
+        + (d/px>26 ? `<text x="${x+d/2}" y="${-h/2+fs*.35}" font-size="${fs*.9}" text-anchor="middle">${i+1}°</text>` : ''), `${p.code}, ${name}`);
+    });
+    // corrimano: uno ogni 2 gradini adiacenti, partendo dall'alto (con 3 gradini sta sul 2° e 3°),
+    // dall'inizio del gradino basso alla fine di quello alto
+    const hr = stairPieces(st, rails).find(p => p.rail);
+    if(hr) for(let up=n; up-1>=1; up-=2){
+      const lo = up-1, xa = -(n-lo+1)*d + 2, ya = -20*lo-RH, xb = -(n-up)*d - 2, yb = -20*up-RH;
+      s += piece(hr.code, hit(xa,ya,xb,yb)+ln(xa,ya,xb,yb,'l',3)+ln(xa,ya,xa,-20*lo)+ln(xb,yb,xb,-20*up), `${hr.code}, corrimano gradini ${lo}° e ${up}°`);
+    }
+    s += `<text x="${-n*d/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">${n*d} cm</text>`;
+    s += `<text x="${-d*n-6*px}" y="${-H+20+fs*.35}" font-size="${fs}" text-anchor="end">ultimo gradino ${H-20} cm</text>`;
+    s += ln(-d*n, -H+20, 0, -H+20, '', 1, ' stroke="var(--muted)" stroke-dasharray="3 3"');
+  }else{
+    const n = st.steps, L = st.len;
+    let inner = ln(-run, 0, 0, -H, 'l', 4);
+    for(let k=1;k<=n;k++){
+      const t = k/(n+1), x = -run*(1-t), y = -H*t, tw = Math.min(30, run/(n+1)*1.1);
+      inner += ln(x-tw/2, y, x+tw/2, y, 'l', 3);
+    }
+    s += piece(st.model, `<polygon points="${-run},0 0,0 0,${-H}" fill="transparent"/>` + inner, `${st.model}, scala regolabile`);
+    // 2 corrimano: quello sul lato lontano un po' più indietro e tratteggiato
+    stairPieces(st, rails).filter(p => p.rail).forEach((hr, i) => {
+      const o = i*12, da = i ? ' stroke-dasharray="6 4"' : '';
+      s += piece(hr.code, hit(-run+o, -RH-o*.4, o, -H-RH-o*.4)+ln(-run+o, -RH-o*.4, o, -H-RH-o*.4, 'l', 3, da)+ln(-run+o,-RH-o*.4,-run+o,0,'l',1.5,da)+ln(o,-H-RH-o*.4,o,-H,'l',1.5,da), `${hr.code}, corrimano`);
+    });
+    s += `<text x="${-run/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">a terra circa ${Math.round(run)} cm · ${Math.round(st.angle)}°</text>`;
+    s += `<text x="${-run/2}" y="${fs*3}" font-size="${fs*.9}" text-anchor="middle">${n} gradini · cosciale ${Math.round(L)} cm</text>`;
+  }
+  // quota altezza palco
+  const qx = DW+18;
+  s += ln(qx, 0, qx, -H, '', 1, ' stroke="var(--muted)"') + ln(qx-5*px,-H,qx+5*px,-H,'',1,' stroke="var(--muted)"') + ln(qx-5*px,0,qx+5*px,0,'',1,' stroke="var(--muted)"');
+  s += `<text transform="translate(${qx+fs*1.2} ${-H/2}) rotate(-90)" font-size="${fs}" text-anchor="middle">${H} cm</text>`;
+  s += `<text x="${DW/2}" y="${-H-6*px}" font-size="${fs}" text-anchor="middle">palco</text>`;
+  return s + '</svg>';
+}
+function renderStair(p){
+  const st = p.stair, box = $('#stairPanel');
+  box.hidden = !st;
+  if(!st) return;
+  if(stairSel >= st.list.length) stairSel = 0;
+  const railTxt = r => r===0 ? 'senza corrimano' : r===1 ? 'corrimano 1 lato' : 'corrimano 2 lati';
+  $('#stairPick').hidden = st.list.length < 2;
+  $('#stairPick').innerHTML = st.list.map((x,i) => `<button type="button" data-ssel="${i}" aria-pressed="${i===stairSel}">Scala ${i+1} · ${SIDE_LABEL[x.side].toLowerCase()}</button>`).join('');
+  const cur = st.list[stairSel];
+  $('#stairBox').innerHTML = stairSVG(st, cur.rails);
+  const pcs = stairPieces(st, cur.rails);
+  const nameOf = c => (LOOK.get(ncode(c))||{}).name || c;
+  $('#stairParts').innerHTML = pcs.map(x => `<button type="button" data-spart="${esc(x.code)}"><b>${esc(x.code)}</b>× ${x.qty}</button>`).join('');
+  const head = st.kind==='modular'
+    ? `Scala modulare, ${st.steps} ${st.steps===1?'elemento':'elementi'} da 20 cm, ${railTxt(cur.rails)}.`
+    : `Scala regolabile ${st.model} (${st.lo}–${st.hi} cm) con gambe telescopiche ${st.legCode}, ${st.rails ? railTxt(cur.rails) : 'senza corrimano (non previsto per VAS-2)'}.`;
+  const info = $('#stairInfo');
+  info.textContent = head + ' Tocca un pezzo per vedere cos\'è.';
+  const show = code => {
+    $$('#stairBox .sp').forEach(g => g.classList.toggle('on', g.dataset.code===code));
+    $$('#stairParts button').forEach(b => b.classList.toggle('on', b.dataset.spart===code));
+    const pc = pcs.find(x => x.code===code);
+    info.innerHTML = code ? `<span class="code">${esc(code)}</span>${esc(nameOf(code))}${pc ? ` · ${pc.qty} ${pc.qty===1?'pezzo':'pezzi'} per questa scala` : ''}` : esc(head);
+  };
+  $$('#stairBox .sp').forEach(g => {
+    g.addEventListener('mouseenter', () => show(g.dataset.code));
+    g.addEventListener('focus', () => show(g.dataset.code));
+    g.addEventListener('click', () => show(g.dataset.code));
+    g.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); show(g.dataset.code); } });
+  });
+  $$('#stairParts button').forEach(b => {
+    b.addEventListener('mouseenter', () => show(b.dataset.spart));
+    b.addEventListener('click', () => show(b.dataset.spart));
+  });
+  $$('#stairPick button').forEach(b => b.addEventListener('click', () => { stairSel = +b.dataset.ssel; renderStair(p); }));
+}
+
+/* --- spedizione: riepilogo, bancali disegnati in assonometria e dettaglio --- */
+function palletSVG(p, Hmax){
+  // assonometria isometrica, cm: x = lunghezza (verso destra in basso), y = larghezza (verso sinistra in basso), z = altezza
+  const c30 = Math.cos(Math.PI/6), s30 = 0.5, BASE = 15;
+  const P = (x,y,z) => [(x-y)*c30, (x+y)*s30 - z];
+  const pts = a => a.map(q => q.map(v => v.toFixed(1)).join(',')).join(' ');
+  const box = (x,y,z,dx,dy,dz,top,left,right,extra='') => {
+    const A = P(x,y,z+dz), B = P(x+dx,y,z+dz), C = P(x+dx,y+dy,z+dz), D = P(x,y+dy,z+dz);
+    const E = P(x+dx,y,z), F = P(x+dx,y+dy,z), G = P(x,y+dy,z);
+    return `<polygon points="${pts([A,B,C,D])}" fill="${top}" ${extra}/>`
+      + `<polygon points="${pts([D,C,F,G])}" fill="${left}" ${extra}/>`
+      + `<polygon points="${pts([B,C,F,E])}" fill="${right}" ${extra}/>`;
+  };
+  const st = 'stroke="var(--ink)" stroke-opacity=".55" stroke-width="1" vector-effect="non-scaling-stroke" stroke-linejoin="round"';
+  let s = '';
+  // bancale: 3 travetti e piano
+  for(const yy of [0, p.W/2-5, p.W-10]) s += box(0, yy, 0, p.L, 10, BASE-2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
+  s += box(0, 0, BASE-2.5, p.L, p.W, 2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
+  // pedane, strato per strato (strato incompleto più corto)
+  let z = BASE;
+  for(const L of p.layers){ s += box(0, 0, z, p.L*L.used, p.W, L.t, 'var(--deck)', 'var(--deck-side-l)', 'var(--deck-side-r)', st); z += L.t; }
+  // accessori sopra
+  if(p.accH > 0.5) s += box(4, 4, z, p.L-8, p.W-8, p.accH, 'var(--acc-top)', 'var(--acc-l)', 'var(--acc-r)', st);
+  const top = z + p.accH;
+  // quota dell'altezza totale, a destra
+  const q0 = P(p.L, 0, 0), q1 = P(p.L, 0, top), qx = q0[0] + 14;
+  s += `<line x1="${qx}" y1="${q0[1]}" x2="${qx}" y2="${q1[1]}" stroke="var(--muted)" vector-effect="non-scaling-stroke"/>`
+    + `<text x="${qx+6}" y="${(q0[1]+q1[1])/2}" font-size="13" dominant-baseline="middle">${Math.round(top)} cm</text>`;
+  // vista fissa: stessa scala per tutti i bancali (2×1 m alto Hmax + bancale)
+  const vb0 = P(0, 100, 0)[0]-6, vb1 = P(200, 0, 0)[0]+70, vt = P(0, 0, BASE+Hmax)[1]-10, vbt = P(200, 100, 0)[1]+8;
+  return `<svg class="pal" viewBox="${vb0} ${vt} ${vb1-vb0} ${vbt-vt}" role="img" aria-label="Bancale ${esc(p.name)} alto ${Math.round(top)} cm">${s}</svg>`;
+}
+function renderShip(){
+  const box = $('#shipPanel'), sh = res && res.ship, t = res && res.totals;
+  box.hidden = !sh || !t;
+  if(box.hidden) return;
+  const cards = sh.pallets.map((p,i) => {
+    const what = [p.deckCount ? `Pedane: ${Object.entries(p.decks).map(([c,n]) => `${n} × ${c}`).join(', ')}` : '', Object.keys(p.acc).length ? `Accessori: ${accList(p.acc)}` : ''].filter(Boolean);
+    return `<figure class="palcard">${palletSVG(p, sh.Hmax)}<figcaption><div><b>${i+1}. Bancale ${esc(p.name)}</b> · ${dec(p.kg,0)} kg`
+      + `${p.deckCount ? ` · ${p.deckCount} pedane, ${Math.round(p.deckH)} cm` : ''}${p.accVol ? ` · accessori ${dec(p.accVol,2)} m³` : ''}</div>`
+      + what.map(w => `<span>${esc(w)}</span>`).join('') + `</figcaption></figure>`;
+  }).join('');
+  const notes = [
+    `Pedane su bancali 2×1 m: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico, bancale escluso. Uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.`,
+    `Accessori sopra le pedane finché c'è spazio (fino a ${sh.Hmax} cm, riempimento ${sh.fill}% del volume libero); quello che avanza va su EPAL 120×80 cm, i pezzi più lunghi di 120 cm${sh.longCodes.length ? ' ('+listCodes(sh.longCodes)+')' : ''} solo su bancali 2×1 m.`,
+    'Il disegno è indicativo: gli accessori sono un blocco unico con il loro volume. Pesi senza il bancale.',
+    sh.carts.length ? `Carrelli a parte: ${sh.carts.map(c => c.qty+' × '+c.code).join(', ')}.` : '',
+    sh.noDims.length ? `Senza misure d'imballo, non conteggiati: ${listCodes(sh.noDims)}.` : ''
+  ].filter(Boolean);
+  box.innerHTML = `<h2>Spedizione</h2>
+    <div class="tiles">
+      <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
+      <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
+      <div class="tile"><div class="k">Bancali 2×1 m</div><div class="v">${sh.big}</div></div>
+      <div class="tile"><div class="k">EPAL 120×80</div><div class="v">${sh.epal}</div></div>
+    </div>
+    ${cards ? `<div class="palgrid">${cards}</div>` : '<p class="hint">Nessun articolo da spedire.</p>'}
+    <div class="legend"><span><i style="background:var(--pal-l)"></i>Bancale</span><span><i style="background:var(--deck-side-l)"></i>Pedane</span><span><i style="background:var(--acc-l)"></i>Accessori</span></div>
+    <ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
+}
 function renderResult(){
   res = compute(cfg, R, LOOK, KITS);
   const t = res.totals;
+  const sumQ = g => (res.lines||[]).filter(l => l.group===g && /PLATFORM|DECK/i.test((LOOK.get(ncode(l.code))||{}).section||'')).reduce((a,l) => a+l.qty, 0);
+  const nDecks = sumQ('Pedana'), nRampDecks = sumQ('Rampe');
   $('#tiles').innerHTML = t ? `
     <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
     <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
-    <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
-    <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
-    <div class="tile"><div class="k">Pezzi</div><div class="v">${t.pieces}</div></div>` : '';
+    <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
+  renderShip();
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
-  if(!res.plan){ $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   const title = `Palco ${nf(p.W)} × ${nf(p.D)} m · altezza ${cfg.H} cm`;
   $('#planTitle').textContent = title;
@@ -971,18 +1380,25 @@ function renderResult(){
   $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planBox').innerHTML = planSVG(p, cfg.H);
   draw3d();
-  let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num">Prezzo €</th><th class="num">Totale €</th><th class="num">Peso kg</th><th class="num">Volume m³</th></tr></thead><tbody>`;
+  $('#lgConn').hidden = !(p.conn2 || p.conn4);
+  renderStair(p);
+  let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num c-cost">Acquisto €</th><th class="num c-cost">Magg. %</th><th class="num">Vendita €</th><th class="num">Totale €</th></tr></thead><tbody>`;
+  const mkp = dec(+cfg.markup||0, (+cfg.markup||0)%1 ? 1 : 0);
   for(const g of GROUPS){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
-    html += `<tr class="grp"><td colspan="4">${g}</td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.kg||0),0),1)}</td><td class="num">${dec(ls.reduce((s,l)=>s+(l.m3||0),0),3)}</td></tr>`;
-    for(const l of ls) html += `<tr><td class="code">${esc(l.code)}</td><td>${esc(l.name)}</td><td class="num">${l.qty}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td><td class="num">${l.kg==null?'–':dec(l.kg,1)}</td><td class="num">${l.m3==null?'–':dec(l.m3,3)}</td></tr>`;
+    html += `<tr class="grp"><td colspan="3">${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
+    for(const l of ls) html += `<tr${l.adj ? ' class="mod"' : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}</td><td class="num"><span class="qed">`
+      + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
+      + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
+      + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost">${mkp}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`;
   }
   $('#offerTable').innerHTML = html + '</tbody></table>';
+  $('#adjReset').hidden = !res.lines.some(l => l.adj);
   $('#techNotes').innerHTML = res.notes.map(n => `<li>${esc(n)}</li>`).join('');
   $('#sum').innerHTML = `
-    <div class="int"><span>Acquisto (interno)</span><span class="num">${money(t.cost)} €</span></div>
-    <div class="int"><span>Maggiorazione ${dec(+cfg.markup||0,1)}% (interno)</span><span class="num">${money(t.gross-t.cost)} €</span></div>
+    <div class="c-cost"><span>Totale acquisto</span><span class="num">${money(t.cost)} €</span></div>
+    <div class="c-cost"><span>Maggiorazione ${mkp}%</span><span class="num">${money(t.gross-t.cost)} €</span></div>
     <div><span>Subtotale vendita</span><span class="num">${money(t.gross)} €</span></div>
     ${t.disc ? `<div><span>Sconto ${dec(+cfg.discount,1)}%</span><span class="num">−${money(t.disc)} €</span></div>` : ''}
     <div><span>Imponibile</span><span class="num">${money(t.net)} €</span></div>
@@ -990,6 +1406,22 @@ function renderResult(){
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
 function update(){ save(); renderResult(); }
+
+/* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
+function printPart(part){
+  if(!res || !res.plan){ say('Niente da stampare'); return; }
+  const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
+  const head = [cfg.numero ? 'Offerta n. '+cfg.numero : 'Offerta', cfg.cliente, cfg.progetto, d].filter(Boolean);
+  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`Palco ${nf(res.plan.W)} × ${nf(res.plan.D)} m, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>`;
+  const oldTitle = document.title;
+  // il titolo diventa il nome proposto per il file PDF
+  document.title = [part==='offerta' ? 'Offerta' : 'Disegni', cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
+  document.body.dataset.print = part;
+  document.body.dataset.cost = cfg.pdfCost ? '1' : '0';
+  const done = () => { document.title = oldTitle; delete document.body.dataset.print; delete document.body.dataset.cost; window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
 
 /* --- copia --- */
 function say(msg){ const s = $('#status'); s.textContent = msg; clearTimeout(say.t); say.t = setTimeout(() => s.textContent = '', 2500); }
@@ -1010,7 +1442,7 @@ function offerText(){
   if(d) out.push('Data: '+d);
   out.push(`Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
   out.push(pad('Codice',16)+pad('Descrizione',46)+lpad('Q.tà',5)+lpad('Prezzo',11)+lpad('Totale',12));
-  for(const l of res.lines) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
+  for(const l of res.lines.filter(l => l.qty>0)) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
   out.push('', `Subtotale: ${money(t.gross)} €`);
   if(t.disc) out.push(`Sconto ${dec(+cfg.discount,1)}%: -${money(t.disc)} €`);
   out.push(`Imponibile: ${money(t.net)} €`, `IVA ${dec(+cfg.vat||0,0)}%: ${money(t.vat)} €`, `Totale: ${money(t.grand)} €`, '',
@@ -1023,6 +1455,7 @@ function orderRows(){
   const rows = [['Product Code','Product Name','Quantity','Unit']];
   if(!res || !res.plan) return rows;
   for(const l of res.lines){
+    if(l.qty<=0) continue;
     const isSet = l.isSet;
     let name = l.rawName;
     if(/^VFL\d+$/.test(l.code) && !/^VFL(20|40|60|80|100)$/.test(l.code)) name = `square leg ${l.code.slice(3)}cm (intermediate height)`;
@@ -1084,7 +1517,6 @@ async function downloadOrder(){
     copy(rows.map(r => r.join('\t')).join('\n'));
   }
 }
-
 /* --- vista 3D (caricata solo se richiesta: models3d.js + viewer3d.js) --- */
 const v3 = {on:false, view:null, loading:false};
 function loadScript(src){ return new Promise((ok,ko) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => ko(new Error(src)); document.head.appendChild(e); }); }
@@ -1131,9 +1563,9 @@ async function save3d(){
 }
 function offerTsv(){
   if(!res || !res.plan) return '';
-  const rows = [['Codice','Descrizione','Quantità','Prezzo unitario','Totale','Peso kg','Volume m3']];
+  const rows = [['Codice','Descrizione','Quantità','Prezzo unitario','Totale']];
   const c = n => n==null ? '' : String(Math.round(n*1000)/1000).replace('.',',');
-  for(const l of res.lines) rows.push([l.code,l.name,l.qty,c(l.unit),c(l.total),c(l.kg),c(l.m3)]);
+  for(const l of res.lines.filter(l => l.qty>0)) rows.push([l.code,l.name,l.qty,c(l.unit),c(l.total)]);
   return rows.map(r => r.join('\t')).join('\n');
 }
 
@@ -1147,8 +1579,8 @@ function ruleHint(r){
 }
 function renderRules(){
   $('#stairOpening').value = R.params.stairOpening;
+  $$('[data-pal]').forEach(i => i.value = R.params.pal[i.dataset.pal]);
   $('#rampOpening').value = R.params.rampOpening;
-  $('#skirtDeck').value = R.params.skirtDeck;
   $$('[data-cap]').forEach(i => i.value = R.params.cap[i.dataset.cap]);
   $('#rulesList').innerHTML = R.rows.map((r,i) => `
     <div class="rule ${r.on?'':'off'}" data-rule="${i}">
@@ -1245,6 +1677,22 @@ function bind(){
   });
   $('#copyText').addEventListener('click', () => copy(offerText()));
   $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
+  $('#offerTable').addEventListener('click', e => {
+    const b = e.target.closest('button[data-adj]'); if(!b) return;
+    const k = b.dataset.adj, v = (cfg.adj[k]||0) + (+b.dataset.d);
+    if(v) cfg.adj[k] = v; else delete cfg.adj[k];
+    update();
+    const again = $(`#offerTable button[data-adj="${CSS.escape(k)}"][data-d="${b.dataset.d}"]`);
+    if(again && !again.disabled) again.focus();
+  });
+  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; update(); });
+  $('#resetAll').addEventListener('click', () => {
+    if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
+    cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
+  });
+  $('#pdfOffer').addEventListener('click', () => printPart('offerta'));
+  $('#pdfCost').addEventListener('change', e => { cfg.pdfCost = e.target.checked; save(); });
+  $('#pdfDraw').addEventListener('click', () => printPart('disegni'));
   $('#dlOrder').addEventListener('click', downloadOrder);
   $('#v3Show').addEventListener('click', show3d);
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
@@ -1269,7 +1717,7 @@ function bind(){
   });
   $('#resetRules').addEventListener('click', () => { R = clone(DEFAULT_RULES); renderRules(); update(); });
   $('#stairOpening').addEventListener('input', e => { R.params.stairOpening = +e.target.value || 1; update(); });
-  $('#skirtDeck').addEventListener('input', e => { R.params.skirtDeck = Math.max(0, +e.target.value||0); update(); });
+  $$('[data-pal]').forEach(i => i.addEventListener('input', e => { const v = +e.target.value; if(v>0){ R.params.pal[i.dataset.pal] = v; update(); } }));
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);
