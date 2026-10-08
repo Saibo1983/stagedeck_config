@@ -28,6 +28,7 @@ I prezzi del listino sono di acquisto. La maggiorazione è fissa al 37% (il camp
 
 ## Regole confermate
 - Connettori tra le gambe solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe): sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC.
+- Connettori d'angolo parapetti VHCC: 2 per ogni angolo a 90° dove due lati con parapetto si incontrano (parapetto su 3 lati = 4 connettori, su 4 lati = 8).
 - Connettori e livellatori: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.
 - Scale: numero, lato e corrimano (1 o 2 lati) si scelgono nei dati generali.
 - Imballo Spider deck: spessore 60 mm.

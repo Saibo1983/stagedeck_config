@@ -26,6 +26,8 @@ const comp = (A,B) => { const t = mulV(A.r,B.t); return {r:mulR(A.r,B.r), t:[t[0
 const toMat4 = T => { const r = T.r, t = T.t; return [r[0],r[3],r[6],0, r[1],r[4],r[7],0, r[2],r[5],r[8],0, t[0],t[1],t[2],1]; };
 const RY = a => { const c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a)); return [c,0,s, 0,1,0, -s,0,c]; };
 const ZUP = [1,0,0, 0,0,1, 0,-1,0];   // modelli CAD con z verso l'alto -> y verso l'alto
+const LEG_AXIS = [-13,-1,0];           // centro del tubo nel modello della gamba (in pianta)
+const VLC_JAW = -30;                   // centro delle ganasce del morsetto VLC (asse z del modello)
 
 /* ---------- WebGL ---------- */
 const VS = `#version 300 es
@@ -160,21 +162,22 @@ function create(canvas){
       const sx = Math.min(wx,dz) - 1000, sz = Math.max(wx,dz) - 2000;
       const key = Math.min(wx,dz)+'x'+Math.max(wx,dz);
       if(!deckBy.has(key)) deckBy.set(key, {sx, sz, list:[]});
-      let D;
-      if(!rot) D = {r:I3, t:[d.x*500+31, ty, d.y*500+1000]};
-      else D = {r:[0,0,1, 0,1,0, -1,0,0], t:[d.y*0+d.x*500+1000, ty, d.y*500 + 969 + sx]};
       // rot: x_w = z_m + (x0+1000), z_w = -x_m + (z0 + 969 + sx)
-      D.t[0] = d.x*500 + 1000; D.t[2] = d.y*500 + 969 + sx;
+      const D = !rot ? {r:I3, t:[d.x*500+31, ty, d.y*500+1000]} : {r:[0,0,1, 0,1,0, -1,0,0], t:[d.x*500+1000, ty, d.y*500 + 969 + sx]};
       deckBy.get(key).list.push(D);
       for(const T of MD.legT){
         const t = T.t.slice(); if(t[0] > 469) t[0] += sx; if(t[2] > 0) t[2] += sz;
         t[1] -= delta;                              // la gamba resta ancorata a terra
         const L = comp(D, {r:T.R.flat(), t});
         legs.push(L);
-      }
-      // punti angolo (per i morsetti)
-      for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
-        const k = cx+','+cy; if(!legPts.has(k)) legPts.set(k, {x:cx*500, z:cy*500, n:0, near:[]}); legPts.get(k).n++;
+        // asse del tubo della gamba (in pianta), assegnato all'angolo di deck più vicino: serve per i morsetti
+        const a = mulV(L.r, LEG_AXIS), gx = L.t[0]+a[0], gz = L.t[2]+a[2];
+        let best = null, bd = Infinity;
+        for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
+          const dd = Math.hypot(cx*500-gx, cy*500-gz); if(dd < bd){ bd = dd; best = cx+','+cy; }
+        }
+        if(!legPts.has(best)) legPts.set(best, {legs:[]});
+        legPts.get(best).legs.push([gx,gz]);
       }
     }
     for(const [key,v] of deckBy){
@@ -189,19 +192,14 @@ function create(canvas){
     const v4 = [], v2 = [];
     const conn4 = plan.conn4!==false, conn2 = plan.conn2!==false;   // connettori solo dove l'offerta li mette (gambe oltre 80 cm)
     for(const p of legPts.values()){
-      if(conn4 && p.n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[p.x, cy, p.z]});
-    }
-    // coppie da 2: lungo i lati di deck dove si incontrano solo 2 angoli
-    const seen = new Set();
-    for(const p of legPts.values()){
-      if(!conn2 || p.n!==2) continue;
-      // direzione: dai deck che condividono il vertice
-      const dk = plan.decks.filter(d => [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]].some(([a,b]) => a*500===p.x && b*500===p.z));
-      if(dk.length!==2) continue;
-      const a = dk[0], b = dk[1];
-      const ax = (a.x+a.w/2 - b.x - b.w/2), az = (a.y+a.h/2 - b.y - b.h/2);
-      const alongX = Math.abs(ax) > Math.abs(az);   // i deck sono affiancati su x -> il morsetto corre lungo x
-      v2.push({r: alongX ? I3 : RY(Math.PI/2), t:[p.x, cy, p.z]});   // piastra in piedi contro le facce delle due gambe
+      const n = p.legs.length, mx = p.legs.reduce((s,g) => s+g[0],0)/n, mz = p.legs.reduce((s,g) => s+g[1],0)/n;
+      if(conn4 && n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[mx, cy, mz]});
+      if(conn2 && n===2){
+        // il morsetto corre da una gamba all'altra; le sue ganasce (a z = -30 nel modello) stringono i tubi
+        const alongX = Math.abs(p.legs[0][0]-p.legs[1][0]) > Math.abs(p.legs[0][1]-p.legs[1][1]);
+        const R = alongX ? I3 : RY(Math.PI/2), o = mulV(R, [0,0,VLC_JAW]);
+        v2.push({r:R, t:[mx - o[0], cy, mz - o[2]]});
+      }
     }
     if(v4.length) addBatch(plain('v4lc'), v4);
     if(v2.length) addBatch(plain('vlc'), v2);
