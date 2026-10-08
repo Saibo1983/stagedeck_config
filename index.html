@@ -416,7 +416,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
       <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
       <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
-      <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
+      <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m. Se avanza una parte, lo segnala.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
@@ -659,16 +659,14 @@ function tile(Wc, Dc, sizes, st){
   }
   return out;
 }
-function railPieces(L, p2, p1){
+function railPieces(L){
+  // Elementi da 2 m su tutto il lato; se avanza un tratto fino a 1 m, un solo elemento da 1 m.
   if(L<=0) return {n2:0,n1:0,cover:0};
-  let best = null;
-  for(let n2=0;n2<=Math.ceil(L/2);n2++) for(let n1=0;n1<=2;n1++){
-    const cover = 2*n2+n1;
-    if(cover < L-1e-9) continue;
-    const cost = n2*p2 + n1*p1;
-    if(!best || cost<best.cost-1e-9 || (Math.abs(cost-best.cost)<1e-9 && cover<best.cover)) best = {n2,n1,cover,cost};
-  }
-  return best;
+  let n2 = Math.floor(L/2+1e-9), n1 = 0;
+  const rest = L-2*n2;
+  if(rest > 1+1e-9) n2++;
+  else if(rest > 1e-9) n1 = 1;
+  return {n2, n1, cover:2*n2+n1};
 }
 const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length-5}` : a.join(', ');
 
@@ -803,7 +801,7 @@ function compute(cfg, R, look, kits){
     const start = Math.min(sideLen[s], taken(s));
     const L = sideLen[s] - start;
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
-    const pc = railPieces(L, P(c2), P(c1));
+    const pc = railPieces(L);
     const n = pc.n2+pc.n1;
     runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, cover:pc.cover});
     rails += n; railLinks += n-1;
