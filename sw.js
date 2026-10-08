@@ -1,5 +1,5 @@
 // Cache semplice: l'app funziona anche senza rete. Cambia VERSION quando aggiorni i file.
-const VERSION = 'stagedeck-9';
+const VERSION = 'stagedeck-19';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './viewer3d.js', './models3d.js'];
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(

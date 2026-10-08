@@ -24,23 +24,43 @@ Le regole dei pezzi accessori (morsetti, connettori, corrimano) sono modificabil
 
 
 ## Prezzi e maggiorazione
-I prezzi del listino sono di acquisto. Nel campo Maggiorazione % (o con i tasti rapidi) si imposta il ricarico: ogni riga dell'offerta è il prezzo di vendita. Acquisto e maggiorazione compaiono solo nel riepilogo a schermo (voci «interno»), non nel testo copiato.
+I prezzi del listino sono di acquisto. La maggiorazione è fissa al 37% (il campo Maggiorazione % resta modificabile). L'offerta mostra per ogni riga acquisto, maggiorazione, prezzo di vendita e totale; sotto, totale acquisto, maggiorazione, subtotale vendita, sconto, imponibile, IVA e totale. Nel PDF dell'offerta acquisto e maggiorazione compaiono solo se è spuntato «Prezzi di acquisto nel PDF»; nel testo copiato non compaiono mai.
 
 ## Regole confermate
+- Connettori tra le gambe solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe): sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC.
 - Connettori e livellatori: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.
 - Scale: numero, lato e corrimano (1 o 2 lati) si scelgono nei dati generali.
 - Imballo Spider deck: spessore 60 mm.
 
 ## Confezioni
-Nel listino gambe (set da 4) e connettori VD2D, VDL, D2DC (set da 3) hanno prezzo unitario per pezzo, mentre peso e misure dell'imballo sono della confezione. L'app divide di conseguenza e arrotonda la quantità per eccesso a confezioni intere (sulla riga compare «conf. da N»).
+Nel listino gambe (set da 4) e connettori VD2D, VDL, D2DC (set da 3) hanno prezzo unitario per pezzo, mentre peso e misure dell'imballo sono della confezione. L'app divide di conseguenza e arrotonda la quantità per eccesso a confezioni intere (sulla riga compare «conf. da N»). Le gambe in offerta sono espresse in set da 4, con prezzo per set: un set per ogni deck.
 
 ## Mascheratura e carrelli
-- Mascheratura: si scelgono i lati (come per i parapetti), la stoffa (poliestere o velluto, liscio o plissettato) e l'altezza del telo. Per ogni lato di deck sul perimetro: lato lungo = profilo SKP1970 + telo da 2050, lato corto = SKP970 + telo da 1050. Non dipende dalle scale. Altezza automatica: il telo standard (20-100 cm) che copre altezza palco + 9 cm di deck (modificabile in Regole).
+- Mascheratura: si scelgono i lati (come per i parapetti), la stoffa (poliestere o velluto, liscio o plissettato) e l'altezza del telo. Per ogni lato di deck sul perimetro: lato lungo = profilo SKP1970 + telo da 2050, lato corto = SKP970 + telo da 1050. Non dipende dalle scale. Altezza automatica: il telo standard (20-100 cm) che copre l'altezza del palco, che è l'altezza finita (piano del deck da terra).
 - Carrelli: VTT, VDT, VGT per StageDeck, VTSP e FLSP per Spider. Quantità automatica dalla capacità (modificabile in Regole) oppure scelta a mano.
 - Dopo aver aggiornato il listino ricarica `prezzi.json` nell'app: contiene anche i codici dei teli.
 
 ## Ordine al fornitore
 Il pulsante «Ordine fornitore (Excel)» scarica un .xlsx con Product Code, Product Name, Quantity e Unit. Le gambe sono in set da 4, tutto il resto in pezzi.
 
+## Scale
+- Scala modulare: elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...). L'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm servono VSM20 + VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; per altre altezze l'app usa la scala regolabile (o avvisa, se è scelta «Modulare»). Un palco da 20 cm non ha scala.
+- Scala regolabile: il modello va abbinato alla gamba telescopica con la stessa escursione (VAS-2↔VTL40, VAS-4↔VTL60, VAS-5↔VTL80, VAS-7↔VTL100). Con le gambe telescopiche l'app sceglie la scala dello stesso modello; con le gambe fisse lo segnala.
+- Il riquadro «Scala in offerta» mostra la scala vista di lato con i pezzi messi in offerta: tocca un pezzo (o il suo codice) per vedere cos'è. L'ingombro a terra della scala regolabile è indicativo.
+
+## Quantità modificate a mano
+Nell'offerta ogni riga ha i tasti − e + per cambiare la quantità (per esempio 2 parapetti da 1 m al posto di uno da 2 m). Un passo vale 1 pezzo, 1 set per le gambe, 1 confezione per gli articoli in confezione. Le righe modificate sono evidenziate, un avviso le elenca e «Ripristina quantità calcolate» le riporta ai valori dell'app. Le modifiche restano salvate finché non le ripristini, anche se cambi misure o altezza. Scale e rampe sono in due gruppi separati.
+
+## PDF e nuova offerta
+- «PDF offerta» e «PDF disegni» aprono la stampa del browser con solo quella parte e un'intestazione con numero, cliente, progetto e data: scegli «Salva come PDF». Il nome del file proposto è «Offerta …» o «Disegni …». Nel PDF dell'offerta non compaiono le voci interne (acquisto e maggiorazione).
+- «Nuova offerta: azzera tutto», in fondo ai dati, riporta il palco 4 × 4 m a 60 cm su gambe senza accessori, dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.
+
+## Spedizione e bancali
+In cima ci sono totale, superficie e numero di pedane in offerta. Peso, volume e bancali sono nel riquadro «Spedizione», sotto l'offerta, con un disegno di ogni bancale (stima):
+- Pedane impilate su bancali 2×1 m: al massimo 20 strati e 200 cm di carico, bancale escluso; uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.
+- Accessori prima sopra le pedane, nello spazio che resta fino a 200 cm. Quello che avanza va su EPAL 120×80 cm; i pezzi più lunghi di 120 cm (parapetti da 2 m, profili mascheratura 1970, scale regolabili, ...) solo su bancali 2×1 m.
+- Lo spazio per gli accessori è il 75% del volume libero del bancale. I carrelli viaggiano a parte; rampe e Rollrisers non hanno misure d'imballo e non sono conteggiati.
+- Il riepilogo «Spedizione (stima)» compare anche nelle note dell'offerta e il riquadro esce nel PDF dell'offerta. Strati, altezza e riempimento si cambiano nella scheda Regole.
+
 ## Vista 3D
-Il pannello «Vista 3D» monta il palco configurato con i pezzi reali (pedane, gambe, morsetti, parapetti, scale, mascheratura) e salva un'immagine PNG per l'offerta. Si carica solo se richiesto (`viewer3d.js` + `models3d.js`, entrambi vanno pubblicati insieme a `index.html`). Spider Deck e Rollrisers sono mostrati con pedane e gambe StageDeck. I palchi circolari non sono supportati.
+Il pannello «Vista 3D» monta il palco configurato con i pezzi reali (pedane, gambe, connettori, parapetti da 2 m, 1 m e 0,5 m, scale, mascheratura) e salva un'immagine PNG. Si carica solo se richiesto (`viewer3d.js` + `models3d.js`, entrambi vanno pubblicati insieme a `index.html`). I connettori tra le gambe compaiono solo quando sono in offerta (gambe oltre 80 cm). Spider Deck e Rollrisers sono mostrati con pedane e gambe StageDeck. I palchi circolari non sono supportati. Nel PDF dei disegni la vista 3D esce se è aperta; nel PDF dell'offerta no.
