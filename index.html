@@ -519,7 +519,7 @@ const TRIGGERS = {
 };
 // when: 'perDeck' = solo gambe (sempre 4 per deck), 'legsHigh' = gambe più lunghe di 80 cm (fisse sopra 80, telescopiche da VTL60 in su), 'deck' = gambe o Rollrisers, 'roll', 'spider'
 const DEFAULT_RULES = {
-  v:5,
+  v:6,
   params:{legMode:'perDeck', stairOpening:1, rampOpening:1, pal:{decks:20, h:200, fill:75}, cap:{VTT:30, VDT:12, VGT:30, VTSP:15, FLSP:6}},
   rows:[
     {on:true, label:'Gamba per ogni angolo di ogni deck', trigger:'deck_corner', code:'@LEG', qty:1, when:'perDeck', note:'Manuale Larcher: la gamba va inserita in tutti e 4 gli angoli di ogni deck.'},
@@ -533,7 +533,7 @@ const DEFAULT_RULES = {
     {on:true, label:'Rollriser con 2 gambe', trigger:'junction2', code:'@RR2', qty:1, when:'roll', note:'Come sopra, dove si incontrano 2 deck.'},
     {on:true, label:'Rollriser con 4 gambe', trigger:'junction34', code:'@RR4', qty:1, when:'roll', note:'Come sopra, dove si incontrano 4 deck.'},
     {on:true, label:'Connettore tra parapetti', trigger:'rail_link', code:'VHC', qty:1, note:'Manuale: unione dritta tra due parapetti vicini.'},
-    {on:true, label:'Connettore d\'angolo parapetti', trigger:'rail_corner', code:'VHCC', qty:1, note:'Manuale: connettore d\'angolo dove due lati con parapetto si incontrano.'},
+    {on:true, label:'Connettore d\'angolo parapetti', trigger:'rail_corner', code:'VHCC', qty:2, note:'Regola tua: 2 connettori d\'angolo per ogni angolo a 90° dove due lati con parapetto si incontrano (3 lati = 4 connettori, 4 lati = 8).'},
     {on:true, label:'Corrimano scala modulare', trigger:'stair_modular_rails', code:'VHSM', qty:1, note:'Brochure: un corrimano ogni 2 gradini adiacenti, a partire dall\'alto (con 3 gradini va sul 2° e 3°), per ogni lato con corrimano (1 o 2 lati, scelto per ogni scala). Con 1 solo gradino non serve.'},
     {on:true, label:'Corrimano scala regolabile destro', trigger:'stair_adjustable_rail', code:'VASH-R', qty:1, note:'Brochure: corrimano universale per scale regolabili da 4, 5 e 7 gradini. Un corrimano per ogni scala con corrimano.'},
     {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
@@ -1032,6 +1032,11 @@ function load(){
         const d = DEFAULT_RULES.rows.find(x => x.trigger===r.trigger && x.when==='legsHigh');
         Object.assign(r, {when:'legsHigh', label:d.label, note:d.note});
       }
+    }
+    if(s && s.rules && s.rules.rows && s.rules.v===5){
+      s.rules.v = 6;   // connettori d'angolo parapetti: 2 per angolo
+      const d = DEFAULT_RULES.rows.find(x => x.trigger==='rail_corner');
+      for(const r of s.rules.rows) if(r.trigger==='rail_corner' && r.code==='VHCC' && r.qty===1) Object.assign(r, {qty:d.qty, note:d.note});
     }
     if(s && s.rules && s.rules.rows && s.rules.v===DEFAULT_RULES.v){ R = s.rules; R.params = Object.assign(clone(DEFAULT_RULES.params), R.params||{}); R.params.pal = Object.assign(clone(DEFAULT_RULES.params.pal), R.params.pal||{}); R.params.cap = Object.assign(clone(DEFAULT_RULES.params.cap), R.params.cap||{}); R.rows = R.rows.filter(r => r.when!=='shared'); }
   }catch(e){}
