@@ -18,7 +18,7 @@
   --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
   --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2;
-  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -28,7 +28,7 @@
     --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
     --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
@@ -36,7 +36,7 @@
   --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
   --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240;
-  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -175,7 +175,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
     --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
     --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
-    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
   @page{margin:12mm}
@@ -353,6 +353,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <span id="lgConn"><i style="background:color-mix(in srgb, var(--conn) 25%, transparent);border:2px solid var(--conn);height:10px;width:16px"></i>Connettore gambe (2 o 4)</span>
         <span><i style="background:var(--rail)"></i>Parapetto 2 m</span>
         <span><i style="background:var(--rail1)"></i>Parapetto 1 m</span>
+        <span><i style="background:var(--rail05)"></i>Parapetto 0,5 m</span>
         <span><i style="background:var(--ink);opacity:.55"></i>Mascheratura</span>
         <span><i style="background:var(--stair);opacity:.5"></i>Scala</span>
         <span><i style="background:var(--ramp);opacity:.5"></i>Rampa</span>
@@ -416,7 +417,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
       <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
       <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
-      <li>I parapetti coprono i lati scelti con elementi da 2 m e da 1 m, scegliendo la combinazione più economica che copre la lunghezza. Se avanza una parte, lo segnala.</li>
+      <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m; se avanza mezzo metro (2,5, 3,5 m...) un elemento da 0,5 m, sulla pedana da mezzo metro del bordo.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
@@ -659,16 +660,25 @@ function tile(Wc, Dc, sizes, st){
   }
   return out;
 }
-function railPieces(L, p2, p1){
-  if(L<=0) return {n2:0,n1:0,cover:0};
-  let best = null;
-  for(let n2=0;n2<=Math.ceil(L/2);n2++) for(let n1=0;n1<=2;n1++){
-    const cover = 2*n2+n1;
-    if(cover < L-1e-9) continue;
-    const cost = n2*p2 + n1*p1;
-    if(!best || cost<best.cost-1e-9 || (Math.abs(cost-best.cost)<1e-9 && cover<best.cover)) best = {n2,n1,cover,cost};
+function railPieces(L){
+  // Elementi da 2 m su tutto il lato; se avanza 1 m un elemento da 1 m, se avanza mezzo metro un elemento da 0,5 m.
+  if(L<=0) return {n2:0,n1:0,n05:0,cover:0};
+  let n2 = Math.floor(L/2+1e-9), n1 = 0, n05 = 0;
+  let rest = L-2*n2;
+  if(rest >= 1-1e-9){ n1 = 1; rest -= 1; }
+  if(rest > 1e-9){ if(rest <= 0.5+1e-9) n05 = 1; else n1++; }
+  return {n2, n1, n05, cover:2*n2+n1+0.5*n05};
+}
+// Ordine dei pezzi sul lato: il pezzo da 0,5 m va sulla pedana da mezzo metro del bordo (edges: inizi dei tratti da 0,5 m).
+function railOrder(pc, start, edges){
+  const rest = [...Array(pc.n2).fill(2), ...Array(pc.n1).fill(1)];
+  if(!pc.n05) return rest;
+  for(const e of edges){
+    const off = e-start;
+    for(let a=0;a<=pc.n2;a++) for(let b=0;b<=pc.n1;b++) if(Math.abs(2*a+b-off)<1e-9)
+      return [...Array(a).fill(2), ...Array(b).fill(1), 0.5, ...Array(pc.n2-a).fill(2), ...Array(pc.n1-b).fill(1)];
   }
-  return best;
+  return [...rest, 0.5];
 }
 const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length-5}` : a.join(', ');
 
@@ -796,22 +806,25 @@ function compute(cfg, R, look, kits){
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
 
   // --- parapetti
-  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0';
+  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0', c05 = cfg.kick ? 'VHK0.5' : 'VH0.5';
+  const halfEdges = s => decks.filter(d => s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc)
+    .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
   const runs = []; let rails = 0, railLinks = 0;
   for(const s of ['back','front','left','right']){
     if(!cfg.rails[s]) continue;
     const start = Math.min(sideLen[s], taken(s));
     const L = sideLen[s] - start;
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
-    const pc = railPieces(L, P(c2), P(c1));
-    const n = pc.n2+pc.n1;
-    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, cover:pc.cover});
+    const pc = railPieces(L);
+    const n = pc.n2+pc.n1+pc.n05;
+    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
     rails += n; railLinks += n-1;
     if(pc.cover > L+1e-9) warn('info',`Lato ${SIDE_LABEL[s]}: servono ${nf(L)} m di parapetto, gli elementi coprono ${nf(pc.cover)} m (${nf(pc.cover-L)} m in più).`);
   }
-  const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0);
+  const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0), tn05 = runs.reduce((s,r) => s+r.n05,0);
   if(tn2) out.lines.push({group:'Parapetti', code:c2, qty:tn2});
   if(tn1) out.lines.push({group:'Parapetti', code:c1, qty:tn1});
+  if(tn05) out.lines.push({group:'Parapetti', code:c05, qty:tn05});
   M.rail = rails; M.rail_link = railLinks;
   M.rail_corner = [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
   if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
@@ -934,7 +947,7 @@ function compute(cfg, R, look, kits){
   const shTxt = shipSummary(out.ship);
   if(shTxt) out.notes.push(shTxt);
   const onLegs = support==='legs' && !!leg;
-  out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1,
+  out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     skirt:skSides, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
@@ -953,6 +966,9 @@ const dec = (n,d=1) => n.toLocaleString('it-IT',{minimumFractionDigits:d,maximum
 
 const CATALOG = JSON.parse(document.getElementById('catalog').textContent);
 const ITEMS = CATALOG.items;
+// Parapetti da 0,5 m: non sono nel listino Everdeck, li aggiungo senza prezzo, peso e imballo (prezzo da prezzi.json se c'è).
+for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VHK0.5', name:'0,5m handrail with kickboard (fuori listino)'}])
+  if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
 const LOOK = new Map(ITEMS.map(i => [ncode(i.code), i]));
 const BASE_PRICES = ITEMS.some(i => i.price!=null);
@@ -1103,12 +1119,12 @@ function planSVG(p, H){
   for(const r of p.runs){
     const horiz = r.side==='back' || r.side==='front';
     const fixed = r.side==='back' ? 0 : r.side==='front' ? D : r.side==='left' ? 0 : W;
-    const lens = [...Array(r.n2).fill(2), ...Array(r.n1).fill(1)];
+    const lens = r.pieces;
     let pos = r.start;
     const limit = horiz ? p.W : p.D;
     for(const L of lens){
       const a = pos*100, b = Math.min(limit,pos+L)*100;
-      const rc = L===2 ? 'var(--rail)' : 'var(--rail1)';  // 2 m e 1 m con colori diversi
+      const rc = L===2 ? 'var(--rail)' : L===1 ? 'var(--rail1)' : 'var(--rail05)';  // 2 m, 1 m e 0,5 m con colori diversi
       if(b>a) s += horiz ? seg(a+2*px,fixed,b-2*px,fixed,rc,5) : seg(fixed,a+2*px,fixed,b-2*px,rc,5);
       pos += L;
     }
