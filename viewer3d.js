@@ -493,7 +493,76 @@ function create(canvas){
   theme(); resize();
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => theme()); }catch(e){}
   function setXray(on){ xray = !!on; request(); }
-  return {build, resize, theme, reset, png, glb, request, cam, setXray};
+
+  /* ---------- un solo pezzo su fondo bianco, alla misura voluta (per creare le illustrazioni del listino:
+     tools/genera_immagini.js). spec: {kind:'deck', w, d, fam, black, topOnly} | {kind:'leg', h} |
+     {kind:'rail', L, kick} | {kind:'step', h} | {kind:'part', name}; misure in mm ---------- */
+  function item(spec){
+    clearBatches();
+    if(groundMesh){ gl.deleteVertexArray(groundMesh.vao); gl.deleteBuffer(groundMesh.pb); gl.deleteBuffer(groundMesh.ib); groundMesh = null; }
+    let mats, T = IDT;
+    if(spec.kind==='deck'){
+      const sx = Math.min(spec.w,spec.d) - 1000, sz = Math.max(spec.w,spec.d) - 2000;
+      const top = DECK_TOP[spec.fam] || DECK_TOP.hexa, frame = spec.black ? [0.10,0.10,0.11] : null;
+      mats = stretched('deck', (x,y,z) => [x + (x>469 ? sx : 0), y, z + (z>0 ? sz : 0)], m => m.key==='64,64,64' ? top : (frame && m.key==='254,254,255' ? frame : null));
+      if(spec.topOnly) mats = mats.filter((m,i) => PARTS.deck[i].key==='64,64,64');
+    } else if(spec.kind==='leg'){
+      const d = spec.h - 600; mats = stretched('leg', (x,y,z) => [x, y, z > 150 ? z + d : z]); T = {r:ZUP, t:[0,0,0]};
+    } else if(spec.kind==='rail'){
+      const base = spec.L > 1000 ? 'rail2' : 'rail1', cut = spec.L > 1000 ? 1000 : 450, d = spec.L - (spec.L > 1000 ? 2000 : 1000);
+      mats = stretched(base, (x,y,z) => [x, y, z > cut ? z + d : z]);
+      if(spec.kick) mats.push(rawMat(box([-24,0,-40],[-20,150,spec.L-60]), BOX_IDX, [0.80,0.82,0.86], 0.4));   // battipiede
+    } else if(spec.kind==='step'){
+      const src = spec.h <= 200 ? 20 : spec.h <= 400 ? 40 : 60, d = spec.h - src*10;
+      mats = stretched('step'+src, (x,y,z) => [x, y, z > src*5 ? z + d : z]); T = {r:ZUP, t:[0,0,0]};
+    } else if(spec.kind==='shape'){       // pedana sagomata (triangolo, quarto di cerchio): telaio in alluminio + piano
+      const pts = spec.pts, top = DECK_TOP[spec.fam] || DECK_TOP.hexa;
+      mats = [rawMat(...extrude(pts, 0, 72), [0.80,0.82,0.86], 0.5), rawMat(...extrude(pts, 72, 90), top, 0.15)];
+    } else if(spec.kind==='tube'){        // tubo tondo o profilo quadro lungo x
+      const g = spec.round ? cyl([0,0,0],[spec.L,0,0], spec.d/2) : [box([0,-spec.d/2,-spec.d/2],[spec.L,spec.d/2,spec.d/2]), BOX_IDX];
+      mats = [rawMat(...g, spec.color || [0.80,0.82,0.86], 0.45)];
+    } else if(spec.kind==='truss'){       // traliccio a 2 correnti con diagonali
+      const L = spec.L, w = spec.w, r = spec.r || 24, col = spec.color || [0.80,0.82,0.86], P = [], I = [];
+      const add = g => { const o = P.length/3; P.push(...g[0]); I.push(...g[1].map(i => i+o)); };
+      add(cyl([0,0,0],[L,0,0], r)); add(cyl([0,w,0],[L,w,0], r));
+      const n = Math.round(L/w); for(let k=0;k<n;k++) add(cyl([k*L/n,(k%2)*w,0],[(k+1)*L/n,((k+1)%2)*w,0], r*0.55));
+      mats = [rawMat(P, I, col, 0.45)];
+    } else if(spec.kind==='ramp'){        // rampa: cuneo con piano nero e fianchi in alluminio
+      const L = spec.L, H = spec.H, W = spec.W, top = [[0,H,0],[L,0,0],[L,0,W],[0,H,W]];
+      mats = [rawMat(top.flat(), [0,1,2,0,2,3], [0.10,0.10,0.11], 0.15),
+              rawMat([0,0,0, L,0,0, 0,H,0, 0,0,W, L,0,W, 0,H,W, 0,0,0, 0,0,W, 0,H,W, 0,H,0], [0,1,2, 3,5,4, 6,7,8, 6,8,9], [0.80,0.82,0.86], 0.5)];
+    } else mats = plain(spec.name);
+    addBatch(mats, [T]);
+    // inquadratura sul pezzo
+    const mn = [Infinity,Infinity,Infinity], mx = [-Infinity,-Infinity,-Infinity];
+    for(const m of mats) for(let i=0;i<m.pos.length;i+=3){ const v = mulV(T.r,[m.pos[i],m.pos[i+1],m.pos[i+2]]); for(let k=0;k<3;k++){ mn[k] = Math.min(mn[k],v[k]); mx[k] = Math.max(mx[k],v[k]); } }
+    const r = Math.hypot(mx[0]-mn[0], mx[1]-mn[1], mx[2]-mn[2])/2;
+    cam.target = [(mn[0]+mx[0])/2, (mn[1]+mx[1])/2, (mn[2]+mx[2])/2];
+    cam.az = spec.az!=null ? spec.az : 0.62; cam.el = spec.el!=null ? spec.el : 0.42; cam.dist = cam.fit = r/Math.tan(0.31)*1.08; cam.userMoved = true;
+    bg = [1,1,1]; dirty = true; draw();
+  }
+  const box = (a,b) => [a[0],a[1],a[2], b[0],a[1],a[2], b[0],b[1],a[2], a[0],b[1],a[2], a[0],a[1],b[2], b[0],a[1],b[2], b[0],b[1],b[2], a[0],b[1],b[2]];
+  // prisma da un poligono convesso in pianta [[x,z],...] tra le quote y0 e y1
+  function extrude(pts, y0, y1){
+    const n = pts.length, P = [], I = [];
+    for(const [x,z] of pts) P.push(x,y0,z); for(const [x,z] of pts) P.push(x,y1,z);
+    for(let i=1;i<n-1;i++){ I.push(0,i,i+1); I.push(n,n+i+1,n+i); }
+    for(let i=0;i<n;i++){ const j = (i+1)%n; I.push(i,j,n+j, i,n+j,n+i); }
+    return [P, I];
+  }
+  function cyl(a, b, r, seg=18){       // cilindro dall'asse a -> b
+    const d = [b[0]-a[0],b[1]-a[1],b[2]-a[2]], L = Math.hypot(...d), u = d.map(v => v/L);
+    const t = Math.abs(u[1]) < 0.9 ? [0,1,0] : [1,0,0];
+    const v1 = [u[1]*t[2]-u[2]*t[1], u[2]*t[0]-u[0]*t[2], u[0]*t[1]-u[1]*t[0]], l1 = Math.hypot(...v1); for(let k=0;k<3;k++) v1[k] /= l1;
+    const v2 = [u[1]*v1[2]-u[2]*v1[1], u[2]*v1[0]-u[0]*v1[2], u[0]*v1[1]-u[1]*v1[0]];
+    const P = [], I = [];
+    for(let i=0;i<seg;i++){ const an = i/seg*Math.PI*2, c = Math.cos(an)*r, s = Math.sin(an)*r;
+      for(const e of [a,b]) P.push(e[0]+v1[0]*c+v2[0]*s, e[1]+v1[1]*c+v2[1]*s, e[2]+v1[2]*c+v2[2]*s); }
+    for(let i=0;i<seg;i++){ const j = (i+1)%seg; I.push(i*2, j*2, j*2+1, i*2, j*2+1, i*2+1); }
+    return [P, I];
+  }
+  const BOX_IDX = [0,1,2,0,2,3, 4,6,5,4,7,6, 0,4,5,0,5,1, 3,2,6,3,6,7, 1,5,6,1,6,2, 0,3,7,0,7,4];
+  return {build, resize, theme, reset, png, glb, request, cam, setXray, item};
 }
 window.StageView = {create};
 })();

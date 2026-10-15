@@ -86,6 +86,8 @@ Le immagini stanno in `img/` (lato lungo 600 px, bordo bianco tolto) e il catalo
 - Ogni immagine si abbina all'articolo con lo stesso nome della colonna «Product Photo Name» del listino, oppure con lo stesso codice. I nomi diversi noti (es. `VS750P-2×1B` per `VS750PB-2×1`, `VASH` per i due corrimano, `rollriser` per tutti i Rollrisers) sono in `ALIAS` dentro lo script.
 - Lo script elenca le immagini che non trovano un articolo e gli articoli ancora senza immagine.
 - `aggiorna_listino.py` ricollega da solo le immagini già presenti in `img/`.
+- Articoli senza foto: `node tools/genera_immagini.js cartella` crea le illustrazioni dai modelli 3D dell'app, allungati alla misura (pedane di altre misure, gambe, parapetti anche con battipiede, gradini, morsetto VLC), oppure con forme generate (pedane triangolari e a quarto di cerchio, tubi, profili, traliccio, rampe); poi `python3 tools/importa_immagini.py cartella`. Salta gli articoli che hanno già un'immagine.
+- Gli articoli quasi uguali a uno con foto (pedane RC, VTL30, teli e profili di misura vicina) usano quella foto: elenco `SIMILI` in `importa_immagini.py`.
 Nell'app la miniatura compare nell'offerta (anche nel PDF per il cliente), nella scheda Listino e sotto ogni sezione della configurazione (Palco, Scale, Parapetti, ...) con i pezzi che quella scelta mette in offerta. Tocca una miniatura per ingrandirla.
 
 ## Posizione dei dati offerta
