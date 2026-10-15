@@ -67,10 +67,21 @@ Nell'offerta ogni riga ha i tasti − e + per cambiare la quantità (per esempio
 
 ## Spedizione e bancali
 In cima ci sono totale, superficie e numero di pedane in offerta. Peso, volume e bancali sono nel riquadro «Spedizione», sotto l'offerta, con un disegno di ogni bancale (stima):
-- Pedane impilate su bancali 2×1 m: al massimo 20 strati e 200 cm di carico, bancale escluso; uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.
+- Pedane impilate su bancali 2×1 m: al massimo 20 strati e 200 cm di carico, bancale escluso. Ogni strato è il piano 2×1 diviso in celle da 50 cm e le pedane ci stanno con la loro forma vera (una 2×0,5 è una striscia lunga 2 m, non un quadrato 1×1): dalla più grande alla più piccola, nel primo posto libero, girate se serve. Le pedane più grandi di 2×1 (es. 2,1×1,2) fanno strato da sole.
 - Accessori prima sopra le pedane, nello spazio che resta fino a 200 cm. Quello che avanza va su EPAL 120×80 cm; i pezzi più lunghi di 120 cm (parapetti da 2 m, profili mascheratura 1970, scale regolabili, ...) solo su bancali 2×1 m.
 - Lo spazio per gli accessori è il 75% del volume libero del bancale. I carrelli viaggiano a parte; rampe e Rollrisers non hanno misure d'imballo e non sono conteggiati.
 - Il riepilogo «Spedizione (stima)» compare anche nelle note dell'offerta e il riquadro esce nel PDF dell'offerta. Strati, altezza e riempimento si cambiano nella scheda Regole.
+
+## Richiesta offerta trasporto
+A destra dei disegni dei bancali c'è il riepilogo dei colli (per esempio «1 bancale 2 × 1 × h 1,93 m») con il peso totale, bancali vuoti compresi (stima 30 kg il 2×1, 25 kg l'EPAL), e il pulsante «Richiedi offerta trasporto». Nella finestra si scelgono:
+- trasportatore e indirizzo email: Brigl (sales@brigl.it) o GLS (bolzano.ritiri@gls-italy.com);
+- carico: fornitore (EVERDECK s.c., Bogacica PL, predefinito, oppure BÜTEC GmbH, Mettmann D) e muletto sì/no;
+- scarico: indirizzo da scrivere a mano, muletto sì/no, sponda idraulica sì/no;
+- referente per la consegna: nominativo e telefono per il preavviso.
+«Crea email» apre il programma di posta con la mail già scritta; «Copia testo» la copia. Le scelte restano salvate; «Nuova offerta: azzera tutto» le riporta ai valori iniziali.
+
+## Larghezza della pagina
+Sul bordo destro della pagina c'è una barra verticale: trascinala per allargare la pagina fino a tutto lo schermo. Doppio clic per tornare alla larghezza normale. La larghezza resta salvata nel browser. Non c'è su schermi stretti.
 
 ## Vista 3D
 Il pannello «Vista 3D» monta il palco configurato con i pezzi reali (pedane, gambe, connettori, parapetti da 2 m, 1 m e 0,5 m, scale, mascheratura) e salva un'immagine PNG. Si carica solo se richiesto (`viewer3d.js` + `models3d.js`, entrambi vanno pubblicati insieme a `index.html`). I connettori tra le gambe compaiono solo quando sono in offerta (gambe oltre 80 cm). Spider Deck e Rollrisers sono mostrati con pedane e gambe StageDeck. I palchi circolari non sono supportati. Nel PDF dei disegni la vista 3D esce se è aperta; nel PDF dell'offerta no.
