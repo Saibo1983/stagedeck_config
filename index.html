@@ -67,6 +67,14 @@ button,input,select{font:inherit;color:inherit}
 .stack{display:flex;flex-direction:column;gap:16px;min-width:0}
 .config{display:flex;flex-direction:column;gap:18px}
 .config h3{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line)}
+.sechead h3{border-bottom:0}
+.layseg{margin-bottom:5px;flex:none}
+.layseg button{min-height:26px;padding:2px 10px;font-size:12.5px;flex:none}
+/* posizione «Sopra»: i dati vanno sotto la barra dei totali, sopra la pianta, in riquadri affiancati */
+#tab-offerta[data-layout="top"]{grid-template-columns:minmax(0,1fr)}
+#tab-offerta[data-layout="top"] .config{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;background:none;border:0;padding:0}
+#tab-offerta[data-layout="top"] .config>.sec{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
 .sec{display:flex;flex-direction:column;gap:10px}
 .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -253,7 +261,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <section id="tab-offerta" class="grid2" aria-labelledby="t-offerta">
   <form class="panel config" id="cfgForm" onsubmit="return false">
     <div class="sec">
-      <h3>Dati offerta</h3>
+      <div class="sechead"><h3>Dati offerta</h3>
+        <div class="seg layseg" role="group" aria-label="Posizione dei dati">
+          <button type="button" data-layout="side" aria-pressed="true" title="Dati in una colonna a sinistra">A lato</button>
+          <button type="button" data-layout="top" aria-pressed="false" title="Dati in riquadri affiancati, sopra la pianta">Sopra</button>
+        </div>
+      </div>
       <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
       <div class="row">
         <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
@@ -1917,6 +1930,18 @@ function bind(){
     bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up);
   });
   $('#wresize').addEventListener('dblclick', () => { wrap.style.maxWidth = ''; try{ localStorage.removeItem(WKEY); }catch(e){} draw3d(); });
+  // posizione dei dati offerta: a lato (colonna a sinistra) o sopra la pianta, sotto la barra dei totali
+  const LKEY = 'stagedeck.posizioneDati';
+  const setLayout = mode => {
+    const sec = $('#tab-offerta'), form = $('#cfgForm');
+    sec.dataset.layout = mode;
+    if(mode==='top') $('#notes').after(form); else sec.prepend(form);
+    $$('.layseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.layout===mode ? 'true' : 'false'));
+    try{ localStorage.setItem(LKEY, mode); }catch(e){}
+    draw3d();
+  };
+  $$('.layseg button').forEach(b => b.addEventListener('click', () => setLayout(b.dataset.layout)));
+  try{ if(localStorage.getItem(LKEY)==='top') setLayout('top'); }catch(e){}
   $('#shipPanel').addEventListener('click', e => {
     if(!e.target.closest('#trOpen')) return;
     trFill(); $('#trDlg').showModal();
