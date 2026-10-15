@@ -174,6 +174,10 @@ def main():
     label = f"Everdeck STAGEDECKS {m.group(0)}" if m else xlsx.stem
     # i prezzi NON vanno nel repository: restano in prezzi.json (ignorato da git)
     prezzi = {norm(i["code"]): i["price"] for i in items if i.get("price") is not None}
+    # prezzi che non sono nel listino Excel (es. pezzi speciali dei palchi rotondi): prezzi_extra.json, anche lui fuori da git
+    extra = Path(__file__).resolve().parent.parent / "prezzi_extra.json"
+    if extra.exists():
+        prezzi.update({norm(k): v for k, v in json.loads(extra.read_text(encoding="utf-8")).items() if not k.startswith("_")})
     for i in items:
         i.pop("price", None)
     (Path(__file__).resolve().parent.parent / "prezzi.json").write_text(

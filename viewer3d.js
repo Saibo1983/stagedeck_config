@@ -187,6 +187,20 @@ function create(canvas){
       geo.forEach((m,i) => { if(PARTS.deck[i].key==='64,64,64') m.top = true; });   // il pianale (si può rendere trasparente)
       addBatch(geo, v.list);
     }
+    // palco rotondo: pezzi speciali (telaio in alluminio + piano) e una gamba in ogni loro angolo
+    if(plan.round){
+      const LT = MD.legT[0], LR = LT.R.flat(), la = mulV(LR, LEG_AXIS);
+      for(const q of plan.round.pieces){
+        if(q.std) continue;
+        const pts = q.poly.map(([x,y]) => [x*1000, y*1000]);
+        addBatch([rawMat(...extrude(pts, ty, ty+72, false), FRAME_DARK[fam] ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5), Object.assign(rawMat(...extrude(pts, ty+72, ty+90), topCol, 0.15), {top:true})], [IDT]);
+        const cx = pts.reduce((s,v) => s+v[0],0)/pts.length, cz = pts.reduce((s,v) => s+v[1],0)/pts.length;
+        for(const [x,y] of q.corners){
+          const X = x*1000, Z = y*1000, l = Math.hypot(cx-X, cz-Z) || 1, gx = X + (cx-X)/l*60, gz = Z + (cz-Z)/l*60;
+          legs.push({r:LR, t:[gx - la[0], ty + LT.t[1] - delta, gz - la[2]]});
+        }
+      }
+    }
     // gambe: la parte sopra z=150 si allunga/accorcia
     addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
 
@@ -258,7 +272,8 @@ function create(canvas){
     for(const side of Object.keys(byside)){
       byside[side].forEach((st,i) => {
         const o = OUT[side], horiz = side==='back'||side==='front';
-        const along = (i+0.5)*opening;                         // centro della scala lungo il lato
+        // centro della scala lungo il lato (palco rotondo: scale centrate, il bordo tocca il lato solo al centro)
+        const along = (i+0.5)*opening + (plan.round ? ((horiz ? Wmm : Dmm) - byside[side].length*opening)/2 : 0);
         const base = sideStart[side];
         const cx = base[0] + (horiz ? along : 0), cz = base[1] + (horiz ? 0 : along);
         const n = Math.max(1, Math.max(1, Math.round(H/20)));       // gradini da 20 cm
@@ -543,10 +558,10 @@ function create(canvas){
   }
   const box = (a,b) => [a[0],a[1],a[2], b[0],a[1],a[2], b[0],b[1],a[2], a[0],b[1],a[2], a[0],a[1],b[2], b[0],a[1],b[2], b[0],b[1],b[2], a[0],b[1],b[2]];
   // prisma da un poligono convesso in pianta [[x,z],...] tra le quote y0 e y1
-  function extrude(pts, y0, y1){
+  function extrude(pts, y0, y1, caps=true){   // caps=false: solo le pareti (telaio aperto sotto e sopra)
     const n = pts.length, P = [], I = [];
     for(const [x,z] of pts) P.push(x,y0,z); for(const [x,z] of pts) P.push(x,y1,z);
-    for(let i=1;i<n-1;i++){ I.push(0,i,i+1); I.push(n,n+i+1,n+i); }
+    if(caps) for(let i=1;i<n-1;i++){ I.push(0,i,i+1); I.push(n,n+i+1,n+i); }
     for(let i=0;i<n;i++){ const j = (i+1)%n; I.push(i,j,n+j, i,n+j,n+i); }
     return [P, I];
   }

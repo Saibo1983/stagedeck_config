@@ -304,9 +304,16 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 
     <div class="sec">
       <h3>Palco</h3>
+      <div class="field"><span>Forma</span>
+        <div class="seg" id="shapeSeg" role="group" aria-label="Forma del palco">
+          <button type="button" data-shape="rect" aria-pressed="true">Rettangolare</button>
+          <button type="button" data-shape="round" aria-pressed="false">Rotondo</button>
+        </div>
+      </div>
       <div class="row3">
-        <label class="field"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
-        <label class="field"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
+        <label class="field rectOnly"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
+        <label class="field rectOnly"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
+        <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
         <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="180" step="5" inputmode="numeric"></label>
       </div>
       <label class="field"><span>Struttura</span><select id="support"></select></label>
@@ -651,6 +658,103 @@ const DEFAULT_RULES = {
     {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
   ]
 };
+/* ---------- palco rotondo (suddivisioni Everdeck: disegni 3, 4, 6, 8, 10 m) ----------
+   Rettangoli in metri, origine al centro, y verso il retro: [x0,y0,x1,y1]. «std» sono pedane 2×1 intere; gli altri
+   rettangoli vengono ritagliati sul cerchio e diventano pezzi speciali (tipi uguali a meno di una rotazione). */
+const ROUND_LAYOUTS = (() => {
+  const L = {};
+  const mir = rs => rs.flatMap(([a,b,c,d]) => [[a,b,c,d],[-c,b,-a,d]]);      // + speculare destra/sinistra
+  const rot4 = rs => rs.flatMap(([a,b,c,d]) => [[a,b,c,d],[-d,a,-b,c],[-c,-d,-a,-b],[b,-c,d,-a]]);   // + 3 rotazioni di 90°
+  L[3] = {std:[[-1,-1,0,1],[0,-1,1,1]], spec:[[-1.5,1,0,1.5],[0,1,1.5,1.5],[-1.5,-1.5,0,-1],[0,-1.5,1.5,-1],
+    [-1.5,0,-1,1],[-1.5,-1,-1,0],[1,0,1.5,1],[1,-1,1.5,0]]};
+  const c4 = Math.sqrt(3)/2;
+  L[4] = {std:[[-1,-1,0,1],[0,-1,1,1]], spec:[[-2,1,-c4,2],[-c4,1,0,2],[0,1,c4,2],[c4,1,2,2],
+    [-2,-2,-c4,-1],[-c4,-2,0,-1],[0,-2,c4,-1],[c4,-2,2,-1], [-2,0,-1,1],[-2,-1,-1,0],[1,0,2,1],[1,-1,2,0]]};
+  // 6 m: «girandola» di 8 pedane nel quadrato 4×4 e 4 pezzi per ogni fascia esterna
+  L[6] = {std:rot4([[-2,0,0,1],[-2,1,0,2]]), spec:rot4([[-3,2,-1.1,3],[-1.1,2,0,3],[0,2,1,3],[1,2,2,3]])};
+  L[8] = {std:[...[-2,-1,0,1].flatMap(x => [-3,-1,1].map(y => [x,y,x+1,y+2])), [-3,-2,-2,0],[-3,0,-2,2],[2,-2,3,0],[2,0,3,2]],
+    spec:[[-2,3,0,4],[0,3,2,4],[-2,-4,0,-3],[0,-4,2,-3],[-4,-2,-3,0],[-4,0,-3,2],[3,-2,4,0],[3,0,4,2],
+      ...mir([[2,2,2.73,4],[2.73,2,4,4],[2,-4,2.73,-2],[2.73,-4,4,-2]])]};
+  L[10] = {std:[...[-4,-2,0,2].flatMap(x => [-3,-2,-1,0,1,2].map(y => [x,y,x+2,y+1])), [-2,3,0,4],[0,3,2,4],[-2,-4,0,-3],[0,-4,2,-3]],
+    spec:[[-2,4,0,5],[0,4,2,5],[-2,-5,0,-4],[0,-5,2,-4], [4,-1,5,1],[-5,-1,-4,1],
+      ...mir([[2,4,5,5],[2,3,5,4],[4,1,5,3],[4,-3,5,-1],[2,-4,5,-3],[2,-5,5,-4]])]};
+  return L;
+})();
+const ROUND_D = [3,4,6,8,10];
+// rettangolo ∩ cerchio (cerchio approssimato da un poligono di 360 lati: le rotazioni di 90° lo lasciano uguale)
+function clipCircle(rect, R){
+  let poly = [[rect[0],rect[1]],[rect[2],rect[1]],[rect[2],rect[3]],[rect[0],rect[3]]];
+  const N = 360;
+  for(let k=0;k<N && poly.length;k++){
+    const a0 = k/N*2*Math.PI, a1 = (k+1)/N*2*Math.PI, P0 = [R*Math.cos(a0),R*Math.sin(a0)], P1 = [R*Math.cos(a1),R*Math.sin(a1)];
+    const side = q => (P1[0]-P0[0])*(q[1]-P0[1]) - (P1[1]-P0[1])*(q[0]-P0[0]);   // >0 dentro (antiorario)
+    const out = [];
+    for(let i=0;i<poly.length;i++){
+      const A = poly[i], B = poly[(i+1)%poly.length], sa = side(A), sb = side(B);
+      if(sa >= 0) out.push(A);
+      if((sa >= 0) !== (sb >= 0)){ const t = sa/(sa-sb); out.push([A[0]+(B[0]-A[0])*t, A[1]+(B[1]-A[1])*t]); }
+    }
+    poly = out;
+  }
+  return poly;
+}
+// pezzi del palco rotondo: poligoni in coordinate di pianta (m, origine retro-sinistra, y verso il fronte)
+const roundPieces = (() => {
+  const cache = {};
+  // forma a meno di rotazioni di 90° (non speculare: i pezzi destri e sinistri sono tipi diversi):
+  // ingombro, area e posizione del baricentro nell'ingombro, al centimetro
+  const canon = poly => {
+    let A = 0, cx = 0, cy = 0;
+    poly.forEach((v,i) => { const w = poly[(i+1)%poly.length], c = v[0]*w[1]-w[0]*v[1]; A += c; cx += (v[0]+w[0])*c; cy += (v[1]+w[1])*c; });
+    cx /= 3*A; cy /= 3*A;
+    let best = null;
+    for(let r=0;r<4;r++){
+      const rot = ([x,y]) => r===0 ? [x,y] : r===1 ? [-y,x] : r===2 ? [-x,-y] : [y,-x];
+      const q = poly.map(rot), c = rot([cx,cy]);
+      const mx = Math.min(...q.map(v => v[0])), my = Math.min(...q.map(v => v[1])), Mx = Math.max(...q.map(v => v[0])), My = Math.max(...q.map(v => v[1]));
+      const k = [Mx-mx, My-my, c[0]-mx, c[1]-my, Math.abs(A)/2].map(v => Math.round(v*100)).join(',');
+      if(best===null || k < best) best = k;
+    }
+    return best;
+  };
+  return Dm => {
+    if(cache[Dm]) return cache[Dm];
+    const R = Dm/2, lay = ROUND_LAYOUTS[Dm], types = new Map(), out = [];
+    const toPlan = ([x,y]) => [x+R, R-y];
+    for(const r of lay.std) out.push({std:true, rect:r, poly:[[r[0],r[1]],[r[2],r[1]],[r[2],r[3]],[r[0],r[3]]].map(toPlan),
+      cells:{x:Math.round((r[0]+R)*2), y:Math.round((R-r[3])*2), w:Math.round((r[2]-r[0])*2), h:Math.round((r[3]-r[1])*2)}});
+    for(const r of lay.spec){
+      const pl = clipCircle(r, R).filter((v,i,a) => i===0 || Math.hypot(v[0]-a[i-1][0], v[1]-a[i-1][1]) > 1e-6);
+      if(pl.length < 3) continue;
+      const k = canon(pl); if(!types.has(k)) types.set(k, String(types.size+1).padStart(2,'0'));
+      const xs = pl.map(v => v[0]), ys = pl.map(v => v[1]);
+      const bw = Math.max(...xs)-Math.min(...xs), bh = Math.max(...ys)-Math.min(...ys);
+      out.push({std:false, rect:r, poly:pl.map(toPlan), type:types.get(k), code:`KOLO${Dm}-${types.get(k)}`, bw, bh,
+        area: Math.abs(pl.reduce((s,v,i) => { const w = pl[(i+1)%pl.length]; return s + v[0]*w[1]-w[0]*v[1]; }, 0))/2,
+        // angoli del pezzo (vertici sui lati del rettangolo): servono per gambe e giunti
+        corners: pl.filter(([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6)).map(toPlan)});
+    }
+    return cache[Dm] = out;
+  };
+})();
+// articoli dei pezzi speciali (uno per tipo e diametro): prezzo dalla regola Everdeck (fino a 1×1 m / fino a 2×1 m, in prezzi.json)
+function roundItems(){
+  const items = [];
+  for(const Dm of ROUND_D){
+    const seen = new Set();
+    for(const p of roundPieces(Dm)){
+      if(p.std || seen.has(p.code)) continue; seen.add(p.code);
+      const small = Math.max(p.bw,p.bh) <= 1.005 && Math.min(p.bw,p.bh) <= 1.005;
+      // sagoma del pezzo (m, y verso l'alto) per l'immagine
+      const xs = p.poly.map(v => v[0]), ys = p.poly.map(v => v[1]), mx = Math.min(...xs), my = Math.max(...ys);
+      items.push({shape:p.poly.map(([x,y]) => [r2(x-mx), r2(my-y)]), code:p.code, name:`Pedana speciale per palco rotondo Ø ${Dm} m, tipo ${p.type} (${nf(r2(Math.max(p.bw,p.bh)))} × ${nf(r2(Math.min(p.bw,p.bh)))} m)`,
+        section:'STAGE PLATFORMS', kg:Math.round(p.area*16*10)/10, pack:[Math.round(Math.max(p.bw,p.bh)*1000)+5, Math.round(Math.min(p.bw,p.bh)*1000)+5, 100],
+        priceRef: small ? 'TONDO-SPEC-1X1' : 'TONDO-SPEC-2X1', round:Dm,
+        fattura:`Pezzo speciale su misura Everdeck (disegno palco rotondo Ø ${Dm} m): prezzo dalla regola Everdeck per pezzi speciali ${small ? 'fino a 1×1 m' : 'fino a 2×1 m'}; peso stimato dalla superficie (16 kg/m²), imballo dalle misure d'ingombro.`});
+    }
+  }
+  return items;
+}
 const FIXED_LEGS = {20:'VFL20',40:'VFL40',60:'VFL60',80:'VFL80',100:'VFL100'};
 const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'VTL100']];
 const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
@@ -849,10 +953,15 @@ function compute(cfg, R, look, kits){
   let fam = FAMILIES[cfg.family];
   if(!fam || (support==='spider') !== (fam.support==='spider')) fam = FAMILIES[support==='spider' ? 'spidera' : 'hexa'];
   let W = +cfg.W, D = +cfg.D, H = Math.round(+cfg.H);
+  // palco rotondo: diametri dei disegni Everdeck, solo su gambe (pedane 2×1 + pezzi speciali)
+  const round = cfg.shape==='round' && support==='legs' && fam.support==='deck' && !!fam.codes['4x2'];
+  if(cfg.shape==='round' && !round) warn('bad','Il palco rotondo si fa solo su gambe, con pedane StageDeck (HEXA, legno o plexi): uso la forma rettangolare.');
+  const Dm = ROUND_D.includes(+cfg.diam) ? +cfg.diam : 6;
+  if(round){ W = D = Dm; }
   if(!(W>0 && D>0)){ warn('bad','Inserisci larghezza e profondità maggiori di zero.'); return out; }
   if(W>60 || D>60){ warn('bad','Le misure oltre 60 m non sono supportate.'); return out; }
   if(!(H>0)){ warn('bad','Inserisci l\'altezza del palco.'); return out; }
-  const W2 = Math.ceil(W/fam.step-1e-9)*fam.step, D2 = Math.ceil(D/fam.step-1e-9)*fam.step;
+  const W2 = round ? W : Math.ceil(W/fam.step-1e-9)*fam.step, D2 = round ? D : Math.ceil(D/fam.step-1e-9)*fam.step;
   if(Math.abs(W2-W)>1e-9 || Math.abs(D2-D)>1e-9) warn('info',`Misure arrotondate a ${nf(W2)} × ${nf(D2)} m: i moduli di questo piano sono multipli di ${fam.step===1?'1 m':'50 cm'}.`);
   W = W2; D = D2;
   const Wc = Math.round(W*2), Dc = Math.round(D*2);
@@ -868,7 +977,9 @@ function compute(cfg, R, look, kits){
   const mains = big[0]===big[1] ? [{w:big[0],h:big[1]}] : [{w:big[0],h:big[1]}, {w:big[1],h:big[0]}];
   // «Ottimizza pedane» (cfg.deckMix): copertura libera come prima, vince il prezzo più basso anche con versi misti.
   let best = null;
-  for(const main of cfg.deckMix ? [null] : [...mains, null]){
+  const rp = round ? roundPieces(Dm) : null;
+  if(round) best = {t:rp.filter(q => q.std).map(q => ({...q.cells})), c:0};
+  else for(const main of cfg.deckMix ? [null] : [...mains, null]){
     if(best && !main) break;
     for(const st of STRATS){
       const t = tile(Wc,Dc,sizes,st,main);
@@ -879,17 +990,30 @@ function compute(cfg, R, look, kits){
   }
   if(!best){ warn('bad','Non riesco a coprire la superficie con i moduli del piano scelto.'); return out; }
   const decks = best.t;
-  if(cfg.deckMix) warn('info','Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.');
+  if(cfg.deckMix && !round) warn('info','Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.');
   for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
   const byDeck = new Map();
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
   for(const [code,qty] of byDeck) out.lines.push({group:'Pedana', code, qty});
+  const specials = round ? rp.filter(q => !q.std) : [];
+  if(round){
+    const bySp = new Map();
+    for(const q of specials) bySp.set(q.code, (bySp.get(q.code)||0)+1);
+    for(const [code,qty] of [...bySp].sort()) out.lines.push({group:'Pedana', code, qty});
+    out.notes.push(`Palco rotondo Ø ${Dm} m (suddivisione Everdeck): ${decks.length} pedane 2×1 e ${specials.length} pezzi speciali su misura in ${bySp.size} tipi. Senza parapetti, mascheratura e rampe (non ci sono pezzi curvi).`);
+  }
 
   // --- metriche per le regole
-  const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(W*D-1e-9), fixed:1};
+  // palco rotondo: ogni pezzo ha una gamba in ogni suo angolo (4 per le pedane 2×1, 3–5 per i pezzi speciali)
+  const area = round ? Math.PI*Dm*Dm/4 : W*D;
+  const legsN = decks.length*4 + specials.reduce((s,q) => s + q.corners.length, 0);
+  const M = {deck:decks.length + specials.length, deck_corner:legsN, m2:Math.ceil(area-1e-9), fixed:1};
   const vmap = new Map();
   for(const d of decks) for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
     const k = cx+','+cy; vmap.set(k,(vmap.get(k)||0)+1);
+  }
+  for(const q of specials) for(const [x,y] of q.corners){   // in celle da 50 cm, come le pedane
+    const k = r2(x*2)+','+r2(y*2); vmap.set(k,(vmap.get(k)||0)+1);
   }
   M.vertex = vmap.size; M.vertex1 = 0; M.junction2 = 0; M.junction34 = 0;
   for(const n of vmap.values()){ if(n===1) M.vertex1++; else if(n===2) M.junction2++; else M.junction34++; }
@@ -898,6 +1022,23 @@ function compute(cfg, R, look, kits){
     const a = decks[i], b = decks[j];
     if(a.x+a.w===b.x || b.x+b.w===a.x){ const o = Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y); if(o>0) joints.push(o/2); }
     if(a.y+a.h===b.y || b.y+b.h===a.y){ const o = Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x); if(o>0) joints.push(o/2); }
+  }
+  if(round){   // giunti con i pezzi speciali: tratti di lato in comune (m)
+    const edges = q => { const c = q.corners, e = []; for(let i=0;i<q.poly.length;i++){ const a = q.poly[i], b = q.poly[(i+1)%q.poly.length];
+      if(Math.abs(a[0]-b[0])<1e-6 || Math.abs(a[1]-b[1])<1e-6) e.push([a,b]); } return e; };
+    const stdEdges = d => { const x0 = d.x/2, y0 = d.y/2, x1 = (d.x+d.w)/2, y1 = (d.y+d.h)/2; return [[[x0,y0],[x1,y0]],[[x1,y0],[x1,y1]],[[x1,y1],[x0,y1]],[[x0,y1],[x0,y0]]]; };
+    const E = [...decks.map(stdEdges), ...specials.map(edges)];
+    const overlap = (e, f) => {
+      const v = Math.abs(e[0][0]-e[1][0])<1e-6, vf = Math.abs(f[0][0]-f[1][0])<1e-6;
+      if(v!==vf) return 0;
+      const k = v ? 0 : 1, o = v ? 1 : 0;
+      if(Math.abs(e[0][k]-f[0][k])>1e-6) return 0;
+      return Math.max(0, Math.min(Math.max(e[0][o],e[1][o]), Math.max(f[0][o],f[1][o])) - Math.max(Math.min(e[0][o],e[1][o]), Math.min(f[0][o],f[1][o])));
+    };
+    for(let i=0;i<E.length;i++) for(let j=Math.max(i+1, decks.length);j<E.length;j++){
+      let L = 0; for(const e of E[i]) for(const f of E[j]) L += overlap(e,f);
+      if(L>1e-3) joints.push(r2(L));
+    }
   }
   M.joint = joints.length;
 
@@ -936,7 +1077,8 @@ function compute(cfg, R, look, kits){
   const legLong = !!(leg && legLongFn(leg, H));
 
   // --- scale e rampe
-  const nStairs = cfg.stairs.length, nRamps = (cfg.ramps||[]).length;
+  const nStairs = cfg.stairs.length, nRamps = round ? 0 : (cfg.ramps||[]).length;
+  if(round && (cfg.ramps||[]).length) warn('warn','Palco rotondo: le rampe non si montano sul bordo curvo, non sono in offerta.');
   const stair = nStairs && H>20 ? pickStair(H, cfg.stairType, leg) : null;
   if(nStairs && H<=20) out.notes.push('Palco da 20 cm: la scala non serve (l\'ultimo gradino sarebbe a 0 cm).');
   else if(nStairs && !stair) warn('bad', cfg.stairType==='modular'
@@ -983,7 +1125,7 @@ function compute(cfg, R, look, kits){
     .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
   const runs = []; let rails = 0, railLinks = 0;
   for(const s of ['back','front','left','right']){
-    if(!cfg.rails[s]) continue;
+    if(!cfg.rails[s] || round) continue;
     const start = Math.min(sideLen[s], taken(s));
     const L = sideLen[s] - start;
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
@@ -998,7 +1140,8 @@ function compute(cfg, R, look, kits){
   if(tn1) out.lines.push({group:'Parapetti', code:c1, qty:tn1});
   if(tn05) out.lines.push({group:'Parapetti', code:c05, qty:tn05});
   M.rail = rails; M.rail_link = railLinks;
-  M.rail_corner = [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
+  M.rail_corner = round ? 0 : [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
+  if(round && Object.values(cfg.rails).some(Boolean)) warn('warn','Palco rotondo: non ci sono parapetti curvi, i parapetti non sono in offerta.');
   if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
 
   // --- regole accessori
@@ -1027,7 +1170,8 @@ function compute(cfg, R, look, kits){
   // --- mascheratura: sul perimetro, per ogni lato di deck un profilo con velcro e un telo della stessa lunghezza.
   // Lato lungo (2 m) = SKP1970 + telo 2050, lato corto (1 m) = SKP970 + telo 1050. Non dipende da scale e rampe.
   const sk = cfg.skirt || {};
-  const skSides = ['back','front','left','right'].filter(s => sk.sides && sk.sides[s]);
+  const skSides = round ? [] : ['back','front','left','right'].filter(s => sk.sides && sk.sides[s]);
+  if(round && sk.sides && Object.values(sk.sides).some(Boolean)) warn('warn','Palco rotondo: non ci sono profili e teli curvi, la mascheratura non è in offerta.');
   let skirtH = null;
   if(skSides.length){
     const fab = SKIRT_FABRICS[sk.fabric] ? sk.fabric : 'PSP-S';
@@ -1106,7 +1250,7 @@ function compute(cfg, R, look, kits){
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
-  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
+  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto o pezzi speciali su misura), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
   if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
   if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
@@ -1119,13 +1263,14 @@ function compute(cfg, R, look, kits){
   const cost = r2(lines.reduce((s,l) => s+l.cost,0));
   out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
     kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
-    pieces: lines.reduce((s,l) => s+l.pieces,0), area: W*D};
+    pieces: lines.reduce((s,l) => s+l.pieces,0), area: r2(area)};
   out.ship = shipping(lines, look, R.params.pal || {});
   const shTxt = shipSummary(out.ship);
   if(shTxt) out.notes.push(shTxt);
   const onLegs = support==='legs' && !!leg;
   out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     vd2d: lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
+    round: round ? {D:Dm, pieces:rp} : null,
     skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
@@ -1147,6 +1292,8 @@ const ITEMS = CATALOG.items;
 // Parapetti da 0,5 m: non sono nel listino Everdeck, li aggiungo senza prezzo, peso e imballo (prezzo da prezzi.json se c'è).
 for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VHK0.5', name:'0,5m handrail with kickboard (fuori listino)'}])
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
+// pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
+for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
 const LOOK = new Map(ITEMS.map(i => [ncode(i.code), i]));
 const BASE_PRICES = ITEMS.some(i => i.price!=null);
@@ -1154,7 +1301,7 @@ function applyPrices(map){
   let n = 0;
   for(const i of ITEMS){
     if(BASE_PRICES && i.price!=null && !map) { n++; continue; }
-    const v = map ? map[ncode(i.code)] : null;
+    const v = map ? map[ncode(i.priceRef || i.code)] : null;
     if(!BASE_PRICES) i.price = (typeof v==='number') ? v : null;
     if(i.price!=null) n++;
   }
@@ -1169,7 +1316,7 @@ const today = () => new Date().toISOString().slice(0,10);
 
 const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
-  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false,
+  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false,
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
@@ -1213,7 +1360,8 @@ function fillForm(){
   $('#support').innerHTML = Object.entries(SUPPORTS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
   $('#support').value = cfg.support;
   renderFamilies();
-  for(const id of ['cliente','progetto','numero','data','W','D','H','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  for(const id of ['cliente','progetto','numero','data','W','D','H','diam','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  renderShape();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
   $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#pdfCost').checked = !!cfg.pdfCost;
@@ -1223,6 +1371,14 @@ function fillForm(){
   $('#skFabric').value = cfg.skirt.fabric; $('#skHeight').value = cfg.skirt.height;
   $$('[data-skside]').forEach(c => c.checked = !!cfg.skirt.sides[c.dataset.skside]);
   renderSkSeg(); renderTrolleys();
+}
+// forma del palco: rettangolare (larghezza × profondità) o rotonda (diametro, suddivisione Everdeck)
+function renderShape(){
+  const round = cfg.shape==='round';
+  $$('#shapeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.shape===cfg.shape ? 'true' : 'false'));
+  $$('.rectOnly').forEach(e => e.hidden = round);
+  $$('.roundOnly').forEach(e => e.hidden = !round);
+  $('#deckMix').hidden = round; $('#deckMixHint').hidden = round;
 }
 function renderSkSeg(){
   const n = Object.values(cfg.skirt.sides).filter(Boolean).length;
@@ -1301,6 +1457,15 @@ function planSVG(p, H){
     s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--deck)" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
     if(Math.min(w,h)/px >= 30) s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle">${nf(d.w/2)}×${nf(d.h/2)}</text>`;
   }
+  // palco rotondo: pezzi speciali con la loro forma e il numero del tipo
+  const centroid = poly => { let A = 0, x = 0, y = 0; poly.forEach((v,i) => { const w = poly[(i+1)%poly.length], c = v[0]*w[1]-w[0]*v[1]; A += c; x += (v[0]+w[0])*c; y += (v[1]+w[1])*c; }); return [x/(3*A), y/(3*A)]; };
+  const specials = p.round ? p.round.pieces.filter(q => !q.std) : [];
+  for(const q of specials){
+    s += `<polygon points="${q.poly.map(([x,y]) => (x*100).toFixed(1)+','+(y*100).toFixed(1)).join(' ')}" fill="var(--deck)" fill-opacity=".75" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    const [cx,cy] = centroid(q.poly);
+    s += `<text x="${cx*100}" y="${cy*100+fs*.35}" font-size="${fs}" text-anchor="middle" font-weight="600">${q.type}</text>`;
+  }
+  if(p.round) s += `<circle cx="${W/2}" cy="${D/2}" r="${W/2}" fill="none" stroke="var(--deck-line)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
   const seg = (x1,y1,x2,y2,col,w) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" vector-effect="non-scaling-stroke"/>`;
   // parapetti
   for(const r of p.runs){
@@ -1324,6 +1489,8 @@ function planSVG(p, H){
   }
   // scale e rampe: prima le scale, poi le rampe, a partire dall'inizio del lato
   const slot = (side, off, len, depth) => {
+    // palco rotondo: scale centrate sul lato (il bordo tocca il quadrato solo al centro)
+    if(p.round) off += ((side==='back'||side==='front' ? p.W : p.D) - p.stairs[side]*p.opening)/2;
     const o = off*100, l = len*100;
     return side==='back' ? {x:o,y:-depth,w:l,h:depth} : side==='front' ? {x:o,y:D,w:l,h:depth}
          : side==='left' ? {x:-depth,y:o,w:depth,h:l} : {x:W,y:o,w:depth,h:l};
@@ -1358,6 +1525,14 @@ function planSVG(p, H){
     for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
       const k = cx+','+cy; if(!corners.has(k)) corners.set(k, []); corners.get(k).push(legAt(cx,cy,sx,sy));
     }
+    for(const q of specials){   // pezzi speciali: una gamba in ogni angolo, spostata verso il centro del pezzo
+      const c = centroid(q.poly);
+      for(const [x,y] of q.corners){
+        const dx = c[0]-x, dy = c[1]-y, l = Math.hypot(dx,dy) || 1, k = r2(x*2)+','+r2(y*2);
+        if(!corners.has(k)) corners.set(k, []);
+        corners.get(k).push([x*100 + dx/l*ins*1.41, y*100 + dy/l*ins*1.41]);
+      }
+    }
     // connettori: una cornice intorno alle gambe che collega (doppio = 2 gambe, quadro = 4)
     for(const pts of corners.values()){
       if(!(pts.length===2 && p.conn2) && !(pts.length>=3 && p.conn4)) continue;
@@ -1368,8 +1543,11 @@ function planSVG(p, H){
     for(const pts of corners.values()) for(const [x,y] of pts) s += `<rect x="${x-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
   }else for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
   // quote
-  s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
-  s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
+  if(p.round) s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">Ø ${nf(p.W)} m</text>`;
+  else{
+    s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
+    s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
+  }
   return s + '</svg>';
 }
 
@@ -1509,14 +1687,21 @@ function palletSVG(p, Hmax){
   const vb0 = P(0, 100, 0)[0]-6, vb1 = P(200, 0, 0)[0]+70, vt = P(0, 0, BASE+Hmax)[1]-10, vbt = P(200, 100, 0)[1]+8;
   return `<svg class="pal" viewBox="${vb0} ${vt} ${vb1-vb0} ${vbt-vt}" role="img" aria-label="Bancale ${esc(p.name)} alto ${Math.round(top)} cm">${s}</svg>`;
 }
+const stageName = p => p.round ? `Palco rotondo Ø ${nf(p.round.D)} m` : `Palco ${nf(p.W)} × ${nf(p.D)} m`;
 /* --- illustrazioni: img/<file> indicato nel catalogo (campo img), scritto da tools/importa_immagini.py --- */
-const imgSrc = it => it && it.img ? 'img/' + encodeURIComponent(it.img) : '';
+// pezzi speciali dei palchi rotondi: immagine generata dalla sagoma (piano nero, bordo in alluminio)
+const shapeSrc = it => {
+  const xs = it.shape.map(v => v[0]), ys = it.shape.map(v => v[1]), w = Math.max(...xs), h = Math.max(...ys), m = Math.max(w,h)*0.08;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-m} ${-m} ${w+2*m} ${h+2*m}"><polygon points="${it.shape.map(([x,y]) => x+','+(h-y)).join(' ')}" fill="#1c1c1f" stroke="#b9c0c8" stroke-width="${Math.max(w,h)*0.035}" stroke-linejoin="round"/></svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+};
+const imgSrc = it => it && it.img ? 'img/' + encodeURIComponent(it.img) : it && it.shape ? shapeSrc(it) : '';
 function thumb(code){
   const it = LOOK.get(ncode(code)), src = imgSrc(it);
   return src ? `<button type="button" class="thumb" data-img="${esc(it.code)}" aria-label="Immagine di ${esc(it.code)}"><img src="${src}" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>` : '';
 }
 function showImg(code, src, title, name){
-  if(!src){ const it = LOOK.get(ncode(code)); if(!it || !it.img) return; src = imgSrc(it); title = it.code; name = it.name; }
+  if(!src){ const it = LOOK.get(ncode(code)); src = imgSrc(it); if(!src) return; title = it.code; name = it.name; }
   $('#imgTitle').textContent = title; $('#imgName').textContent = name || '';
   $('#imgBig').src = src; $('#imgBig').alt = name || title;
   $('#imgDlg').showModal();
@@ -1639,7 +1824,7 @@ function renderResult(){
   $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
-  const title = `Palco ${nf(p.W)} × ${nf(p.D)} m · altezza ${cfg.H} cm`;
+  const title = `${stageName(p)} · altezza ${cfg.H} cm`;
   $('#planTitle').textContent = title;
   $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
   $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
@@ -1678,7 +1863,7 @@ function printPart(part){
   if(!res || !res.plan){ say('Niente da stampare'); return; }
   const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
   const head = [cfg.numero ? 'Offerta n. '+cfg.numero : 'Offerta', cfg.cliente, cfg.progetto, d].filter(Boolean);
-  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`Palco ${nf(res.plan.W)} × ${nf(res.plan.D)} m, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>`;
+  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`${stageName(res.plan)}, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
   document.title = [part==='offerta' ? 'Offerta' : 'Disegni', cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
@@ -1706,7 +1891,7 @@ function offerText(){
   if(cfg.cliente) out.push('Cliente: '+cfg.cliente);
   if(cfg.progetto) out.push('Progetto: '+cfg.progetto);
   if(d) out.push('Data: '+d);
-  out.push(`Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
+  out.push(`${stageName(p)}, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
   out.push(pad('Codice',16)+pad('Descrizione',46)+lpad('Q.tà',5)+lpad('Prezzo',11)+lpad('Totale',12));
   for(const l of res.lines.filter(l => l.qty>0)) out.push(pad(l.code,16)+pad(l.name.slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
   out.push('', `Subtotale: ${money(t.gross)} €`);
@@ -1830,7 +2015,7 @@ async function saveHtml3d(){
   const buf = new Uint8Array(await v3.view.glb().arrayBuffer());
   let bin = ''; for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
   const p = res.plan, d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
-  const title = `Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm`;
+  const title = `${stageName(p)}, altezza ${cfg.H} cm`;
   const meta = [cfg.numero ? 'Offerta n. '+cfg.numero : '', cfg.cliente, cfg.progetto, d].filter(Boolean).map(esc).join(' · ');
   const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
@@ -1910,6 +2095,7 @@ function bind(){
     for(const n of ['offerta','regole','listino']) $('#tab-'+n).hidden = n !== b.dataset.tab;
   }));
 
+  $$('#shapeSeg button').forEach(b => b.addEventListener('click', () => { cfg.shape = b.dataset.shape; renderShape(); update(); }));
   $('#cfgForm').addEventListener('input', e => {
     const t = e.target;
     if(t.id && t.id in cfg && !['stairs','extras','rails','nStairs'].includes(t.id)){
