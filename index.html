@@ -226,6 +226,11 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .sum .imp{font-weight:600}
 .sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+/* «Nuova offerta»: pulsante centrato, la spiegazione compare solo passandoci sopra (o con il tasto Tab) */
+.resetbox{position:relative;display:flex;justify-content:center}
+.resetbox .tip{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:10;margin:0;padding:8px 12px;border-radius:6px;font-size:12.5px;line-height:1.4;
+  background:var(--ink);color:var(--surface);box-shadow:0 4px 12px rgba(18,32,43,.25);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s}
+.resetbox:has(.btn:hover) .tip,.resetbox:has(.btn:focus-visible) .tip{opacity:1;visibility:visible}
 /* barra sotto 3D e offerta: prima le impostazioni, poi i comandi, ognuno con la sua etichetta */
 .bar{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .bar .actions{margin-top:0;align-items:center}
@@ -312,8 +317,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" data-layout="top" aria-pressed="false" title="Dati in riquadri affiancati, sopra la pianta">Sopra</button>
         </div>
       </div>
-      <div><button type="button" class="btn" id="resetAll">Nuova offerta: azzera tutto</button></div>
-      <p class="hint">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive, quantità e maggiorazioni modificate; dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.</p>
+      <div class="resetbox"><button type="button" class="btn" id="resetAll" aria-describedby="resetTip">Nuova offerta: azzera tutto</button>
+        <p class="tip" id="resetTip" role="tooltip">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive, quantità e maggiorazioni modificate; dati cliente vuoti, maggiorazione a 37% e sconto a 0. Prezzi e regole restano.</p></div>
     </div>
     <div class="sec">
       <h3>Dati offerta</h3>
