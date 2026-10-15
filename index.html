@@ -431,7 +431,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <div class="panel">
     <h3>Come vengono contati i pezzi</h3>
     <ul class="assump">
-      <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
+      <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Le pedane 2×1 sono tutte orientate nello stesso verso, in un blocco unico; dove la misura non è multipla del modulo, la striscia che avanza si chiude con i moduli più piccoli (mai con un 2×1 girato). Tra i due versi possibili vince quello con il prezzo di listino più basso, poi quello con meno pezzi.</li>
       <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
       <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
       <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
@@ -653,12 +653,27 @@ function stairGeom(st, h, look){
   const run = Math.sqrt(Math.max(L*L - h*h, (L*0.3)**2));
   return {run, len:L, angle:Math.atan2(h, run)*180/Math.PI};
 }
-function tile(Wc, Dc, sizes, st){
+// Regola: pedane tutte nello stesso verso. Il modulo più grande (2×1) riempie un blocco unico a partire dall'angolo
+// retro-sinistra, tutto orientato come `main` ({w,h} in celle da 50 cm); le strisce che avanzano (misure non multiple
+// del modulo) si coprono con i moduli più piccoli, mai con il 2×1 girato. Senza `main`: copertura libera.
+function tile(Wc, Dc, sizes, st, main){
   const g = new Uint8Array(Wc*Dc), out = [], cands = [];
+  if(main){
+    const nx = Math.floor(Wc/main.w), ny = Math.floor(Dc/main.h);
+    for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){
+      const x = i*main.w, y = j*main.h;
+      for(let b=y;b<y+main.h;b++) for(let a=x;a<x+main.w;a++) g[b*Wc+a] = 1;
+      out.push({x,y,w:main.w,h:main.h});
+    }
+  }
+  // con `main` i moduli rettangolari più piccoli si provano prima nello stesso verso delle pedane grandi
+  const sameH = main ? main.w>=main.h : st.preferH;
   for(const [a,b] of sizes){
     const seen = new Set();
-    for(const [w,h] of (st.preferH ? [[a,b],[b,a]] : [[b,a],[a,b]])){
-      if(seen.has(w+'x'+h)) continue; seen.add(w+'x'+h); cands.push({w,h});
+    for(const [w,h] of (sameH ? [[a,b],[b,a]] : [[b,a],[a,b]])){
+      if(seen.has(w+'x'+h)) continue; seen.add(w+'x'+h);
+      if(main && w===main.h && h===main.w && w!==h) continue;   // niente 2×1 girati
+      cands.push({w,h});
     }
   }
   cands.sort((p,q) => q.w*q.h - p.w*p.h);
@@ -719,12 +734,20 @@ function compute(cfg, R, look, kits){
   // --- piano
   const sizes = Object.keys(fam.codes).map(k => k.split('x').map(Number));
   const sizeKey = (w,h) => Math.max(w,h)+'x'+Math.min(w,h);
+  // Pedane tutte nello stesso verso (2×1 con il lato lungo sulla larghezza o sulla profondità): tra i due versi
+  // vince il prezzo di listino più basso, poi meno pezzi, poi il lato lungo sulla larghezza.
+  // La copertura libera (versi misti) resta solo come ultima possibilità.
+  const big = sizes.reduce((m,s) => s[0]*s[1] > m[0]*m[1] ? s : m);
+  const mains = big[0]===big[1] ? [{w:big[0],h:big[1]}] : [{w:big[0],h:big[1]}, {w:big[1],h:big[0]}];
   let best = null;
-  for(const st of STRATS){
-    const t = tile(Wc,Dc,sizes,st);
-    if(!t) continue;
-    const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
-    if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+  for(const main of [...mains, null]){
+    if(best && !main) break;
+    for(const st of STRATS){
+      const t = tile(Wc,Dc,sizes,st,main);
+      if(!t) continue;
+      const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
+      if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+    }
   }
   if(!best){ warn('bad','Non riesco a coprire la superficie con i moduli del piano scelto.'); return out; }
   const decks = best.t;
