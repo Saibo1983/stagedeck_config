@@ -114,7 +114,11 @@ label.tgl::before{content:none}
 .hint{color:var(--muted);font-size:12.5px;margin:0}
 .tiles{display:flex;flex-wrap:wrap;gap:12px}
 .tile{flex:1 1 130px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
-.tile.main{flex:2 1 210px}
+.tile.main{flex:1 1 170px}
+/* riga in alto: totale, superficie, pedane e il riquadro Pagina (posizione dei dati e nuova offerta) */
+.tilesdyn{display:contents}
+.tile.pagetile{flex:1 1 230px;display:flex;flex-direction:column;gap:6px}
+.pagetile .layseg button{min-height:28px;padding:3px 8px;font-size:13px}
 .tile .k{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 .tile .v{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tile .v small{font-size:15px;font-weight:600;color:var(--muted)}
@@ -228,7 +232,7 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 /* «Nuova offerta»: pulsante centrato, la spiegazione compare solo passandoci sopra (o con il tasto Tab) */
 .resetbox{position:relative;display:flex;justify-content:center}
-.resetbox .tip{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:10;margin:0;padding:8px 12px;border-radius:6px;font-size:12.5px;line-height:1.4;
+.resetbox .tip{position:absolute;top:calc(100% + 8px);right:0;width:min(340px,80vw);z-index:10;margin:0;padding:8px 12px;border-radius:6px;font-size:12.5px;line-height:1.4;
   background:var(--ink);color:var(--surface);box-shadow:0 4px 12px rgba(18,32,43,.25);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s}
 .resetbox:has(.btn:hover) .tip,.resetbox:has(.btn:focus-visible) .tip{opacity:1;visibility:visible}
 /* barra sotto 3D e offerta: prima le impostazioni, poi i comandi, ognuno con la sua etichetta */
@@ -261,7 +265,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.bar,.planbar,.shipside,.wresize,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.bar,.planbar,.shipside,.wresize,.tabs,footer,.toprow,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -309,17 +313,6 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <!-- ============ OFFERTA ============ -->
 <section id="tab-offerta" class="grid2" aria-labelledby="t-offerta">
   <form class="panel config" id="cfgForm" onsubmit="return false">
-    <div class="sec">
-      <h3>Pagina</h3>
-      <div class="field"><span>Posizione dei dati</span>
-        <div class="seg layseg" role="group" aria-label="Posizione dei dati">
-          <button type="button" data-layout="side" aria-pressed="true" title="Dati in una colonna a sinistra">A lato</button>
-          <button type="button" data-layout="top" aria-pressed="false" title="Dati in riquadri affiancati, sopra la pianta">Sopra</button>
-        </div>
-      </div>
-      <div class="resetbox"><button type="button" class="btn" id="resetAll" aria-describedby="resetTip">Nuova offerta: azzera tutto</button>
-        <p class="tip" id="resetTip" role="tooltip">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive, quantità e maggiorazioni modificate; dati cliente vuoti, maggiorazione a 37% e sconto a 0. Prezzi e regole restano.</p></div>
-    </div>
     <div class="sec">
       <h3>Dati offerta</h3>
       <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
@@ -447,7 +440,18 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 
   <div class="stack" id="result">
     <div class="printhead" id="printHead"></div>
-    <div class="tiles" id="tiles"></div>
+    <div class="tiles toprow">
+      <div id="tiles" class="tilesdyn"></div>
+      <div class="tile pagetile">
+        <div class="k">Pagina</div>
+        <div class="seg layseg" role="group" aria-label="Posizione dei dati">
+          <button type="button" data-layout="side" aria-pressed="true" title="Dati in una colonna a sinistra">A lato</button>
+          <button type="button" data-layout="top" aria-pressed="false" title="Dati in riquadri affiancati, sopra la pianta">Sopra</button>
+        </div>
+        <div class="resetbox"><button type="button" class="btn small" id="resetAll" aria-describedby="resetTip">Nuova offerta: azzera tutto</button>
+          <p class="tip" id="resetTip" role="tooltip">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive, quantità e maggiorazioni modificate; dati cliente vuoti, maggiorazione a 37% e sconto a 0. Prezzi e regole restano.</p></div>
+      </div>
+    </div>
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
