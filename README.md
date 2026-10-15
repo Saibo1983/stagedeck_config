@@ -12,8 +12,8 @@ Configuratore di offerte per palchi modulari Everdeck. Inserisci misure, altezza
 
 ## Articoli integrati da fatture
 Il listino `Everdeck_STAGEDECKS_2026.04_integrato` aggiunge 48 pezzi e misure fuori catalogo, ricavati dalle fatture di acquisto: sono le righe con il codice evidenziato in azzurro. Lo script le riconosce dal colore e le marca nel catalogo con la nota di provenienza (colonne R e U del file: codice, fatture, come sono stati stimati peso e imballo).
-- Nell'offerta ogni riga con un articolo da fattura è azzurra con l'etichetta «da fattura · controlla» (passa sopra per leggere la nota), e un avviso in cima elenca i codici. Etichetta e avviso non escono nel PDF né nel testo copiato.
-- Nella scheda Listino gli stessi articoli hanno l'etichetta «da fattura».
+- Nell'offerta ogni riga con un articolo da fattura è azzurra con l'etichetta «fuori listino · controlla» (passa sopra per leggere la nota), e un avviso in cima elenca i codici. Etichetta e avviso non escono nel PDF né nel testo copiato.
+- Nella scheda Listino gli stessi articoli hanno l'etichetta «fuori listino».
 - Alcuni entrano da soli nei calcoli: i parapetti da 0,5 m (VH0.5) e la gamba fissa da 70 cm (VFL70), che ora ha il suo prezzo invece della media tra VFL60 e VFL80. Gli altri si aggiungono a mano da «Voci aggiuntive» e sono segnalati allo stesso modo.
 - Caricando un nuovo `prezzi.json`, i codici che non ci sono (per esempio le rampe) tengono il prezzo già caricato sul dispositivo.
 

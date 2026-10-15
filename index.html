@@ -986,7 +986,7 @@ function compute(cfg, R, look, kits){
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
-  if(invCodes.length) warn('inv', `Articoli integrati da fatture di acquisto, da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
+  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
   if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
   if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
@@ -1437,7 +1437,7 @@ function renderResult(){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="3">${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
-    for(const l of ls) html += `<tr${l.adj||l.fattura ? ` class="${[l.adj?'mod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">da fattura · controlla</span>` : ''}</td><td class="num"><span class="qed">`
+    for(const l of ls) html += `<tr${l.adj||l.fattura ? ` class="${[l.adj?'mod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">fuori listino · controlla</span>` : ''}</td><td class="num"><span class="qed">`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
       + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost">${mkp}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`;
@@ -1649,7 +1649,7 @@ function renderCatalog(){
   const rows = ITEMS.filter(i => !q || (i.code+' '+i.name+' '+i.section).toLowerCase().includes(q));
   $('#qCount').textContent = `${rows.length} di ${ITEMS.length} articoli`;
   $('#catTable').innerHTML = `<thead><tr><th>Codice</th><th>Nome</th><th>Gruppo</th><th class="num">Acquisto €</th><th class="num">Peso kg</th><th>Imballo mm</th><th class="num">Volume m³</th></tr></thead><tbody>` +
-    rows.map(i => `<tr${i.fattura ? ' class="inv"' : ''}><td class="code">${esc(i.code)}</td><td>${esc(i.name)}${i.fattura ? ` <span class="invtag" title="${esc(i.fattura)}">da fattura</span>` : ''}</td><td>${esc(i.section)}</td><td class="num">${i.price==null?'–':money(i.price)}</td><td class="num">${i.kg==null?'–':dec(i.kg,2)}</td><td class="code">${i.pack?i.pack.join(' × '):'–'}</td><td class="num">${i.pack?dec(i.pack[0]*i.pack[1]*i.pack[2]/1e9,3):'–'}</td></tr>`).join('') + '</tbody>';
+    rows.map(i => `<tr${i.fattura ? ' class="inv"' : ''}><td class="code">${esc(i.code)}</td><td>${esc(i.name)}${i.fattura ? ` <span class="invtag" title="${esc(i.fattura)}">fuori listino</span>` : ''}</td><td>${esc(i.section)}</td><td class="num">${i.price==null?'–':money(i.price)}</td><td class="num">${i.kg==null?'–':dec(i.kg,2)}</td><td class="code">${i.pack?i.pack.join(' × '):'–'}</td><td class="num">${i.pack?dec(i.pack[0]*i.pack[1]*i.pack[2]/1e9,3):'–'}</td></tr>`).join('') + '</tbody>';
 }
 
 /* --- eventi --- */
