@@ -171,6 +171,16 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .thumb:hover{border-color:var(--accent)}
 .desc{display:flex;align-items:center;gap:0}
 .secimgs{display:flex;flex-wrap:wrap;gap:8px}
+/* ricerca articoli nelle voci aggiuntive */
+.xsearch{position:relative;min-width:0}
+.xlist{position:absolute;left:0;top:calc(100% + 4px);z-index:20;width:max(100%,340px);max-height:340px;overflow:auto;margin:0;padding:4px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.xlist li{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer}
+.xlist li[aria-selected="true"],.xlist li:hover{background:var(--accent-soft)}
+.xlist .thumb{width:34px;height:34px;margin:0;cursor:pointer}
+.xlist .xi{display:flex;flex-direction:column;min-width:0}
+.xlist .xi b{font-family:var(--f-mono);font-weight:500;font-size:12.5px}
+.xlist .xi span{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xlist .xnone{color:var(--muted);cursor:default}
 .secimgs:empty{display:none}
 .secimgs figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);max-width:76px;text-align:center;word-break:break-all}
 .secimgs .thumb{width:64px;height:64px;margin:0}
@@ -374,7 +384,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="sec">
       <h3>Voci aggiuntive</h3>
       <div class="row" style="grid-template-columns:minmax(0,1fr) 72px auto">
-        <input type="text" id="xCode" list="codeList" placeholder="Codice articolo" autocomplete="off" aria-label="Codice articolo">
+        <div class="xsearch">
+          <input type="text" id="xCode" placeholder="Codice o descrizione (es. morsetto)" autocomplete="off" aria-label="Cerca articolo per codice o descrizione" role="combobox" aria-expanded="false" aria-controls="xList" aria-autocomplete="list">
+          <ul id="xList" class="xlist" role="listbox" hidden></ul>
+        </div>
         <input type="number" id="xQty" value="1" min="1" step="1" aria-label="Quantità">
         <button type="button" class="btn" id="addExtra">Aggiungi</button>
       </div>
@@ -434,7 +447,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button></div>
       <div id="v3On" hidden>
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
-        <div class="actions"><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button></div>
+        <div class="actions"><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: Spider Deck e Rollrisers sono mostrati con gambe e pedane StageDeck.</p>
       </div>
     </div>
@@ -1784,17 +1797,47 @@ async function save3d(){
   if(!v3.view) return;
   const blob = await v3.view.png();
   if(!blob) return;
-  const ref = (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
-  const filename = `vista3d_${ref}.png`;
+  await saveBlob(blob, `vista3d_${ref3d()}.png`, 'Immagine');
+}
+const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
+// modello 3D per altri programmi (Visualizzatore 3D di Windows, Anteprima del Mac, Blender, ...)
+async function saveGlb(){
+  if(!v3.view) return;
+  draw3dNow();
+  await saveBlob(v3.view.glb(), `palco3d_${ref3d()}.glb`, 'Modello 3D');
+}
+// pagina HTML da mandare al cliente: si apre con un doppio clic nel browser e il palco si gira con il dito o il mouse
+async function saveHtml3d(){
+  if(!v3.view) return;
+  draw3dNow();
+  const buf = new Uint8Array(await v3.view.glb().arrayBuffer());
+  let bin = ''; for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
+  const p = res.plan, d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
+  const title = `Palco ${nf(p.W)} × ${nf(p.D)} m, altezza ${cfg.H} cm`;
+  const meta = [cfg.numero ? 'Offerta n. '+cfg.numero : '', cfg.cliente, cfg.progetto, d].filter(Boolean).map(esc).join(' · ');
+  const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(title)}</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"><\/script>
+<style>html,body{margin:0;height:100%;font:15px/1.4 system-ui,sans-serif;background:#eef1f4;color:#12202b}
+header{padding:12px 16px;border-bottom:3px solid #b3261e;background:#fff}h1{margin:0;font-size:19px}p{margin:2px 0 0;color:#566774;font-size:13px}
+model-viewer{width:100%;height:calc(100% - 74px);background:linear-gradient(#fff,#e3e8ec)}</style></head><body>
+<header><h1>${esc(title)}</h1><p>${meta ? meta+' · ' : ''}trascina per ruotare, rotellina o due dita per lo zoom</p></header>
+<model-viewer id="mv" camera-controls touch-action="pan-y" shadow-intensity="0.6" exposure="1.05" camera-orbit="35deg 65deg auto" alt="${esc(title)}"></model-viewer>
+<script>const b=atob("${btoa(bin)}"),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
+document.getElementById('mv').src=URL.createObjectURL(new Blob([u],{type:'model/gltf-binary'}));<\/script></body></html>`;
+  await saveBlob(new Blob([html], {type:'text/html'}), `palco3d_${ref3d()}.html`, 'Pagina 3D');
+}
+function draw3dNow(){ cancelAnimationFrame(v3.raf); try{ v3.view.build(res.plan, cfg); }catch(e){ console.error(e); } }
+async function saveBlob(blob, filename, what){
   try{
     let dl = null;
     try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
-    if(dl){ await dl.save({filename, data: blob}); say('Immagine salvata'); return; }
+    if(dl){ await dl.save({filename, data: blob}); say('Salvato: '+what); return; }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = filename;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    say('Immagine scaricata');
+    say('Scaricato: '+what);
   }catch(e){ if(!(e && e.code==='declined')) say('Salvataggio non riuscito'); }
 }
 function offerTsv(){
@@ -1901,6 +1944,52 @@ function bind(){
     const b = e.target.closest('[data-rmramp]'); if(!b) return;
     cfg.ramps.splice(+b.dataset.rmramp,1); renderRamps(); update();
   });
+  // ricerca: tutte le parole devono comparire in codice, descrizione o gruppo (senza badare a maiuscole e accenti)
+  const fold = t => String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/×/g,'x').replace(/(\d),(\d)/g,'$1.$2');
+  // le descrizioni del listino sono in inglese: parola italiana (inizio) -> parole inglesi equivalenti
+  const XSYN = [['morsett',['clamp','coupler']],['giunt',['clamp','coupler','connect']],['connett',['connect','clamp']],['gamb',['leg']],
+    ['pedan',['platform','deck']],['piano',['platform','deck']],['parapett',['handrail']],['ringhier',['handrail']],['corriman',['handrail']],['battipied',['kick']],
+    ['scal',['stair']],['gradin',['stair','step']],['carrell',['trolley','cart']],['mascher',['skirt']],['tel',['skirt']],['gonn',['skirt']],['profil',['profile']],
+    ['velcr',['velcro']],['ramp',['ramp']],['tub',['pipe','tube']],['tralicc',['truss']],['ruot',['rollriser','wheel','castor']],['livell',['level']],
+    ['vellut',['velvet']],['plisset',['pleated']],['liscio',['straight']],['poliest',['polyester']],['legno',['wood']],['ner',['black']],
+    ['allumin',['alumin']],['tond',['round']],['telescop',['telescop']],['angol',['corner']],['cerchi',['circle']],['circol',['circle']],['tappo',['plastic','cap']],
+    ['rondell',['washer']],['vite',['screw']],['viti',['screw']],['valigi',['case']],['custod',['case']],['trasparent',['transparent']],['latte',['milk']]];
+  const xWord = w => { const alt = [w]; for(const [it,en] of XSYN) if(w.length>=3 && (w.startsWith(it) || it.startsWith(w))) alt.push(...en); return alt; };
+  const xIndex = () => ITEMS.map(i => ({i, t:fold(i.code+' '+ncode(i.code)+' '+i.name+' '+i.section)}));
+  let xIdx = null, xSel = -1, xRes = [];
+  const xClose = () => { $('#xList').hidden = true; $('#xCode').setAttribute('aria-expanded','false'); xSel = -1; };
+  const xShow = () => {
+    const q = fold($('#xCode').value).trim();
+    if(!q){ xClose(); return; }
+    const words = q.split(/\s+/), alts = words.map(xWord);
+    xIdx = xIdx || xIndex();
+    xRes = xIdx.filter(x => alts.every(a => a.some(w => x.t.includes(w)))).map(x => x.i)
+      .sort((a,b) => (fold(b.code).startsWith(words[0]) - fold(a.code).startsWith(words[0])) || a.code.localeCompare(b.code)).slice(0,40);
+    xSel = xRes.length===1 ? 0 : -1;
+    $('#xList').innerHTML = xRes.length ? xRes.map((it,k) => `<li role="option" data-k="${k}" aria-selected="${k===xSel}">${thumb(it.code)}<div class="xi"><b>${esc(it.code)}</b><span>${esc(it.name)}</span></div></li>`).join('')
+      : '<li class="xnone">Nessun articolo trovato</li>';
+    $('#xList').hidden = false; $('#xCode').setAttribute('aria-expanded','true');
+  };
+  const xPick = k => { const it = xRes[k]; if(!it) return; $('#xCode').value = it.code; xClose(); $('#xQty').focus(); $('#xQty').select(); };
+  $('#xCode').addEventListener('input', xShow);
+  $('#xCode').addEventListener('focus', () => { if($('#xCode').value.trim() && !LOOK.has(ncode($('#xCode').value))) xShow(); });
+  $('#xCode').addEventListener('keydown', e => {
+    if($('#xList').hidden){ if(e.key==='Enter'){ e.preventDefault(); $('#addExtra').click(); } return; }
+    if(e.key==='ArrowDown' || e.key==='ArrowUp'){
+      e.preventDefault(); if(!xRes.length) return;
+      xSel = (xSel + (e.key==='ArrowDown' ? 1 : -1) + xRes.length) % xRes.length;
+      $$('#xList li').forEach((li,k) => li.setAttribute('aria-selected', k===xSel));
+      $(`#xList li[data-k="${xSel}"]`).scrollIntoView({block:'nearest'});
+    } else if(e.key==='Enter'){ e.preventDefault(); if(xSel>=0) xPick(xSel); else if(LOOK.has(ncode($('#xCode').value))) { xClose(); $('#addExtra').click(); } }
+    else if(e.key==='Escape') xClose();
+  });
+  $('#xList').addEventListener('mousedown', e => e.preventDefault());   // il campo non perde il fuoco
+  $('#xList').addEventListener('click', e => {
+    if(e.target.closest('.thumb')) return;   // la miniatura apre l'immagine grande
+    const li = e.target.closest('li[data-k]'); if(li) xPick(+li.dataset.k);
+  });
+  $('#xCode').addEventListener('blur', () => setTimeout(xClose, 150));
+  $('#xQty').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); $('#addExtra').click(); $('#xCode').focus(); } });
   $('#addExtra').addEventListener('click', () => {
     const code = $('#xCode').value.trim(), it = LOOK.get(ncode(code));
     if(!it){ $('#xCode').setCustomValidity('Codice non presente nel listino'); $('#xCode').reportValidity(); setTimeout(() => $('#xCode').setCustomValidity(''), 1500); return; }
@@ -1933,6 +2022,8 @@ function bind(){
   $('#v3Show').addEventListener('click', show3d);
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
   $('#v3Png').addEventListener('click', save3d);
+  $('#v3Glb').addEventListener('click', saveGlb);
+  $('#v3Html').addEventListener('click', saveHtml3d);
 
   // regole
   const ruleFromEvent = e => { const row = e.target.closest('[data-rule]'); return row ? +row.dataset.rule : -1; };

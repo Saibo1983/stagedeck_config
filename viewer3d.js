@@ -95,7 +95,7 @@ function create(canvas){
   const P = prog(gl,VS,FS), G = prog(gl,GVS,GFS);
   const U = {vp:gl.getUniformLocation(P,'u_vp'), color:gl.getUniformLocation(P,'u_color'), spec:gl.getUniformLocation(P,'u_spec'), eye:gl.getUniformLocation(P,'u_eye')};
   const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center')};
-  let batches = [];      // {meshes:[{vao,n,type,color,spec}], inst, count}
+  let batches = [];      // {meshes:[{vao,n,type,color,spec}], inst, count, src:{mats, mats4}}
   let groundMesh = null, rect = [0,0,1,1], bg = [1,1,1], groundCol = [0.82,0.84,0.86];
   const cam = {az:0.62, el:0.46, dist:9000, target:[0,300,0], fit:9000};
   let dirty = true, W = 1, Hh = 1, stageR = 4000;
@@ -124,7 +124,7 @@ function create(canvas){
       const idx = m.idx32 || m.idx, v = makeVAO(m.pos, idx, inst);
       return {vao:v.vao, pb:v.pb, ib:v.ib, n:idx.length, type: m.idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, color:m.color, spec:m.spec};
     });
-    batches.push({meshes, inst, count:transforms.length});
+    batches.push({meshes, inst, count:transforms.length, src:{mats, data}});   // src: copia per l'esportazione GLB
   }
   const colorOf = (m, over) => {
     const base = COL[m.key] || {c:[0.5,0.5,0.5], s:0.2};
@@ -402,10 +402,61 @@ function create(canvas){
   }
   function reset(){ cam.userMoved = false; cam.az = 0.62; cam.el = 0.46; cam.dist = cam.fit; request(); }
   function png(){ draw(); return new Promise(res => canvas.toBlob(res, 'image/png')); }
+
+  /* ---------- esportazione glTF binario (.glb): una mesh per geometria+colore, un nodo per ogni istanza ---------- */
+  function glb(){
+    const chunks = [], views = [], accessors = [], materials = [], meshes = [], nodes = [], matKey = new Map(), geo = new Map();
+    let off = 0;
+    const view = (arr, target) => {
+      const bytes = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength), pad = (4 - bytes.length % 4) % 4;
+      chunks.push(bytes); if(pad) chunks.push(new Uint8Array(pad));
+      views.push({buffer:0, byteOffset:off, byteLength:bytes.length, target}); off += bytes.length + pad;
+      return views.length - 1;
+    };
+    const material = (color, spec) => {
+      const k = color.map(v => v.toFixed(3)).join(',') + '|' + spec.toFixed(2);
+      if(!matKey.has(k)){
+        materials.push({pbrMetallicRoughness:{baseColorFactor:[color[0],color[1],color[2],1], metallicFactor:Math.min(0.8, spec*0.9), roughnessFactor:Math.max(0.25, 1-spec*0.7)}, doubleSided:true});
+        matKey.set(k, materials.length-1);
+      }
+      return matKey.get(k);
+    };
+    const geometry = m => {   // posizioni e indici condivisi tra lotti che usano gli stessi array
+      const idx = m.idx32 || m.idx;
+      if(geo.has(m.pos) && geo.get(m.pos).idx===idx) return geo.get(m.pos);
+      const min = [Infinity,Infinity,Infinity], max = [-Infinity,-Infinity,-Infinity];
+      for(let i=0;i<m.pos.length;i+=3) for(let k=0;k<3;k++){ const v = m.pos[i+k]; if(v<min[k]) min[k] = v; if(v>max[k]) max[k] = v; }
+      const pos = Float32Array.from(m.pos);
+      accessors.push({bufferView:view(pos, 34962), componentType:5126, count:pos.length/3, type:'VEC3', min, max});
+      const pa = accessors.length - 1;
+      const ix = m.idx32 ? Uint32Array.from(idx) : Uint16Array.from(idx);
+      accessors.push({bufferView:view(ix, 34963), componentType: m.idx32 ? 5125 : 5123, count:ix.length, type:'SCALAR'});
+      const g = {idx, pa, ia:accessors.length - 1};
+      geo.set(m.pos, g); return g;
+    };
+    for(const b of batches){
+      const prims = b.src.mats.filter(m => (m.idx32||m.idx).length).map(m => { const g = geometry(m); return {attributes:{POSITION:g.pa}, indices:g.ia, material:material(m.color, m.spec||0)}; });
+      if(!prims.length) continue;
+      meshes.push({primitives:prims});
+      for(let i=0;i<b.count;i++) nodes.push({mesh:meshes.length-1, matrix:Array.from(b.src.data.subarray(i*16, i*16+16))});
+    }
+    // radice: millimetri -> metri
+    const root = {name:'Palco', scale:[0.001,0.001,0.001], children:nodes.map((_,i) => i+1)};
+    const json = {asset:{version:'2.0', generator:'StageDeck'}, scene:0, scenes:[{nodes:[0]}], nodes:[root, ...nodes],
+      meshes, materials, accessors, bufferViews:views, buffers:[{byteLength:off}]};
+    let js = new TextEncoder().encode(JSON.stringify(json));
+    const jpad = (4 - js.length % 4) % 4; if(jpad){ const t = new Uint8Array(js.length + jpad).fill(0x20); t.set(js); js = t; }
+    const total = 12 + 8 + js.length + 8 + off, out = new Uint8Array(total), dv = new DataView(out.buffer);
+    dv.setUint32(0, 0x46546C67, true); dv.setUint32(4, 2, true); dv.setUint32(8, total, true);
+    dv.setUint32(12, js.length, true); dv.setUint32(16, 0x4E4F534A, true); out.set(js, 20);
+    let p = 20 + js.length; dv.setUint32(p, off, true); dv.setUint32(p+4, 0x004E4942, true); p += 8;
+    for(const c of chunks){ out.set(c, p); p += c.length; }
+    return new Blob([out], {type:'model/gltf-binary'});
+  }
   new ResizeObserver(resize).observe(canvas);
   theme(); resize();
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => theme()); }catch(e){}
-  return {build, resize, theme, reset, png, request, cam};
+  return {build, resize, theme, reset, png, glb, request, cam};
 }
 window.StageView = {create};
 })();
