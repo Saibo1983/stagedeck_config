@@ -321,8 +321,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="field"><span>Offerte salvate</span>
         <div class="archrow"><select id="archSel" aria-label="Offerte salvate"></select><button type="button" class="btn small" id="archOpen">Apri</button></div>
       </div>
-      <div class="archrow"><button type="button" class="btn small" id="archSave" title="Salva l'offerta corrente nell'archivio: il titolo sono le misure con un numero progressivo">Salva offerta</button><button type="button" class="btn small" id="archDel">Elimina</button><span class="hint" id="archMsg" role="status" aria-live="polite"></span></div>
-      <p class="hint" id="presetHint">Il palco standard cambia solo le misure e toglie parapetti, scale e accessori. L'archivio resta in questo browser.</p>
+      <div class="archrow"><button type="button" class="btn small" id="archSave" title="Salva l'offerta corrente nell'archivio: il titolo sono le misure con un numero progressivo">Salva offerta</button><button type="button" class="btn small" id="archDel">Elimina</button><button type="button" class="btn small" id="archExp" title="Scarica tutte le offerte salvate in un file .json">Esporta archivio</button><label class="btn small" for="archFile" style="cursor:pointer" title="Aggiunge all'archivio le offerte di un file esportato">Importa archivio</label><input type="file" id="archFile" accept=".json,application/json" hidden><span class="hint" id="archMsg" role="status" aria-live="polite"></span></div>
+      <p class="hint" id="presetHint">Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.</p>
       <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
       <div class="row">
         <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
@@ -1488,19 +1488,50 @@ function archOpen(){
   const e = archLoad().find(x => x.id===$('#archSel').value); if(!e) return;
   cfg = normCfg(e.cfg); stairSel = 0; fillForm(); update(); renderArchive(e.id); archMsg(`Aperta: ${e.base} · n. ${e.n}`);
 }
+// esporta: un file .json con tutte le offerte; importa: aggiunge quelle che non ci sono già (stesso id), e se il numero
+// progressivo di quella misura è già usato prende il primo libero
+async function archExport(){
+  const a = archLoad(); if(!a.length){ archMsg('Archivio vuoto: niente da esportare.'); return; }
+  const filename = `archivio-offerte-${today()}.json`;
+  const blob = new Blob([JSON.stringify({tipo:'stagedeck-archivio', v:1, esportato:new Date().toISOString(), offerte:a}, null, 1)], {type:'application/json'});
+  let dl = null;
+  try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+  if(dl){ await dl.save({filename, data:blob}); archMsg(`Esportate ${a.length} offerte`); return; }
+  const l = document.createElement('a');
+  l.href = URL.createObjectURL(blob); l.download = filename;
+  document.body.appendChild(l); l.click(); l.remove();
+  setTimeout(() => URL.revokeObjectURL(l.href), 4000);
+  archMsg(`Esportate ${a.length} offerte`);
+}
+async function archImport(f){
+  try{
+    const j = JSON.parse(await f.text()), list = Array.isArray(j) ? j : j && j.offerte;
+    if(!Array.isArray(list)) throw new Error('formato');
+    const a = archLoad(); let added = 0, same = 0;
+    for(const e of list){
+      if(!e || typeof e.cfg!=='object' || !e.cfg) continue;
+      if(e.id && a.some(x => x.id===e.id)){ same++; continue; }
+      const c = normCfg(e.cfg), base = archBase(c);
+      let n = +e.n || 1; while(a.some(x => x.base===base && x.n===n)) n++;
+      a.push({id:e.id || Date.now().toString(36)+added, base, n, saved:e.saved || new Date().toISOString(), cfg:c}); added++;
+    }
+    if(!archStore(a)){ archMsg('Importazione non riuscita: memoria del browser piena o bloccata.'); return; }
+    renderArchive(); archMsg(`Importate ${added} offerte` + (same ? `, ${same} c'erano già` : '') + '.');
+  }catch(e){ archMsg('File non valido: serve un archivio esportato da StageDeck (.json).'); }
+}
 function archDel(){
   const a = archLoad(), e = a.find(x => x.id===$('#archSel').value); if(!e) return;
   if(!confirm(`Eliminare dall'archivio «${e.base} · n. ${e.n}»?`)) return;
   archStore(a.filter(x => x !== e)); renderArchive(); archMsg('Offerta eliminata');
 }
-// palco standard: solo le misure, senza parapetti, scale, rampe e altri accessori; restano dati cliente, altezza,
-// struttura, pedana e prezzi dell'offerta corrente
+// palco standard: misure, su gambe telescopiche 40–60 cm (VTL40, regolate a 60), senza parapetti, scale, rampe e altri
+// accessori; restano dati cliente, pedana e prezzi dell'offerta corrente
 function applyPreset(v){
   const [W,D] = v.split('x').map(Number); if(!W || !D) return;
   const b = blankCfg();
   for(const k of ['rails','stairs','ramps','extras','adj','mkRow','skirt','trolley','kick']) cfg[k] = clone(b[k]);
-  Object.assign(cfg, {shape:'rect', W, D});
-  stairSel = 0; fillForm(); update(); archMsg(`Palco standard ${W} × ${D} m`);
+  Object.assign(cfg, {shape:'rect', W, D, support:'legs', tele:true, H:60});
+  stairSel = 0; fillForm(); update(); archMsg(`Palco standard ${W} × ${D} m, gambe 40–60 cm`);
 }
 function renderPresets(){
   $('#presetSel').innerHTML = '<option value="">Scegli una misura…</option>' + PRESET_W.map(w =>
@@ -2383,6 +2414,8 @@ function bind(){
   $('#archSave').addEventListener('click', archSave);
   $('#archOpen').addEventListener('click', archOpen);
   $('#archDel').addEventListener('click', archDel);
+  $('#archExp').addEventListener('click', archExport);
+  $('#archFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) archImport(f); e.target.value = ''; });
   $('#resetAll').addEventListener('click', () => {
     if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
     cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
