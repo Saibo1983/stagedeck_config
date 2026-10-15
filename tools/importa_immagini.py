@@ -29,6 +29,14 @@ ALIAS = {
     "ROLLRISER": ["RR30-1", "RR30-2", "RR30-4", "RR40-1", "RR40-2", "RR40-4"],
 }
 EST = re.compile(r"\.(jpe?g|png|webp)$", re.I)
+# Articoli senza foto quasi uguali a un altro che ce l'ha: codice senza foto -> codice di cui usare la foto
+SIMILI = {
+    "VS750H-2×1RC": "VS750H-2×1", "VS750H-1×1RC": "VS750H-1×1", "VS750H-2×0,5RC": "VS750H-2×0,5", "VS750H-1x0,5RC": "VS750H-1x0,5",
+    "VTL30": "VTL40", "VTL30-40": "VTL40",
+    "VSP-S 200x405": "VSP-S 200x1050", "VSP-P 200x400": "VSP-P 200x1050",
+    "VSP-P 700x1050": "VSP-P 600x1050", "VSP-P 700x2050": "VSP-P 600x2050",
+    "SKP320": "SKP470", "SKBP470": "SKP470", "SKBP970": "SKP970", "SKBP1970": "SKP1970",
+}
 HTML = Path(__file__).resolve().parent.parent / "index.html"
 PAT = re.compile(r'(<script type="application/json" id="catalog">)(.*?)(</script>)', re.S)
 
@@ -78,6 +86,13 @@ def main():
         im.thumbnail((LATO, LATO), Image.LANCZOS)
         for k in dest:
             im.save(IMG_DIR / img_file(k), "JPEG", quality=82, optimize=True, progressive=True)
+            salvate += 1
+    n = assegna_immagini(cat["items"])
+    by = {norm(i["code"]): i for i in cat["items"]}
+    for dst, src in SIMILI.items():
+        d, s_ = by.get(norm(dst)), by.get(norm(src))
+        if d is not None and not d.get("img") and s_ is not None and s_.get("img"):
+            (IMG_DIR / img_file(norm(dst))).write_bytes((IMG_DIR / s_["img"]).read_bytes())
             salvate += 1
     n = assegna_immagini(cat["items"])
     payload = json.dumps(cat, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")

@@ -23,6 +23,8 @@ CORREZIONI = {
     "SPHA-2X1": {"pack": [2050, 1050, 60]}, "SPHB-2X1": {"pack": [2050, 1050, 60]},
     "SPHA-1X1": {"pack": [1050, 1050, 60]}, "SPHB-1X1": {"pack": [1050, 1050, 60]},
 }
+# Articoli del file Excel da non mettere nell'app (codice normalizzato)
+ESCLUSI = {"VRP20", "VRP40", "VRP60"}   # rampe da fattura: doppioni dei kit rampe, tolte su richiesta dell'utente
 IMG_DIR = Path(__file__).resolve().parent.parent / "img"
 AZZURRO = "BDD7EE"  # riempimento delle righe integrate da fatture di acquisto
 DIM = re.compile(r"^\s*(\d+)\s*[x×]\s*(\d+)\s*[x×]\s*(\d+)\s*$", re.I)
@@ -89,7 +91,7 @@ def parse(xlsx):
         if not code:  # righe senza codice nel file (profilo 5 m, tappo)
             code = "PROFILO-5M" if "profile" in name.lower() else "TAPPO-PLASTICA"
         key = norm(code)
-        if key in seen:
+        if key in ESCLUSI or key in seen:
             continue
         seen.add(key)
         item = {
