@@ -28,6 +28,7 @@ const RY = a => { const c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a))
 const ZUP = [1,0,0, 0,0,1, 0,-1,0];   // modelli CAD con z verso l'alto -> y verso l'alto
 const LEG_AXIS = [-13,-1,0];           // centro del tubo nel modello della gamba (in pianta)
 const VLC_JAW = -30;                   // centro delle ganasce del morsetto VLC (asse z del modello)
+const VD2D_MID = 60, VD2D_TOP = 60;    // connettore deck-deck: centro tra le due ganasce (x) e punta dei ganci (z, verso l'alto)
 
 /* ---------- WebGL ---------- */
 const VS = `#version 300 es
@@ -37,7 +38,7 @@ uniform mat4 u_vp; out vec3 v_pos;
 void main(){ mat4 m = mat4(i0,i1,i2,i3); vec4 w = m*vec4(a_pos,1.0); v_pos = w.xyz; gl_Position = u_vp*w; }`;
 const FS = `#version 300 es
 precision highp float; in vec3 v_pos; out vec4 o;
-uniform vec3 u_color; uniform float u_spec; uniform vec3 u_eye;
+uniform vec3 u_color; uniform float u_spec; uniform vec3 u_eye; uniform float u_alpha;
 void main(){
   vec3 n = normalize(cross(dFdx(v_pos), dFdy(v_pos)));
   vec3 V = normalize(u_eye - v_pos); if(dot(n,V) < 0.0) n = -n;
@@ -46,7 +47,7 @@ void main(){
   float amb = 0.34 + 0.16*n.y;
   vec3 H = normalize(L1+V); float sp = pow(max(dot(n,H),0.0), 48.0)*u_spec;
   vec3 c = u_color*(amb+d) + vec3(sp);
-  o = vec4(pow(c, vec3(1.0/1.1)), 1.0);
+  o = vec4(pow(c, vec3(1.0/1.1)), u_alpha);
 }`;
 const GVS = `#version 300 es
 layout(location=0) in vec3 a_pos; uniform mat4 u_vp; out vec3 v_pos;
@@ -93,12 +94,13 @@ function create(canvas){
   const gl = canvas.getContext('webgl2', {antialias:true, alpha:true, preserveDrawingBuffer:true});
   if(!gl) return null;
   const P = prog(gl,VS,FS), G = prog(gl,GVS,GFS);
-  const U = {vp:gl.getUniformLocation(P,'u_vp'), color:gl.getUniformLocation(P,'u_color'), spec:gl.getUniformLocation(P,'u_spec'), eye:gl.getUniformLocation(P,'u_eye')};
+  const U = {vp:gl.getUniformLocation(P,'u_vp'), color:gl.getUniformLocation(P,'u_color'), spec:gl.getUniformLocation(P,'u_spec'), eye:gl.getUniformLocation(P,'u_eye'), alpha:gl.getUniformLocation(P,'u_alpha')};
   const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center')};
   let batches = [];      // {meshes:[{vao,n,type,color,spec}], inst, count, src:{mats, mats4}}
   let groundMesh = null, rect = [0,0,1,1], bg = [1,1,1], groundCol = [0.82,0.84,0.86];
   const cam = {az:0.62, el:0.46, dist:9000, target:[0,300,0], fit:9000};
   let dirty = true, W = 1, Hh = 1, stageR = 4000;
+  let xray = false;      // pianali delle pedane trasparenti: si vede sotto il palco senza girare la vista
 
   function makeVAO(pos, idx, instBuf){
     const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
@@ -122,7 +124,7 @@ function create(canvas){
     const inst = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,inst); gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
     const meshes = mats.map(m => {
       const idx = m.idx32 || m.idx, v = makeVAO(m.pos, idx, inst);
-      return {vao:v.vao, pb:v.pb, ib:v.ib, n:idx.length, type: m.idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, color:m.color, spec:m.spec};
+      return {vao:v.vao, pb:v.pb, ib:v.ib, n:idx.length, type: m.idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, color:m.color, spec:m.spec, top:!!m.top};
     });
     batches.push({meshes, inst, count:transforms.length, src:{mats, data}});   // src: copia per l'esportazione GLB
   }
@@ -182,6 +184,7 @@ function create(canvas){
     }
     for(const [key,v] of deckBy){
       const geo = stretched('deck', (x,y,z) => [x + (x>469 ? v.sx : 0), y, z + (z>0 ? v.sz : 0)], deckOver);
+      geo.forEach((m,i) => { if(PARTS.deck[i].key==='64,64,64') m.top = true; });   // il pianale (si può rendere trasparente)
       addBatch(geo, v.list);
     }
     // gambe: la parte sopra z=150 si allunga/accorcia
@@ -200,6 +203,26 @@ function create(canvas){
         const R = alongX ? I3 : RY(Math.PI/2), o = mulV(R, [0,0,VLC_JAW]);
         v2.push({r:R, t:[mx - o[0], cy, mz - o[2]]});
       }
+    }
+    // --- connettori deck-deck VD2D: sotto ogni giunto tra due pedane, di traverso, 1 per metro di giunto (come nell'offerta)
+    if(plan.vd2d && PARTS.vd2d){
+      const vd = [], ds = plan.decks, yv = ty + 20 - VD2D_TOP;   // i ganci salgono 20 mm dentro il telaio delle pedane
+      const put = (x, z, alongZ) => {   // alongZ: giunto parallelo a z, il connettore corre lungo x
+        const R = alongZ ? ZUP : mulR(RY(Math.PI/2), ZUP), o = mulV(R, [VD2D_MID, 0, 0]);
+        vd.push({r:R, t:[x - o[0], yv, z - o[2]]});
+      };
+      for(let i=0;i<ds.length;i++) for(let j=i+1;j<ds.length;j++){
+        const a = ds[i], b = ds[j];
+        if(a.x+a.w===b.x || b.x+b.w===a.x){           // giunto lungo z
+          const y0 = Math.max(a.y,b.y), y1 = Math.min(a.y+a.h,b.y+b.h), L = (y1-y0)/2;
+          if(L>0){ const n = Math.ceil(L-1e-9), x = (a.x+a.w===b.x ? b.x : a.x)*500; for(let k=0;k<n;k++) put(x, (y0/2 + (k+0.5)*L/n)*1000, true); }
+        }
+        if(a.y+a.h===b.y || b.y+b.h===a.y){           // giunto lungo x
+          const x0 = Math.max(a.x,b.x), x1 = Math.min(a.x+a.w,b.x+b.w), L = (x1-x0)/2;
+          if(L>0){ const n = Math.ceil(L-1e-9), z = (a.y+a.h===b.y ? b.y : a.y)*500; for(let k=0;k<n;k++) put((x0/2 + (k+0.5)*L/n)*1000, z, false); }
+        }
+      }
+      if(vd.length) addBatch(plain('vd2d'), vd);
     }
     if(v4.length) addBatch(plain('v4lc'), v4);
     if(v2.length) addBatch(plain('vlc'), v2);
@@ -352,9 +375,22 @@ function create(canvas){
       gl.bindVertexArray(groundMesh.vao); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0); gl.disable(gl.BLEND);
     }
     gl.useProgram(P); gl.uniformMatrix4fv(U.vp,false,vp); gl.uniform3f(U.eye,e[0],e[1],e[2]);
+    // prima i pezzi opachi, poi (in modalità trasparente) i pianali, semitrasparenti e senza scrivere la profondità
+    gl.uniform1f(U.alpha, 1);
     for(const b of batches) for(const m of b.meshes){
+      if(xray && m.top) continue;
       gl.uniform3f(U.color,m.color[0],m.color[1],m.color[2]); gl.uniform1f(U.spec,m.spec);
       gl.bindVertexArray(m.vao); gl.drawElementsInstanced(gl.TRIANGLES, m.n, m.type, 0, b.count);
+    }
+    if(xray){
+      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+      gl.uniform1f(U.alpha, 0.16);
+      for(const b of batches) for(const m of b.meshes){
+        if(!m.top) continue;
+        gl.uniform3f(U.color,m.color[0],m.color[1],m.color[2]); gl.uniform1f(U.spec,0);
+        gl.bindVertexArray(m.vao); gl.drawElementsInstanced(gl.TRIANGLES, m.n, m.type, 0, b.count);
+      }
+      gl.depthMask(true); gl.disable(gl.BLEND);
     }
     gl.bindVertexArray(null);
   }
@@ -456,7 +492,8 @@ function create(canvas){
   new ResizeObserver(resize).observe(canvas);
   theme(); resize();
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => theme()); }catch(e){}
-  return {build, resize, theme, reset, png, glb, request, cam};
+  function setXray(on){ xray = !!on; request(); }
+  return {build, resize, theme, reset, png, glb, request, cam, setXray};
 }
 window.StageView = {create};
 })();
