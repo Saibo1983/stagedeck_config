@@ -58,6 +58,11 @@ def assegna_immagini(items):
     return n
 
 
+def rampe_immagini():
+    """Altezze (cm) delle rampe con immagine in img/: RAMPA-<h>.jpg (rampa) e RAMPA-<h>-PALCO.jpg (rampa montata al palco)."""
+    return sorted({int(m.group(1)) for f in IMG_DIR.glob("RAMPA-*.jpg") if (m := re.match(r"RAMPA-(\d+)", f.name))})
+
+
 def dims(v):
     m = DIM.match(v) if isinstance(v, str) else None
     return [int(m.group(i)) for i in (1, 2, 3)] if m else None
@@ -169,11 +174,15 @@ def main():
     label = f"Everdeck STAGEDECKS {m.group(0)}" if m else xlsx.stem
     # i prezzi NON vanno nel repository: restano in prezzi.json (ignorato da git)
     prezzi = {norm(i["code"]): i["price"] for i in items if i.get("price") is not None}
+    # prezzi che non sono nel listino Excel (es. pezzi speciali dei palchi rotondi): prezzi_extra.json, anche lui fuori da git
+    extra = Path(__file__).resolve().parent.parent / "prezzi_extra.json"
+    if extra.exists():
+        prezzi.update({norm(k): v for k, v in json.loads(extra.read_text(encoding="utf-8")).items() if not k.startswith("_")})
     for i in items:
         i.pop("price", None)
     (Path(__file__).resolve().parent.parent / "prezzi.json").write_text(
         json.dumps({"listino": label, "prezzi": prezzi}, ensure_ascii=False, indent=0), encoding="utf-8")
-    payload = json.dumps({"listino": label, "items": items, "rampKits": kit}, ensure_ascii=False, separators=(",", ":"))
+    payload = json.dumps({"listino": label, "items": items, "rampKits": kit, "rampImgs": rampe_immagini()}, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("</", "<\\/")
     html_path.write_text(pat.sub(lambda mo: mo.group(1) + payload + mo.group(3), html, count=1), encoding="utf-8")
     print(f"{len(items)} articoli scritti in index.html ({label}), senza prezzi.")

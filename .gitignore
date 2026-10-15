@@ -1,3 +1,4 @@
 prezzi.json
 *.xlsx
 __pycache__/
+prezzi_extra.json
