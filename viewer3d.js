@@ -187,17 +187,30 @@ function create(canvas){
       geo.forEach((m,i) => { if(PARTS.deck[i].key==='64,64,64') m.top = true; });   // il pianale (si può rendere trasparente)
       addBatch(geo, v.list);
     }
-    // palco rotondo: pezzi speciali (telaio in alluminio + piano) e una gamba in ogni loro angolo
+    // palco rotondo: pezzi speciali (telaio in alluminio + piano) e 4 gambe per pezzo (q.legs[].at: asse del tubo, già
+    // dentro il pezzo). La gamba non è simmetrica: di 4 rotazioni si prende quella che sta più dentro il pezzo.
     if(plan.round){
-      const LT = MD.legT[0], LR = LT.R.flat(), la = mulV(LR, LEG_AXIS);
+      const LT = MD.legT[0], mn = MD.parts.leg.min, mx = MD.parts.leg.sc.map((v,i) => mn[i] + v*65535);
+      const foot = [[mn[0],mn[1]],[mx[0],mn[1]],[mx[0],mx[1]],[mn[0],mx[1]]];   // ingombro in pianta (modello)
+      const rots = [0,1,2,3].map(k => { const r = mulR(RY(k*Math.PI/2), LT.R.flat()), a = mulV(r, LEG_AXIS);
+        return {r, a, f:foot.map(([x,y]) => { const v = mulV(r, [x,y,0]); return [v[0]-a[0], v[2]-a[2]]; })}; });
       for(const q of plan.round.pieces){
         if(q.std) continue;
         const pts = q.poly.map(([x,y]) => [x*1000, y*1000]);
         addBatch([rawMat(...extrude(pts, ty, ty+72, false), FRAME_DARK[fam] ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5), Object.assign(rawMat(...extrude(pts, ty+72, ty+90), topCol, 0.15), {top:true})], [IDT]);
-        const cx = pts.reduce((s,v) => s+v[0],0)/pts.length, cz = pts.reduce((s,v) => s+v[1],0)/pts.length;
-        for(const {p:[x,y]} of q.legs){
-          const X = x*1000, Z = y*1000, l = Math.hypot(cx-X, cz-Z) || 1, gx = X + (cx-X)/l*60, gz = Z + (cz-Z)/l*60;
-          legs.push({r:LR, t:[gx - la[0], ty + LT.t[1] - delta, gz - la[2]]});
+        const sgn = Math.sign(pts.reduce((a,v,i) => { const w = pts[(i+1)%pts.length]; return a + v[0]*w[1]-w[0]*v[1]; }, 0));
+        const inside = (x,z) => Math.min(...pts.map((a,i) => { const b = pts[(i+1)%pts.length], L = Math.hypot(b[0]-a[0], b[1]-a[1]);
+          return L < 1e-6 ? Infinity : ((x-a[0])*-(b[1]-a[1]) + (z-a[1])*(b[0]-a[0]))/L*sgn; }));   // distanza dal lato più vicino (<0 fuori)
+        for(const g of q.legs){
+          const gx = g.at[0]*1000, gz = g.at[1]*1000;
+          let best = null, bd = -Infinity;
+          for(const o of rots){ const d = Math.min(...o.f.map(([x,z]) => inside(gx+x, gz+z))); if(d > bd + 1e-6){ bd = d; best = o; } }
+          legs.push({r:best.r, t:[gx - best.a[0], ty + LT.t[1] - delta, gz - best.a[2]]});
+          if(g.aligned){   // gambe allineate con quelle dei pezzi vicini: morsetti come nelle pedane normali
+            const k = Math.round(g.p[0]*200)/100 + ',' + Math.round(g.p[1]*200)/100;
+            if(!legPts.has(k)) legPts.set(k, {legs:[]});
+            legPts.get(k).legs.push([gx, gz]);
+          }
         }
       }
     }
