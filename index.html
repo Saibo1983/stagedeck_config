@@ -16,9 +16,9 @@
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
   --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
+  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --cmd:#1D5D78; --cmd-ink:#FFFFFF;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2; --inv:#1F5E99; --inv-bg:#DDEBF7;
-  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+  --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
   --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
@@ -26,17 +26,17 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
+    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E; --cmd:#8CCBE3; --cmd-ink:#0B2530;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
-    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+    --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
+  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E; --cmd:#8CCBE3; --cmd-ink:#0B2530;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
-  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
+  --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -92,12 +92,21 @@ input:disabled{opacity:.5}
 .sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
 .btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px;font-weight:500}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
+/* due famiglie di pulsanti: i comandi (fanno un'operazione: PDF, copia, salva) sono rettangolari, il principale pieno
+   in blu petrolio; le impostazioni (accese/spente) sono pillole grigie con un interruttore. */
+.cmds .btn:hover{border-color:var(--cmd);color:var(--cmd)}
+.btn.primary{background:var(--cmd);color:var(--cmd-ink);border-color:var(--cmd)}
+.btn.primary:hover{color:var(--cmd-ink);border-color:var(--cmd);filter:brightness(1.1)}
+.tgl{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid transparent;border-radius:999px;padding:5px 14px 5px 6px;min-height:32px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink)}
+.tgl:hover{border-color:var(--line)}
+.tgl::before,.tgl input{content:"";flex:none;width:30px;height:18px;margin:0;border-radius:9px;appearance:none;-webkit-appearance:none;cursor:pointer;
+  background:radial-gradient(circle at 9px 50%, var(--surface) 6px, transparent 6.5px) var(--muted);transition:background .15s}
+.tgl[aria-pressed="true"]::before,.tgl input:checked{background:radial-gradient(circle at 21px 50%, var(--surface) 6px, transparent 6.5px) var(--ok)}
+.tgl input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.tgl::before{content:none}
 .btn.small{padding:3px 9px;min-height:28px;font-size:13px}
 .planbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 8px}
 .planbar .hint{margin:0;font-size:12.5px;color:var(--muted)}
-#v3Xray[aria-pressed="true"],#deckMix[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:6px}
 .item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
@@ -215,6 +224,12 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .sum .c-cost{color:var(--muted)}
 .sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+/* barra sotto 3D e offerta: prima le impostazioni, poi i comandi, ognuno con la sua etichetta */
+.bar{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.bar .actions{margin-top:0;align-items:center}
+.bar .lbl{flex:0 0 92px}
+.bar .sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}
+@media (max-width:600px){.bar .lbl{flex-basis:100%}.bar .sep{display:none}}
 .status{color:var(--ok);font-size:13px;align-self:center;min-height:1em}
 .rule{display:grid;grid-template-columns:auto minmax(0,1.6fr) minmax(0,1.3fr) minmax(0,1fr) 84px auto;gap:8px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
 .rule .sub{grid-column:2 / -1;font-size:12px;color:var(--muted)}
@@ -233,13 +248,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 @media print{
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
     --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
-    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
+    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --cmd:#1D5D78; --cmd-ink:#FFFFFF; --warn:#80500A; --warn-bg:#FFFFFF;
+    --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.planbar,.shipside,.wresize,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.bar,.planbar,.shipside,.wresize,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -428,14 +443,15 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
       <div class="planbar">
-        <button type="button" class="btn small" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
+        <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
       </div>
       <div id="planBox"></div>
       <div class="legend">
         <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
         <span><i style="background:var(--leg);height:8px;width:8px"></i>Gamba</span>
-        <span id="lgConn"><i style="background:color-mix(in srgb, var(--conn) 25%, transparent);border:2px solid var(--conn);height:10px;width:16px"></i>Connettore gambe (2 o 4)</span>
+        <span id="lgConn2"><i style="background:color-mix(in srgb, var(--conn) 25%, transparent);border:2px solid var(--conn);height:10px;width:16px"></i>Connettore 2 gambe</span>
+        <span id="lgConn4"><i style="background:color-mix(in srgb, var(--conn4) 25%, transparent);border:2px solid var(--conn4);height:12px;width:12px"></i>Connettore 4 gambe</span>
         <span><i style="background:var(--rail)"></i>Parapetto 2 m</span>
         <span><i style="background:var(--rail1)"></i>Parapetto 1 m</span>
         <span><i style="background:var(--rail05)"></i>Parapetto 0,5 m</span>
@@ -458,7 +474,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button></div>
       <div id="v3On" hidden>
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
-        <div class="actions"><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+        <div class="bar">
+          <div class="actions"><span class="lbl">Impostazioni</span><button type="button" class="tgl" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button></div>
+          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+        </div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: Spider Deck e Rollrisers sono mostrati con gambe e pedane StageDeck.</p>
       </div>
     </div>
@@ -467,15 +486,20 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="tablewrap" id="offerTable"></div>
       <div class="sum" id="sum"></div>
       <ul class="techs" id="techNotes"></ul>
-      <div class="actions">
-        <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
-        <label class="check pdfopt"><input type="checkbox" id="pdfCost"> Prezzi di acquisto nel PDF</label>
-        <button type="button" class="btn primary" id="pdfDraw">PDF disegni</button>
-        <button type="button" class="btn" id="copyText">Copia offerta</button>
-        <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
-        <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
-        <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
-        <span class="status" id="status" role="status" aria-live="polite"></span>
+      <div class="bar">
+        <div class="actions"><span class="lbl">Impostazioni</span>
+          <label class="tgl pdfopt"><input type="checkbox" id="pdfCost"> Prezzi di acquisto nel PDF</label>
+        </div>
+        <div class="actions cmds"><span class="lbl">Comandi</span>
+          <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
+          <button type="button" class="btn primary" id="pdfDraw">PDF disegni</button>
+          <span class="sep" aria-hidden="true"></span>
+          <button type="button" class="btn" id="copyText">Copia offerta</button>
+          <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
+          <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
+          <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
+          <span class="status" id="status" role="status" aria-live="polite"></span>
+        </div>
       </div>
     </div>
     <div class="panel" id="shipPanel" hidden></div>
@@ -727,6 +751,24 @@ function roundLegs(pl, r, R){
   }
   return legs;
 }
+// punto dentro un poligono convesso ad almeno m da ogni lato (anche dal lato curvo), spostato il meno possibile:
+// la gamba non deve sporgere dal pezzo. Negli angoli diritti va in diagonale, come nelle pedane normali.
+function insetPoint(poly, p, m){
+  const n = poly.length, s = Math.sign(poly.reduce((a,v,i) => { const w = poly[(i+1)%n]; return a + v[0]*w[1]-w[0]*v[1]; }, 0));
+  let [x,y] = p;
+  for(let it=0; it<200; it++){
+    let moved = false;
+    for(let i=0;i<n;i++){
+      const a = poly[i], b = poly[(i+1)%n], L = Math.hypot(b[0]-a[0], b[1]-a[1]);
+      if(L < 1e-9) continue;
+      const nx = -(b[1]-a[1])/L*s, ny = (b[0]-a[0])/L*s, d = (x-a[0])*nx + (y-a[1])*ny;   // normale verso l'interno
+      if(d < m - 1e-9){ x += (m-d)*nx; y += (m-d)*ny; moved = true; }
+    }
+    if(!moved) break;
+  }
+  return [x,y];
+}
+const LEG_INSET = 0.074;   // m: asse del tubo della gamba dai lati della pedana (modello CAD)
 // pezzi del palco rotondo: poligoni in coordinate di pianta (m, origine retro-sinistra, y verso il fronte)
 const roundPieces = (() => {
   const cache = {};
@@ -762,7 +804,8 @@ const roundPieces = (() => {
         area: Math.abs(pl.reduce((s,v,i) => { const w = pl[(i+1)%pl.length]; return s + v[0]*w[1]-w[0]*v[1]; }, 0))/2,
         // angoli del pezzo (vertici sui lati del rettangolo): servono per i giunti
         corners: pl.filter(([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6)).map(toPlan),
-        legs: roundLegs(pl, r, R).map(g => ({p:toPlan(g.p), aligned:g.aligned}))});
+        // p = angolo o punto dell'arco (per i connettori), at = asse della gamba, dentro il pezzo
+        legs: roundLegs(pl, r, R).map(g => ({p:toPlan(g.p), at:insetPoint(pl.map(toPlan), toPlan(g.p), LEG_INSET), aligned:g.aligned}))});
     }
     return cache[Dm] = out;
   };
@@ -1557,12 +1600,12 @@ function planSVG(p, H){
     for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
       const k = cx+','+cy; if(!corners.has(k)) corners.set(k, []); corners.get(k).push(legAt(cx,cy,sx,sy));
     }
-    for(const q of specials){   // pezzi speciali: 4 gambe (angoli e lato curvo), spostate verso il centro del pezzo
-      const c = centroid(q.poly);
+    for(const q of specials){   // pezzi speciali: 4 gambe (angoli e lato curvo), dentro il pezzo come nelle pedane normali
+      const poly = q.poly.map(([x,y]) => [x*100, y*100]);
       for(const g of q.legs){
-        const [x,y] = g.p, dx = c[0]-x, dy = c[1]-y, l = Math.hypot(dx,dy) || 1, k = g.aligned ? r2(x*2)+','+r2(y*2) : 'curva'+Math.random();   // gambe non allineate: niente connettore
+        const [x,y] = g.p, k = g.aligned ? r2(x*2)+','+r2(y*2) : 'curva'+Math.random();   // gambe non allineate: niente connettore
         if(!corners.has(k)) corners.set(k, []);
-        corners.get(k).push([x*100 + dx/l*ins*1.41, y*100 + dy/l*ins*1.41]);
+        corners.get(k).push(insetPoint(poly, [x*100, y*100], ins));
       }
     }
     // connettori: una cornice intorno alle gambe che collega (doppio = 2 gambe, quadro = 4)
@@ -1570,7 +1613,8 @@ function planSVG(p, H){
       if(!(pts.length===2 && p.conn2) && !(pts.length>=3 && p.conn4)) continue;
       const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]), pad = sq*0.95;
       const x = Math.min(...xs)-pad, y = Math.min(...ys)-pad, w = Math.max(...xs)-Math.min(...xs)+2*pad, h = Math.max(...ys)-Math.min(...ys)+2*pad;
-      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${sq*.4}" fill="var(--conn)" fill-opacity=".25" stroke="var(--conn)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+      const col = pts.length===2 ? 'var(--conn)' : 'var(--conn4)';   // due colori: connettore per 2 gambe e per 4
+      s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${sq*.4}" fill="${col}" fill-opacity=".25" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
     }
     for(const pts of corners.values()) for(const [x,y] of pts) s += `<rect x="${x-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
   }else for(const [x,y] of p.vertices) s += `<rect x="${x*50-sq/2}" y="${y*50-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
@@ -1862,7 +1906,7 @@ function renderResult(){
   $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planBox').innerHTML = planSVG(p, cfg.H);
   draw3d();
-  $('#lgConn').hidden = !(p.conn2 || p.conn4);
+  $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
   renderStair(p);
   let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num c-cost">Acquisto €</th><th class="num c-cost">Magg. %</th><th class="num">Vendita €</th><th class="num">Totale €</th></tr></thead><tbody>`;
   const mkp = dec(+cfg.markup||0, (+cfg.markup||0)%1 ? 1 : 0);
