@@ -54,11 +54,12 @@ layout(location=0) in vec3 a_pos; uniform mat4 u_vp; out vec3 v_pos;
 void main(){ v_pos = a_pos; gl_Position = u_vp*vec4(a_pos,1.0); }`;
 const GFS = `#version 300 es
 precision highp float; in vec3 v_pos; out vec4 o;
-uniform vec4 u_rect; uniform vec3 u_ground; uniform vec3 u_center;
+uniform vec4 u_rect; uniform vec3 u_ground; uniform vec3 u_center; uniform float u_round;
 void main(){
   vec2 p = v_pos.xz;
   vec2 dd = max(max(u_rect.xy - p, p - u_rect.zw), vec2(0.0));
-  float dist = length(dd);
+  // palco rotondo (u_round = raggio): ombra intorno al cerchio, non al quadrato che lo contiene
+  float dist = u_round > 0.0 ? max(length(p - 0.5*(u_rect.xy + u_rect.zw)) - u_round, 0.0) : length(dd);
   float sh = 1.0 - 0.55*exp(-dist/420.0);          // ombra morbida attorno al palco
   float fade = smoothstep(0.0, 1.0, 1.0 - length(p-u_center.xz)/ (u_center.y));  // sfuma verso l'orizzonte
   vec3 c = u_ground*sh;
@@ -95,9 +96,9 @@ function create(canvas){
   if(!gl) return null;
   const P = prog(gl,VS,FS), G = prog(gl,GVS,GFS);
   const U = {vp:gl.getUniformLocation(P,'u_vp'), color:gl.getUniformLocation(P,'u_color'), spec:gl.getUniformLocation(P,'u_spec'), eye:gl.getUniformLocation(P,'u_eye'), alpha:gl.getUniformLocation(P,'u_alpha')};
-  const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center')};
+  const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center'), round:gl.getUniformLocation(G,'u_round')};
   let batches = [];      // {meshes:[{vao,n,type,color,spec}], inst, count, src:{mats, mats4}}
-  let groundMesh = null, rect = [0,0,1,1], bg = [1,1,1], groundCol = [0.82,0.84,0.86];
+  let groundMesh = null, rect = [0,0,1,1], roundR = 0, bg = [1,1,1], groundCol = [0.82,0.84,0.86];
   const cam = {az:0.62, el:0.46, dist:9000, target:[0,300,0], fit:9000};
   let dirty = true, W = 1, Hh = 1, stageR = 4000;
   let xray = false;      // pianali delle pedane trasparenti: si vede sotto il palco senza girare la vista
@@ -364,7 +365,7 @@ function create(canvas){
     // --- inquadratura
     cam.target = [Wmm/2, (ty+90)/2, Dmm/2];
     stageR = Math.hypot(Wmm, Dmm)/2 + 600;
-    rect = [0,0,Wmm,Dmm];
+    rect = [0,0,Wmm,Dmm]; roundR = plan.round ? Wmm/2 : 0;
     cam.fit = Math.max(stageR*2.1, 3500);
     if(!cam.userMoved) cam.dist = cam.fit;
     buildGround();
@@ -397,7 +398,7 @@ function create(canvas){
     // terreno
     if(groundMesh){
       gl.useProgram(G); gl.uniformMatrix4fv(GU.vp,false,vp);
-      gl.uniform4f(GU.rect, rect[0],rect[1],rect[2],rect[3]); gl.uniform3f(GU.ground, groundCol[0],groundCol[1],groundCol[2]);
+      gl.uniform4f(GU.rect, rect[0],rect[1],rect[2],rect[3]); gl.uniform3f(GU.ground, groundCol[0],groundCol[1],groundCol[2]); gl.uniform1f(GU.round, roundR);
       gl.uniform3f(GU.center, cam.target[0], stageR*5, cam.target[2]);
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.bindVertexArray(groundMesh.vao); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0); gl.disable(gl.BLEND);

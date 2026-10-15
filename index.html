@@ -16,7 +16,7 @@
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
   --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --cmd:#1D5D78; --cmd-ink:#FFFFFF;
+  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2; --inv:#1F5E99; --inv-bg:#DDEBF7;
   --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
@@ -26,7 +26,7 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E; --cmd:#8CCBE3; --cmd-ink:#0B2530;
+    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
     --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
@@ -34,7 +34,7 @@
 }
 :root[data-theme="dark"]{
   --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E; --cmd:#8CCBE3; --cmd-ink:#0B2530;
+  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
   --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
@@ -69,8 +69,6 @@ button,input,select{font:inherit;color:inherit}
 .config h3{padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line)}
 .sechead h3{border-bottom:0}
-.layseg{margin-bottom:5px;flex:none}
-.layseg button{min-height:26px;padding:2px 10px;font-size:12.5px;flex:none}
 /* posizione «Sopra»: i dati vanno sotto la barra dei totali, sopra la pianta, in riquadri affiancati */
 #tab-offerta[data-layout="top"]{grid-template-columns:minmax(0,1fr)}
 #tab-offerta[data-layout="top"] .config{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;background:none;border:0;padding:0}
@@ -90,13 +88,16 @@ input:disabled{opacity:.5}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
-.btn{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px;font-weight:500}
+/* due famiglie di pulsanti: i comandi (fanno un'operazione: PDF, copia, salva) sono rettangolari con un po' di spessore,
+   il principale pieno in rosso; le impostazioni (accese/spente) sono pillole grigie con un interruttore. */
+.btn{background:linear-gradient(var(--surface),var(--surface-2));border:1px solid var(--line);border-bottom-color:var(--deck-line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px;font-weight:500;
+  box-shadow:0 2px 0 var(--line),0 3px 6px rgba(18,32,43,.12);transition:transform .05s,box-shadow .05s}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
-/* due famiglie di pulsanti: i comandi (fanno un'operazione: PDF, copia, salva) sono rettangolari, il principale pieno
-   in blu petrolio; le impostazioni (accese/spente) sono pillole grigie con un interruttore. */
-.cmds .btn:hover{border-color:var(--cmd);color:var(--cmd)}
-.btn.primary{background:var(--cmd);color:var(--cmd-ink);border-color:var(--cmd)}
-.btn.primary:hover{color:var(--cmd-ink);border-color:var(--cmd);filter:brightness(1.1)}
+.btn:active{transform:translateY(2px);box-shadow:0 0 0 var(--line),0 1px 2px rgba(18,32,43,.12)}
+.btn.primary{background:linear-gradient(color-mix(in srgb, var(--accent) 88%, #fff),var(--accent));color:var(--accent-ink);border-color:var(--accent);
+  box-shadow:0 2px 0 color-mix(in srgb, var(--accent) 65%, #000),0 3px 6px rgba(18,32,43,.18)}
+.btn.primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
+.btn.primary:active{box-shadow:0 0 0 transparent,0 1px 2px rgba(18,32,43,.18)}
 .tgl{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid transparent;border-radius:999px;padding:5px 14px 5px 6px;min-height:32px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink)}
 .tgl:hover{border-color:var(--line)}
 .tgl::before,.tgl input{content:"";flex:none;width:30px;height:18px;margin:0;border-radius:9px;appearance:none;-webkit-appearance:none;cursor:pointer;
@@ -150,7 +151,7 @@ label.tgl::before{content:none}
 .qed button:disabled{opacity:.35;cursor:default}
 .qed span{min-width:2.2ch;text-align:right}
 tr.mod td{background:var(--warn-bg)}
-tr.mod .qed span{font-weight:600;color:var(--warn)}
+tr.mod .qed:not(.mkq) span,tr.mkmod .mkq span{font-weight:600;color:var(--warn)}
 @media print{.qed button{display:none}}
 tr.inv td{background:var(--inv-bg)}
 tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
@@ -222,6 +223,7 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .sum div{display:flex;justify-content:space-between;gap:12px}
 .sum .num{font-size:14px}
 .sum .c-cost{color:var(--muted)}
+.sum .imp{font-weight:600}
 .sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 /* barra sotto 3D e offerta: prima le impostazioni, poi i comandi, ognuno con la sua etichetta */
@@ -248,7 +250,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 @media print{
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
     --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --cmd:#1D5D78; --cmd-ink:#FFFFFF; --warn:#80500A; --warn-bg:#FFFFFF;
+    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
     --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
@@ -303,12 +305,18 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 <section id="tab-offerta" class="grid2" aria-labelledby="t-offerta">
   <form class="panel config" id="cfgForm" onsubmit="return false">
     <div class="sec">
-      <div class="sechead"><h3>Dati offerta</h3>
+      <h3>Pagina</h3>
+      <div class="field"><span>Posizione dei dati</span>
         <div class="seg layseg" role="group" aria-label="Posizione dei dati">
           <button type="button" data-layout="side" aria-pressed="true" title="Dati in una colonna a sinistra">A lato</button>
           <button type="button" data-layout="top" aria-pressed="false" title="Dati in riquadri affiancati, sopra la pianta">Sopra</button>
         </div>
       </div>
+      <div><button type="button" class="btn" id="resetAll">Nuova offerta: azzera tutto</button></div>
+      <p class="hint">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive, quantità e maggiorazioni modificate; dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.</p>
+    </div>
+    <div class="sec">
+      <h3>Dati offerta</h3>
       <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
       <div class="row">
         <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
@@ -428,11 +436,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="field"><span>IVA %</span><input type="number" id="vat" step="1" min="0" inputmode="decimal"></label>
       </div>
       <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="37">37</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
-      <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione (fissa 37%, modificabile) si applica a ogni riga e dà il prezzo di vendita. Lo sconto si applica al totale.</p>
-    </div>
-    <div class="sec">
-      <button type="button" class="btn" id="resetAll">Nuova offerta: azzera tutto</button>
-      <p class="hint">Riporta le impostazioni iniziali: palco 4 × 4 m a 60 cm su gambe, senza parapetti, scale, rampe, mascheratura, carrelli, voci aggiuntive e quantità modificate; dati cliente vuoti, maggiorazione e sconto a 0. Prezzi e regole restano.</p>
+      <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione (fissa 37%, modificabile) si applica a ogni riga e dà il prezzo di vendita; con + e − nella colonna «Magg. %» dell'offerta la cambi per una singola voce. Lo sconto si applica al totale.</p>
     </div>
   </form>
 
@@ -497,7 +501,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" class="btn" id="copyText">Copia offerta</button>
           <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
           <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
-          <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità calcolate</button>
+          <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità e maggiorazioni</button>
           <span class="status" id="status" role="status" aria-live="polite"></span>
         </div>
       </div>
@@ -1298,8 +1302,9 @@ function compute(cfg, R, look, kits){
     const k = l.group+'|'+ncode(l.code);
     if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
   }
-  const mk = 1 + (+cfg.markup||0)/100;
-  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [], invCodes = [];
+  // maggiorazione: quella generale, oppure quella della singola voce cambiata a mano con + e − (cfg.mkRow)
+  const mkAll = +cfg.markup||0, mkRow = cfg.mkRow || {};
+  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [], mkNotes = [], invCodes = [];
   const adjMap = cfg.adj || {};
   for(const l of agg.values()){
     const it = look.get(ncode(l.code));
@@ -1315,15 +1320,18 @@ function compute(cfg, R, look, kits){
     const key = l.group+'|'+ncode(l.code), adj = Math.max(-autoPieces/pk, Math.round(+adjMap[key]||0));
     const pieces = autoPieces + adj*pk, sets = pieces/pk;
     if(adj) adjNotes.push(`${it.code} ${adj>0?'+':'−'}${Math.abs(adj)*(isSet?1:pk)}${isSet?' set':''}`);
-    const qty = isSet ? sets : pieces, unit = r2(pr*mk*(isSet ? pk : 1));
+    const mkp = mkRow[key]!=null ? +mkRow[key] : mkAll, mkMod = mkRow[key]!=null && +mkRow[key]!==mkAll;
+    if(mkMod) mkNotes.push(`${it.code} ${dec(mkp, mkp%1 ? 1 : 0)}%`);
+    const qty = isSet ? sets : pieces, unit = r2(pr*(1+mkp/100)*(isSet ? pk : 1));
     const kg = it.kg!=null ? it.kg*sets : null;
     const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
     if(kg==null) noKg.push(it.code);
     if(m3==null) noVol.push(it.code);
-    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
+    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
   }
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
+  if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
   if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto o pezzi speciali su misura), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
@@ -1394,12 +1402,12 @@ const DEFAULT_CFG = {
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false,
-  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
+  support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{},
   markup:37, discount:0, vat:22, pdfCost:false
 };
 const clone = o => JSON.parse(JSON.stringify(o));
 // "Azzera tutto": impostazioni iniziali senza accessori
-const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, markup:37, discount:0});
+const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, mkRow:{}, markup:37, discount:0});
 let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
 
 function load(){
@@ -1411,6 +1419,7 @@ function load(){
     cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
     cfg.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), cfg.trasporto||{});
     cfg.adj = (cfg.adj && typeof cfg.adj==='object') ? cfg.adj : {};
+    cfg.mkRow = (cfg.mkRow && typeof cfg.mkRow==='object') ? cfg.mkRow : {};
     if(!cfg.mk37){ cfg.markup = 37; cfg.mk37 = true; }   // una volta: maggiorazione fissa 37%
     cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
     if(s && s.rules && s.rules.rows && s.rules.v===4){
@@ -1914,21 +1923,24 @@ function renderResult(){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="3">${g==='Rampe' ? thumbSrc(rampSrc(+cfg.H,true), `Rampa ${cfg.H} cm montata al palco`, 'Immagine indicativa del kit rampa per questa altezza') : ''}${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
-    for(const l of ls) html += `<tr${l.adj||l.fattura ? ` class="${[l.adj?'mod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${thumb(l.code)}${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">fuori listino · controlla</span>` : ''}</td><td class="num"><span class="qed">`
+    for(const l of ls) html += `<tr${l.adj||l.mkMod||l.fattura ? ` class="${[l.adj?'mod':'', l.mkMod?'mkmod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${thumb(l.code)}${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">fuori listino · controlla</span>` : ''}</td><td class="num"><span class="qed">`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
       + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
-      + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost">${mkp}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`;
+      + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost"><span class="qed mkq">`
+      + `<button type="button" data-mkrow="${esc(l.key)}" data-d="-1" aria-label="Maggiorazione di ${esc(l.code)} meno 1%" ${l.mk<=0?'disabled':''}>−</button>`
+      + `<span title="${l.mkMod ? 'generale: '+mkp+'%' : ''}">${dec(l.mk, l.mk%1 ? 1 : 0)}</span>`
+      + `<button type="button" data-mkrow="${esc(l.key)}" data-d="1" aria-label="Maggiorazione di ${esc(l.code)} più 1%">+</button></span></td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`;
   }
   $('#offerTable').innerHTML = html + '</tbody></table>';
   renderSecImgs();
-  $('#adjReset').hidden = !res.lines.some(l => l.adj);
+  $('#adjReset').hidden = !res.lines.some(l => l.adj || l.mkMod);
   $('#techNotes').innerHTML = res.notes.map(n => `<li>${esc(n)}</li>`).join('');
   $('#sum').innerHTML = `
     <div class="c-cost"><span>Totale acquisto</span><span class="num">${money(t.cost)} €</span></div>
-    <div class="c-cost"><span>Maggiorazione ${mkp}%</span><span class="num">${money(t.gross-t.cost)} €</span></div>
+    <div class="c-cost"><span>Maggiorazione ${res.lines.some(l => l.mkMod) && t.cost ? 'media '+dec((t.gross-t.cost)/t.cost*100,1) : mkp}%</span><span class="num">${money(t.gross-t.cost)} €</span></div>
     <div><span>Subtotale vendita</span><span class="num">${money(t.gross)} €</span></div>
     ${t.disc ? `<div><span>Sconto ${dec(+cfg.discount,1)}%</span><span class="num">−${money(t.disc)} €</span></div>` : ''}
-    <div><span>Imponibile</span><span class="num">${money(t.net)} €</span></div>
+    <div class="imp"><span>Imponibile</span><span class="num">${money(t.net)} €</span></div>
     <div><span>IVA ${dec(+cfg.vat||0,0)}%</span><span class="num">${money(t.vat)} €</span></div>
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
@@ -2282,6 +2294,15 @@ function bind(){
   $('#copyText').addEventListener('click', () => copy(offerText()));
   $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
   $('#offerTable').addEventListener('click', e => {
+    const m = e.target.closest('button[data-mkrow]');
+    if(m){   // maggiorazione della singola voce: passi dell'1%, non sotto 0; tornata a quella generale, la voce non è più modificata
+      const k = m.dataset.mkrow, all = +cfg.markup||0, cur = cfg.mkRow[k]!=null ? +cfg.mkRow[k] : all, v = Math.max(0, Math.round(cur) + (+m.dataset.d));
+      if(v===all) delete cfg.mkRow[k]; else cfg.mkRow[k] = v;
+      update();
+      const again = $(`#offerTable button[data-mkrow="${CSS.escape(k)}"][data-d="${m.dataset.d}"]`);
+      if(again && !again.disabled) again.focus();
+      return;
+    }
     const b = e.target.closest('button[data-adj]'); if(!b) return;
     const k = b.dataset.adj, v = (cfg.adj[k]||0) + (+b.dataset.d);
     if(v) cfg.adj[k] = v; else delete cfg.adj[k];
@@ -2289,7 +2310,7 @@ function bind(){
     const again = $(`#offerTable button[data-adj="${CSS.escape(k)}"][data-d="${b.dataset.d}"]`);
     if(again && !again.disabled) again.focus();
   });
-  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; update(); });
+  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; cfg.mkRow = {}; update(); });
   $('#resetAll').addEventListener('click', () => {
     if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
     cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
