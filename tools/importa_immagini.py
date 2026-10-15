@@ -17,7 +17,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from aggiorna_listino import IMG_DIR, assegna_immagini, foto_key, img_file, norm  # noqa: E402
+from aggiorna_listino import IMG_DIR, assegna_immagini, foto_key, img_file, norm, rampe_immagini  # noqa: E402
 
 LATO = 600
 # Immagini con un nome diverso dal codice: nome del file (normalizzato) -> codici a cui va
@@ -37,6 +37,8 @@ SIMILI = {
     "VSP-P 700x1050": "VSP-P 600x1050", "VSP-P 700x2050": "VSP-P 600x2050",
     "SKP320": "SKP470", "SKBP470": "SKP470", "SKBP970": "SKP970", "SKBP1970": "SKP1970",
 }
+# Immagini delle rampe per altezza: «20.jpg» (rampa da sola), «20cm e palco.jpg» (rampa montata al palco)
+RAMPA = re.compile(r"^(\d{2,3})\s*(?:cm)?\s*(e\s*palco)?\.(?:jpe?g|png|webp)$", re.I)
 HTML = Path(__file__).resolve().parent.parent / "index.html"
 PAT = re.compile(r'(<script type="application/json" id="catalog">)(.*?)(</script>)', re.S)
 
@@ -67,7 +69,9 @@ def main():
     salvate, scartate = 0, []
     for name, data in sorgenti(sys.argv[1]):
         key = foto_key(name)
-        dest = [key] if key in chiavi else [norm(c) for c in ALIAS.get(key, [])]
+        mr = RAMPA.match(name)
+        dest = [f"RAMPA-{int(mr.group(1))}" + ("-PALCO" if mr.group(2) else "")] if mr else \
+            [key] if key in chiavi else [norm(c) for c in ALIAS.get(key, [])]
         if not dest:
             scartate.append(name)
             continue
@@ -95,6 +99,7 @@ def main():
             (IMG_DIR / img_file(norm(dst))).write_bytes((IMG_DIR / s_["img"]).read_bytes())
             salvate += 1
     n = assegna_immagini(cat["items"])
+    cat["rampImgs"] = rampe_immagini()
     payload = json.dumps(cat, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     HTML.write_text(PAT.sub(lambda mo: mo.group(1) + payload + mo.group(3), html, count=1), encoding="utf-8")
     print(f"{salvate} immagini salvate in img/, {n} articoli del catalogo con immagine.")

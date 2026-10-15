@@ -90,6 +90,9 @@ Le immagini stanno in `img/` (lato lungo 600 px, bordo bianco tolto) e il catalo
 - Gli articoli quasi uguali a uno con foto (pedane RC, VTL30, teli e profili di misura vicina) usano quella foto: elenco `SIMILI` in `importa_immagini.py`.
 Nell'app la miniatura compare nell'offerta (anche nel PDF per il cliente), nella scheda Listino e sotto ogni sezione della configurazione (Palco, Scale, Parapetti, ...) con i pezzi che quella scelta mette in offerta. Tocca una miniatura per ingrandirla.
 
+## Rampe
+I kit rampe per altezza (20, 40, 60, 80–100, 120–140 cm) vengono da `RAMPS_list.xlsx`, con i prezzi: `python3 tools/aggiorna_listino.py listino.xlsx RAMPS_list.xlsx`. Le immagini per altezza («20.jpg» = rampa, «20cm e palco.jpg» = rampa montata al palco) si importano con `importa_immagini.py` e diventano `img/RAMPA-<h>.jpg` e `img/RAMPA-<h>-PALCO.jpg`. Con una rampa in offerta, l'immagine dell'altezza più vicina al palco compare nella sezione Rampe (rampa e rampa con palco) e sulla riga «Rampe» dell'offerta, anche nel PDF.
+
 ## Posizione dei dati offerta
 In alto nel riquadro «Dati offerta» si sceglie la posizione dei dati: «A lato» (colonna a sinistra, come prima) oppure «Sopra»: sotto la barra del totale e sopra la pianta, con Dati offerta, Palco, Scale, Parapetti, ecc. in riquadri affiancati (quanti ne stanno nella larghezza della pagina). La scelta resta salvata nel browser.
 
