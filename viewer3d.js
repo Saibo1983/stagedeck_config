@@ -28,6 +28,7 @@ const RY = a => { const c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a))
 const ZUP = [1,0,0, 0,0,1, 0,-1,0];   // modelli CAD con z verso l'alto -> y verso l'alto
 const LEG_AXIS = [-13,-1,0];           // centro del tubo nel modello della gamba (in pianta)
 const VLC_JAW = -30;                   // centro delle ganasce del morsetto VLC (asse z del modello)
+const VD2D_MID = 60, VD2D_TOP = 60;    // connettore deck-deck: centro tra le due ganasce (x) e punta dei ganci (z, verso l'alto)
 
 /* ---------- WebGL ---------- */
 const VS = `#version 300 es
@@ -200,6 +201,26 @@ function create(canvas){
         const R = alongX ? I3 : RY(Math.PI/2), o = mulV(R, [0,0,VLC_JAW]);
         v2.push({r:R, t:[mx - o[0], cy, mz - o[2]]});
       }
+    }
+    // --- connettori deck-deck VD2D: sotto ogni giunto tra due pedane, di traverso, 1 per metro di giunto (come nell'offerta)
+    if(plan.vd2d && PARTS.vd2d){
+      const vd = [], ds = plan.decks, yv = ty + 20 - VD2D_TOP;   // i ganci salgono 20 mm dentro il telaio delle pedane
+      const put = (x, z, alongZ) => {   // alongZ: giunto parallelo a z, il connettore corre lungo x
+        const R = alongZ ? ZUP : mulR(RY(Math.PI/2), ZUP), o = mulV(R, [VD2D_MID, 0, 0]);
+        vd.push({r:R, t:[x - o[0], yv, z - o[2]]});
+      };
+      for(let i=0;i<ds.length;i++) for(let j=i+1;j<ds.length;j++){
+        const a = ds[i], b = ds[j];
+        if(a.x+a.w===b.x || b.x+b.w===a.x){           // giunto lungo z
+          const y0 = Math.max(a.y,b.y), y1 = Math.min(a.y+a.h,b.y+b.h), L = (y1-y0)/2;
+          if(L>0){ const n = Math.ceil(L-1e-9), x = (a.x+a.w===b.x ? b.x : a.x)*500; for(let k=0;k<n;k++) put(x, (y0/2 + (k+0.5)*L/n)*1000, true); }
+        }
+        if(a.y+a.h===b.y || b.y+b.h===a.y){           // giunto lungo x
+          const x0 = Math.max(a.x,b.x), x1 = Math.min(a.x+a.w,b.x+b.w), L = (x1-x0)/2;
+          if(L>0){ const n = Math.ceil(L-1e-9), z = (a.y+a.h===b.y ? b.y : a.y)*500; for(let k=0;k<n;k++) put((x0/2 + (k+0.5)*L/n)*1000, z, false); }
+        }
+      }
+      if(vd.length) addBatch(plain('vd2d'), vd);
     }
     if(v4.length) addBatch(plain('v4lc'), v4);
     if(v2.length) addBatch(plain('vlc'), v2);
