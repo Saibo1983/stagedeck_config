@@ -42,7 +42,12 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-inline:16px;padding-block:0 32px}
-.wrap{max-width:1320px;margin:0 auto}
+.wrap{max-width:1320px;margin:0 auto;position:relative}
+/* barra a destra per allargare la pagina: si trascina, doppio clic per tornare alla larghezza normale */
+.wresize{position:absolute;top:0;bottom:0;right:-14px;width:12px;cursor:ew-resize;touch-action:none;z-index:5}
+.wresize::before{content:"";position:sticky;top:calc(50vh - 40px);display:block;margin:0 auto;width:4px;height:80px;border-radius:2px;background:var(--line);transition:background .15s}
+.wresize:hover::before,.wresize.drag::before{background:var(--accent)}
+@media (max-width:940px){.wresize{display:none}}
 h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:.01em;margin:0;text-wrap:balance}
 h2{font-size:22px;line-height:1.1}
 h3{font-size:17px;line-height:1.15}
@@ -145,6 +150,20 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .palcard figcaption{font-size:12.5px;display:flex;flex-direction:column;gap:2px;margin-top:6px}
 .palcard figcaption span{color:var(--muted)}
 #shipPanel .tiles{margin-top:10px}
+.shiprow{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:start;margin-top:14px}
+.shiprow .palgrid{margin-top:0}
+.shipside{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface-2)}
+.shipside ul{margin:0;padding-left:16px;font-size:12.5px}
+@media (max-width:760px){.shiprow{grid-template-columns:minmax(0,1fr)}}
+#trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
+#trDlg::backdrop{background:rgba(10,20,30,.45)}
+.trform{display:flex;flex-direction:column;gap:12px;padding:16px}
+.trhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.trcolli ul{margin:4px 0 0;padding-left:18px}
+.trset{border:1px solid var(--line);border-radius:8px;padding:8px 12px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
+.trset legend{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:0 4px}
+.trform textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;font:inherit;color:inherit;resize:vertical}
+#trBody{font-family:var(--f-mono);font-size:12.5px;background:var(--surface-2)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:8px}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tablewrap{overflow-x:auto}
@@ -188,7 +207,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.planbar,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.planbar,.shipside,.wresize,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -216,6 +235,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 </head>
 <body>
 <div class="wrap">
+<div class="wresize" id="wresize" role="separator" aria-orientation="vertical" aria-label="Trascina per allargare la pagina" title="Trascina per allargare la pagina (doppio clic: larghezza normale)"></div>
 <header class="top">
   <div class="brand">
     <h1>StageDeck</h1>
@@ -409,6 +429,36 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
     </div>
     <div class="panel" id="shipPanel" hidden></div>
+    <dialog id="trDlg" aria-labelledby="trTitle">
+      <form method="dialog" class="trform">
+        <div class="trhead"><h2 id="trTitle">Richiesta offerta trasporto</h2><button type="submit" class="btn small" aria-label="Chiudi">✕</button></div>
+        <div class="trcolli"><span class="lbl">Colli</span><ul id="trColli"></ul></div>
+        <div class="row">
+          <label class="field"><span>Trasportatore</span><select id="trCarrier"></select></label>
+          <label class="field"><span>Email</span><select id="trMail"></select></label>
+        </div>
+        <fieldset class="trset"><legend>Carico</legend>
+          <label class="field"><span>Fornitore</span><select id="trFrom"></select></label>
+          <label class="check"><input type="checkbox" id="trForkFrom"> Muletto disponibile al carico</label>
+        </fieldset>
+        <fieldset class="trset"><legend>Scarico</legend>
+          <label class="field"><span>Indirizzo di consegna</span><textarea id="trTo" rows="2" placeholder="Via, CAP, città"></textarea></label>
+          <label class="check"><input type="checkbox" id="trForkTo"> Muletto disponibile allo scarico</label>
+          <label class="check"><input type="checkbox" id="trLift"> Serve la sponda idraulica per lo scarico</label>
+        </fieldset>
+        <fieldset class="trset"><legend>Referente per la consegna</legend>
+          <div class="row">
+            <label class="field"><span>Nominativo</span><input type="text" id="trName" autocomplete="off"></label>
+            <label class="field"><span>Telefono (preavviso)</span><input type="text" id="trPhone" inputmode="tel" autocomplete="off"></label>
+          </div>
+        </fieldset>
+        <label class="field"><span>Testo della mail</span><textarea id="trBody" rows="12" readonly></textarea></label>
+        <div class="actions" style="margin-top:0">
+          <button type="button" class="btn primary" id="trSend">Crea email</button>
+          <button type="button" class="btn" id="trCopy">Copia testo</button>
+        </div>
+      </form>
+    </dialog>
   </div>
 </section>
 
@@ -591,7 +641,9 @@ function pickStair(h, type, leg){
 // Accessori: prima sopra le pedane, nello spazio che resta fino a P.h cm; i pezzi più lunghi di 120 cm solo su 2×1.
 // Quello che avanza: pezzi lunghi su un nuovo bancale 2×1, gli altri su bancali EPAL 120×80.
 // Lo spazio per gli accessori è il volume libero del bancale × P.fill %. I carrelli viaggiano da soli.
-const PALLETS = {big:{name:'2×1 m', L:200, W:100}, epal:{name:'EPAL 120×80 cm', L:120, W:80}};
+// tara: peso stimato del bancale vuoto (kg), usato solo nella richiesta di offerta al trasportatore
+const PALLETS = {big:{name:'2×1 m', L:200, W:100, tara:30}, epal:{name:'EPAL 120×80 cm', L:120, W:80, tara:25}};
+const PALLET_BASE = 15;   // altezza del bancale, cm
 function shipping(lines, look, P){
   const maxLayers = Math.max(1, Math.round(+P.decks||20)), Hmax = Math.max(50, +P.h||200), fill = Math.min(1, Math.max(.1, (+P.fill||75)/100));
   const decks = [], units = [], carts = [], noDims = new Set();
@@ -600,8 +652,10 @@ function shipping(lines, look, P){
     const it = look.get(ncode(l.code)) || {};
     if(TROLLEYS[it.code]){ carts.push({code:it.code, qty:l.pieces}); continue; }
     if(/PLATFORM|DECK/i.test(it.section||'') && it.pack){
-      const [a,b,t] = it.pack, frac = Math.max(1/8, Math.round(a*b/(2005*1005)*8)/8);
-      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, frac:Math.min(1,frac), t:t/10, kg:it.kg||0});
+      // impronta in celle da 50 cm (l'imballo è qualche mm più grande della pedana: 2005 → 4 celle, 1455 → 3)
+      const [a,b,t] = it.pack, cl = mm => Math.max(1, Math.ceil(mm/500 - 0.15));
+      const w = Math.max(cl(a), cl(b)), h = Math.min(cl(a), cl(b));
+      for(let i=0;i<l.pieces;i++) decks.push({code:it.code, w, h, big:w>4 || h>2, t:t/10, kg:it.kg||0});
       continue;
     }
     if(!it.pack){ noDims.add(it.code||l.code); continue; }
@@ -611,20 +665,33 @@ function shipping(lines, look, P){
   }
   const pallets = [];
   const newPallet = kind => { const p = {kind, ...PALLETS[kind], layers:[], deckH:0, decks:{}, deckCount:0, acc:{}, accVol:0, kg:0}; pallets.push(p); return p; };
-  // pedane: strati riempiti dalla più grande alla più piccola (misure multiple di 1/8 di 2×1: il riempimento è esatto)
-  decks.sort((a,b) => b.frac-a.frac || b.t-a.t);
+  // pedane: ogni strato è il piano 2×1 m del bancale diviso in celle da 50 cm (4 × 2). Le pedane si mettono con la loro
+  // forma vera (2×0,5 è una striscia lunga 2 m, non un quadrato 1×1), dalla più grande alla più piccola, nel primo
+  // posto libero, girate se serve. Le pedane più grandi di 2×1 (es. 2,1×1,2) fanno strato da sole e sporgono.
+  decks.sort((a,b) => b.w*b.h-a.w*a.h || b.w-a.w || b.t-a.t);
   const layers = [];
+  const place = (L, d) => {
+    for(const [w,h] of (d.w===d.h ? [[d.w,d.h]] : [[d.w,d.h],[d.h,d.w]]))
+      for(let y=0;y+h<=2;y++) for(let x=0;x+w<=4;x++){
+        let ok = true;
+        for(let j=y;j<y+h && ok;j++) for(let i=x;i<x+w;i++) if(L.g[j*4+i]){ ok = false; break; }
+        if(!ok) continue;
+        for(let j=y;j<y+h;j++) for(let i=x;i<x+w;i++) L.g[j*4+i] = 1;
+        L.items.push({...d, x, y, w, h}); return true;
+      }
+    return false;
+  };
   for(const d of decks){
-    let L = layers.find(x => x.t===d.t && x.free >= d.frac-1e-9);
-    if(!L){ L = {t:d.t, free:1, items:[]}; layers.push(L); }
-    L.free -= d.frac; L.items.push(d);
+    if(d.big){ layers.push({t:d.t, g:new Uint8Array(8).fill(1), items:[{...d, x:0, y:0}]}); continue; }
+    let L = layers.find(x => x.t===d.t && place(x, d));
+    if(!L){ L = {t:d.t, g:new Uint8Array(8), items:[]}; layers.push(L); place(L, d); }
   }
   for(const t of [...new Set(layers.map(x => x.t))]){
     const ls = layers.filter(x => x.t===t), per = Math.max(1, Math.min(maxLayers, Math.floor(Hmax/t)));
     for(let i=0;i<ls.length;i+=per){
       const p = newPallet('big');
       for(const L of ls.slice(i, i+per)){
-        p.layers.push({t:L.t, used:1-Math.max(0,L.free)}); p.deckH += L.t;
+        p.layers.push({t:L.t, items:L.items.map(d => ({x:d.x*50, y:d.y*50, w:d.w*50, h:d.h*50}))}); p.deckH += L.t;
         for(const d of L.items){ p.decks[d.code] = (p.decks[d.code]||0)+1; p.deckCount++; p.kg += d.kg; }
       }
     }
@@ -639,7 +706,10 @@ function shipping(lines, look, P){
     const k = u.code + (u.unit ? '|'+u.unit : '');
     p.acc[k] = (p.acc[k]||0)+1; p.accVol += u.vol; p.kg += u.kg;
   }
-  for(const p of pallets) p.accH = p.accVol ? Math.min(Hmax-p.deckH, p.accVol/(p.L*p.W/1e4*fill)*100) : 0;
+  for(const p of pallets){
+    p.accH = p.accVol ? Math.min(Hmax-p.deckH, p.accVol/(p.L*p.W/1e4*fill)*100) : 0;
+    p.H = Math.ceil(PALLET_BASE + p.deckH + p.accH);   // altezza totale con il bancale, cm
+  }
   const longCodes = [...new Set(units.filter(u => u.long).map(u => u.code))];
   return {pallets, count:pallets.length, carts, noDims:[...noDims], longCodes, maxLayers, Hmax, fill:Math.round(fill*100),
     big:pallets.filter(p => p.kind==='big').length, epal:pallets.filter(p => p.kind==='epal').length};
@@ -1049,6 +1119,7 @@ const today = () => new Date().toISOString().slice(0,10);
 const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false,
+  trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false,
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
   markup:37, discount:0, vat:22, pdfCost:false
@@ -1065,6 +1136,7 @@ function load(){
     if(s && s.cfg) cfg = Object.assign(clone(DEFAULT_CFG), s.cfg);
     cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
     cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
+    cfg.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), cfg.trasporto||{});
     cfg.adj = (cfg.adj && typeof cfg.adj==='object') ? cfg.adj : {};
     if(!cfg.mk37){ cfg.markup = 37; cfg.mk37 = true; }   // una volta: maggiorazione fissa 37%
     cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
@@ -1353,7 +1425,7 @@ function renderStair(p){
 /* --- spedizione: riepilogo, bancali disegnati in assonometria e dettaglio --- */
 function palletSVG(p, Hmax){
   // assonometria isometrica, cm: x = lunghezza (verso destra in basso), y = larghezza (verso sinistra in basso), z = altezza
-  const c30 = Math.cos(Math.PI/6), s30 = 0.5, BASE = 15;
+  const c30 = Math.cos(Math.PI/6), s30 = 0.5, BASE = PALLET_BASE;
   const P = (x,y,z) => [(x-y)*c30, (x+y)*s30 - z];
   const pts = a => a.map(q => q.map(v => v.toFixed(1)).join(',')).join(' ');
   const box = (x,y,z,dx,dy,dz,top,left,right,extra='') => {
@@ -1368,19 +1440,75 @@ function palletSVG(p, Hmax){
   // bancale: 3 travetti e piano
   for(const yy of [0, p.W/2-5, p.W-10]) s += box(0, yy, 0, p.L, 10, BASE-2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
   s += box(0, 0, BASE-2.5, p.L, p.W, 2.5, 'var(--pal-top)', 'var(--pal-l)', 'var(--pal-r)', st);
-  // pedane, strato per strato (strato incompleto più corto)
+  // pedane, strato per strato, ognuna con la sua forma e posizione (prima quelle più lontane da chi guarda)
   let z = BASE;
-  for(const L of p.layers){ s += box(0, 0, z, p.L*L.used, p.W, L.t, 'var(--deck)', 'var(--deck-side-l)', 'var(--deck-side-r)', st); z += L.t; }
+  for(const L of p.layers){
+    for(const d of [...L.items].sort((a,b) => (a.x+a.y)-(b.x+b.y) || a.x-b.x))
+      s += box(d.x, d.y, z, d.w, d.h, L.t, 'var(--deck)', 'var(--deck-side-l)', 'var(--deck-side-r)', st);
+    z += L.t;
+  }
   // accessori sopra
   if(p.accH > 0.5) s += box(4, 4, z, p.L-8, p.W-8, p.accH, 'var(--acc-top)', 'var(--acc-l)', 'var(--acc-r)', st);
   const top = z + p.accH;
   // quota dell'altezza totale, a destra
   const q0 = P(p.L, 0, 0), q1 = P(p.L, 0, top), qx = q0[0] + 14;
   s += `<line x1="${qx}" y1="${q0[1]}" x2="${qx}" y2="${q1[1]}" stroke="var(--muted)" vector-effect="non-scaling-stroke"/>`
-    + `<text x="${qx+6}" y="${(q0[1]+q1[1])/2}" font-size="13" dominant-baseline="middle">${Math.round(top)} cm</text>`;
+    + `<text x="${qx+6}" y="${(q0[1]+q1[1])/2}" font-size="13" dominant-baseline="middle">${p.H || Math.round(top)} cm</text>`;
   // vista fissa: stessa scala per tutti i bancali (2×1 m alto Hmax + bancale)
   const vb0 = P(0, 100, 0)[0]-6, vb1 = P(200, 0, 0)[0]+70, vt = P(0, 0, BASE+Hmax)[1]-10, vbt = P(200, 100, 0)[1]+8;
   return `<svg class="pal" viewBox="${vb0} ${vt} ${vb1-vb0} ${vbt-vt}" role="img" aria-label="Bancale ${esc(p.name)} alto ${Math.round(top)} cm">${s}</svg>`;
+}
+/* --- richiesta offerta al trasportatore --- */
+const TR_CARRIERS = {brigl:{name:'Brigl', mails:['sales@brigl.it']}, gls:{name:'GLS', mails:['bolzano.ritiri@gls-italy.com']}};
+const TR_FROM = {
+  everdeck:{name:'Everdeck', addr:'EVERDECK s.c., ul. Kluczborska 13b, 46-243 Bogacica (PL)'},
+  butec:{name:'BÜTEC', addr:'BÜTEC GmbH, Industriestraße 41, 40822 Mettmann (D)'}
+};
+const cmTxt = cm => cm % 100 ? dec(cm/100, 2) : String(cm/100);
+// colli raggruppati per misura: «2 bancali 2 × 1 × h 1,15 m»
+function trColli(sh){
+  const g = new Map();
+  for(const p of sh.pallets){
+    const k = `${p.kind}|${p.H}`;
+    if(!g.has(k)) g.set(k, {p, n:0});
+    g.get(k).n++;
+  }
+  const out = [...g.values()].sort((a,b) => (a.p.kind==='big' ? 0 : 1)-(b.p.kind==='big' ? 0 : 1) || b.p.H-a.p.H)
+    .map(({p,n}) => `${n} ${n===1 ? 'bancale' : 'bancali'} ${cmTxt(p.L)} × ${cmTxt(p.W)} × h ${cmTxt(p.H)} m`);
+  if(sh.carts.length) out.push('carrelli a parte: ' + sh.carts.map(c => `${c.qty} × ${c.code}`).join(', ') + ' (misure da verificare)');
+  if(sh.noDims.length) out.push('senza misure d\'imballo, non conteggiati: ' + sh.noDims.join(', '));
+  return out;
+}
+// peso: merce + bancali vuoti (stima)
+const trKg = sh => sh.pallets.reduce((s,p) => s + p.kg + (p.tara||0), 0);
+function trText(){
+  const t = cfg.trasporto, sh = res && res.ship;
+  if(!sh) return '';
+  const yn = v => v ? 'sì' : 'no';
+  const from = TR_FROM[t.from] || TR_FROM.everdeck;
+  const lines = ['Buongiorno,', 'avrei bisogno di un\'offerta per il trasporto.', '',
+    `Carico: ${from.addr}`, `Muletto al carico: ${yn(t.forkFrom)}`, '',
+    `Scarico: ${t.to.trim().replace(/\s*\n\s*/g, ', ') || '(indirizzo da completare)'}`, `Muletto allo scarico: ${yn(t.forkTo)}`, `Sponda idraulica per lo scarico: ${yn(t.lift)}`, '',
+    'Colli:', ...trColli(sh).map(c => '- ' + c), `Peso totale: circa ${dec(trKg(sh),0)} kg (bancali compresi)`, '',
+    `Referente per la consegna: ${t.name.trim() || '(nominativo da completare)'}`, `Telefono per il preavviso telefonico: ${t.phone.trim() || '(da completare)'}`, '',
+    'Cordiali saluti'];
+  return lines.join('\n');
+}
+function trFill(){
+  const t = cfg.trasporto, c = TR_CARRIERS[t.carrier] ? t.carrier : 'brigl';
+  const mails = [...new Set(Object.values(TR_CARRIERS).flatMap(x => x.mails))];
+  if(!mails.includes(t.mail)) t.mail = TR_CARRIERS[c].mails[0];
+  $('#trCarrier').innerHTML = Object.entries(TR_CARRIERS).map(([k,v]) => `<option value="${k}"${k===c ? ' selected' : ''}>${esc(v.name)}</option>`).join('');
+  $('#trMail').innerHTML = mails.map(m => `<option${m===t.mail ? ' selected' : ''}>${esc(m)}</option>`).join('');
+  $('#trFrom').innerHTML = Object.entries(TR_FROM).map(([k,v]) => `<option value="${k}"${k===t.from ? ' selected' : ''}>${esc(v.addr)}</option>`).join('');
+  $('#trForkFrom').checked = !!t.forkFrom; $('#trForkTo').checked = !!t.forkTo; $('#trLift').checked = !!t.lift;
+  $('#trTo').value = t.to; $('#trName').value = t.name; $('#trPhone').value = t.phone;
+  trPreview();
+}
+function trPreview(){
+  const sh = res && res.ship;
+  $('#trColli').innerHTML = sh ? trColli(sh).map(c => `<li>${esc(c)}</li>`).join('') + `<li><b>Peso totale circa ${dec(trKg(sh),0)} kg</b> (bancali compresi, stima)</li>` : '';
+  $('#trBody').value = trText();
 }
 function renderShip(){
   const box = $('#shipPanel'), sh = res && res.ship, t = res && res.totals;
@@ -1393,9 +1521,9 @@ function renderShip(){
       + what.map(w => `<span>${esc(w)}</span>`).join('') + `</figcaption></figure>`;
   }).join('');
   const notes = [
-    `Pedane su bancali 2×1 m: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico, bancale escluso. Uno strato è 1 pedana 2×1, 2 da 1×1 o 2×0,5, 4 da 1×0,5.`,
+    `Pedane su bancali 2×1 m: al massimo ${sh.maxLayers} strati e ${sh.Hmax} cm di carico, bancale escluso. Ogni strato è composto con la forma vera delle pedane su una griglia da 50 cm (per esempio 2 da 2×0,5 affiancate, oppure 1 da 1×1 con 2 da 1×0,5); le pedane più grandi di 2×1 fanno strato da sole.`,
     `Accessori sopra le pedane finché c'è spazio (fino a ${sh.Hmax} cm, riempimento ${sh.fill}% del volume libero); quello che avanza va su EPAL 120×80 cm, i pezzi più lunghi di 120 cm${sh.longCodes.length ? ' ('+listCodes(sh.longCodes)+')' : ''} solo su bancali 2×1 m.`,
-    'Il disegno è indicativo: gli accessori sono un blocco unico con il loro volume. Pesi senza il bancale.',
+    'Il disegno è indicativo: gli accessori sono un blocco unico con il loro volume. Pesi senza il bancale; nella richiesta al trasportatore il peso comprende i bancali vuoti (stima: 30 kg il 2×1, 25 kg l\'EPAL).',
     sh.carts.length ? `Carrelli a parte: ${sh.carts.map(c => c.qty+' × '+c.code).join(', ')}.` : '',
     sh.noDims.length ? `Senza misure d'imballo, non conteggiati: ${listCodes(sh.noDims)}.` : ''
   ].filter(Boolean);
@@ -1406,7 +1534,10 @@ function renderShip(){
       <div class="tile"><div class="k">Bancali 2×1 m</div><div class="v">${sh.big}</div></div>
       <div class="tile"><div class="k">EPAL 120×80</div><div class="v">${sh.epal}</div></div>
     </div>
-    ${cards ? `<div class="palgrid">${cards}</div>` : '<p class="hint">Nessun articolo da spedire.</p>'}
+    ${cards ? `<div class="shiprow"><div class="palgrid">${cards}</div>
+      <aside class="shipside"><span class="lbl">Colli</span><ul>${trColli(sh).map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+        <span>Peso totale circa <b>${dec(trKg(sh),0)} kg</b></span>
+        <button type="button" class="btn primary" id="trOpen">Richiedi offerta trasporto</button></aside></div>` : '<p class="hint">Nessun articolo da spedire.</p>'}
     <div class="legend"><span><i style="background:var(--pal-l)"></i>Bancale</span><span><i style="background:var(--deck-side-l)"></i>Pedane</span><span><i style="background:var(--acc-l)"></i>Accessori</span></div>
     <ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
@@ -1770,6 +1901,39 @@ function bind(){
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);
+  // larghezza della pagina: la pagina resta centrata, quindi spostando il bordo destro di dx la larghezza cresce di 2·dx
+  const wrap = $('.wrap'), WKEY = 'stagedeck.larghezza', WDEF = 1320;
+  const setW = w => { w = Math.round(Math.max(WDEF, Math.min(w, document.documentElement.clientWidth - 32))); wrap.style.maxWidth = w + 'px'; return w; };
+  try{ const w = +localStorage.getItem(WKEY); if(w > WDEF) setW(w); }catch(e){}
+  $('#wresize').addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const bar = e.currentTarget; bar.setPointerCapture(e.pointerId); bar.classList.add('drag');
+    const move = ev => setW(2*(ev.clientX - document.documentElement.clientWidth/2) + 8);
+    const up = () => {
+      bar.classList.remove('drag'); bar.removeEventListener('pointermove', move); bar.removeEventListener('pointerup', up);
+      try{ localStorage.setItem(WKEY, String(parseInt(wrap.style.maxWidth) || WDEF)); }catch(e){}
+      draw3d();
+    };
+    bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up);
+  });
+  $('#wresize').addEventListener('dblclick', () => { wrap.style.maxWidth = ''; try{ localStorage.removeItem(WKEY); }catch(e){} draw3d(); });
+  $('#shipPanel').addEventListener('click', e => {
+    if(!e.target.closest('#trOpen')) return;
+    trFill(); $('#trDlg').showModal();
+  });
+  const trSet = (id, key, prop) => $(id).addEventListener(prop==='checked' ? 'change' : 'input', e => {
+    cfg.trasporto[key] = e.target[prop];
+    if(key==='carrier') cfg.trasporto.mail = TR_CARRIERS[e.target.value].mails[0], trFill();
+    save(); trPreview();
+  });
+  trSet('#trCarrier','carrier','value'); trSet('#trMail','mail','value'); trSet('#trFrom','from','value');
+  trSet('#trForkFrom','forkFrom','checked'); trSet('#trForkTo','forkTo','checked'); trSet('#trLift','lift','checked');
+  trSet('#trTo','to','value'); trSet('#trName','name','value'); trSet('#trPhone','phone','value');
+  $('#trSend').addEventListener('click', () => {
+    const subj = 'Richiesta offerta trasporto' + (cfg.numero ? ' - offerta n. ' + cfg.numero : '') + (cfg.progetto ? ' - ' + cfg.progetto : '');
+    location.href = `mailto:${cfg.trasporto.mail}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(trText())}`;
+  });
+  $('#trCopy').addEventListener('click', () => copy(trText()));
   $('#deckMix').addEventListener('click', () => {
     cfg.deckMix = !cfg.deckMix;
     $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
