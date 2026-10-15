@@ -24,12 +24,11 @@ const SPEC = {
   'VHK1.0':{kind:'rail', L:1000, kick:true}, 'VHK1.5':{kind:'rail', L:1500, kick:true}, 'VHK2.0':{kind:'rail', L:2000, kick:true},
   'VSM17,5':{kind:'step', h:175}, 'VSM35':{kind:'step', h:350}, 'VSM52,5':{kind:'step', h:525},
   'VLC':{kind:'part', name:'vlc', el:0.5},
-  // forme generate (non ci sono modelli CAD): pedane sagomate, tubi, profili, traliccio, rampe
+  // forme generate (non ci sono modelli CAD): pedane sagomate, tubi, profili, traliccio
   'PROFILO-5M':{kind:'tube', L:5000, d:60, az:0.35, el:0.3}, 'TAPPO-PLASTICA':{kind:'tube', L:20, d:60, color:[0.08,0.08,0.09], az:1.2},
   'VAP1.0':{kind:'tube', L:1000, d:70, az:0.45}, 'VAP2.0':{kind:'tube', L:2000, d:70, az:0.4},
   'E31-400':{kind:'tube', L:4000, d:50, round:true, az:0.35, el:0.3}, 'E32-300B':{kind:'tube', L:3000, d:50, round:true, color:[0.09,0.09,0.1], az:0.35, el:0.3},
-  'E32-400BM8':{kind:'truss', L:4000, w:290, az:0.25, el:0.35},
-  'VRP20':{kind:'ramp', L:2000, H:200, W:1000}, 'VRP40':{kind:'ramp', L:3000, H:400, W:1000}, 'VRP60':{kind:'ramp', L:2000, H:600, W:1000}
+  'E32-400BM8':{kind:'truss', L:4000, w:290, az:0.25, el:0.35}
 };
 // pedane sagomate: contorno in pianta (mm)
 const tri = (w, d, left) => left ? [[0,0],[w,0],[0,d]] : [[0,0],[w,0],[w,d]];
