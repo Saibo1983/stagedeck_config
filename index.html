@@ -231,6 +231,8 @@ tr.grp td.num{font-family:var(--f-mono);font-size:13px;text-transform:none;lette
 .sum .tot{border-top:2px solid var(--ink);padding-top:6px;font-weight:600;font-size:16px}
 .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 /* «Nuova offerta»: pulsante centrato, la spiegazione compare solo passandoci sopra (o con il tasto Tab) */
+.archrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.archrow select{flex:1 1 160px;width:auto;min-width:0}
 .resetbox{position:relative;display:flex;justify-content:center}
 .resetbox .tip{position:absolute;top:calc(100% + 8px);right:0;width:min(340px,80vw);z-index:10;margin:0;padding:8px 12px;border-radius:6px;font-size:12.5px;line-height:1.4;
   background:var(--ink);color:var(--surface);box-shadow:0 4px 12px rgba(18,32,43,.25);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s}
@@ -315,6 +317,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <form class="panel config" id="cfgForm" onsubmit="return false">
     <div class="sec">
       <h3>Dati offerta</h3>
+      <label class="field"><span>Palchi standard</span><select id="presetSel" aria-describedby="presetHint"></select></label>
+      <div class="field"><span>Offerte salvate</span>
+        <div class="archrow"><select id="archSel" aria-label="Offerte salvate"></select><button type="button" class="btn small" id="archOpen">Apri</button></div>
+      </div>
+      <div class="archrow"><button type="button" class="btn small" id="archSave" title="Salva l'offerta corrente nell'archivio: il titolo sono le misure con un numero progressivo">Salva offerta</button><button type="button" class="btn small" id="archDel">Elimina</button><button type="button" class="btn small" id="archExp" title="Scarica tutte le offerte salvate in un file .json">Esporta archivio</button><label class="btn small" for="archFile" style="cursor:pointer" title="Aggiunge all'archivio le offerte di un file esportato">Importa archivio</label><input type="file" id="archFile" accept=".json,application/json" hidden><span class="hint" id="archMsg" role="status" aria-live="polite"></span></div>
+      <p class="hint" id="presetHint">Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.</p>
       <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
       <div class="row">
         <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
@@ -1419,18 +1427,23 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, mkRow:{}, markup:37, discount:0});
 let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
 
+// configurazione completa: i campi mancanti (salvataggi vecchi) prendono il valore predefinito
+function normCfg(src){
+  const c = Object.assign(clone(DEFAULT_CFG), clone(src));
+  c.skirt = Object.assign(clone(DEFAULT_CFG.skirt), c.skirt||{}); c.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), c.skirt.sides||{});
+  c.trolley = Object.assign(clone(DEFAULT_CFG.trolley), c.trolley||{});
+  c.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), c.trasporto||{});
+  c.adj = (c.adj && typeof c.adj==='object') ? c.adj : {};
+  c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
+  if(!c.mk37){ c.markup = 37; c.mk37 = true; }   // una volta: maggiorazione fissa 37%
+  c.stairs = (c.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
+  return c;
+}
 function load(){
   try{
     let s = JSON.parse(localStorage.getItem(KEY) || 'null');
     if(!s){ const o = JSON.parse(localStorage.getItem(OLDKEY) || 'null'); if(o && o.cfg) s = {cfg:o.cfg}; }
-    if(s && s.cfg) cfg = Object.assign(clone(DEFAULT_CFG), s.cfg);
-    cfg.skirt = Object.assign(clone(DEFAULT_CFG.skirt), cfg.skirt||{}); cfg.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), cfg.skirt.sides||{});
-    cfg.trolley = Object.assign(clone(DEFAULT_CFG.trolley), cfg.trolley||{});
-    cfg.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), cfg.trasporto||{});
-    cfg.adj = (cfg.adj && typeof cfg.adj==='object') ? cfg.adj : {};
-    cfg.mkRow = (cfg.mkRow && typeof cfg.mkRow==='object') ? cfg.mkRow : {};
-    if(!cfg.mk37){ cfg.markup = 37; cfg.mk37 = true; }   // una volta: maggiorazione fissa 37%
-    cfg.stairs = (cfg.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
+    cfg = normCfg(s && s.cfg ? s.cfg : {});
     if(s && s.rules && s.rules.rows && s.rules.v===4){
       s.rules.v = 5;
       for(const r of s.rules.rows) if(r.when==='perDeck' && (r.trigger==='junction2' || r.trigger==='junction34')){
@@ -1447,6 +1460,83 @@ function load(){
   }catch(e){}
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify({cfg, rules:R})); }catch(e){} }
+
+/* --- archivio offerte (in questo browser) e palchi standard ---
+   Ogni offerta salvata ha come titolo le misure (larghezza × profondità, altezza) e un numero progressivo per misura. */
+const AKEY = 'stagedeck.archivio';
+const PRESET_W = [3,4,5,6,7,8,9,10,11,12], PRESET_D = [2,3,4,5,6,7,8,9,10,11,12];
+function archLoad(){ try{ const a = JSON.parse(localStorage.getItem(AKEY) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+function archStore(a){ try{ localStorage.setItem(AKEY, JSON.stringify(a)); return true; }catch(e){ return false; } }
+const archBase = c => (c.shape==='round' ? `Ø ${nf(+c.diam)} m` : `${nf(+c.W)} × ${nf(+c.D)} m`) + ` · h ${nf(+c.H)} cm`;
+function renderArchive(sel){
+  const a = archLoad().sort((x,y) => x.base.localeCompare(y.base, 'it', {numeric:true}) || x.n-y.n);
+  $('#archSel').innerHTML = a.length
+    ? a.map(e => `<option value="${esc(e.id)}">${esc(`${e.base} · n. ${e.n}`)}${e.cfg.cliente ? ' — '+esc(e.cfg.cliente) : ''}</option>`).join('')
+    : '<option value="">Nessuna offerta salvata</option>';
+  if(sel) $('#archSel').value = sel;
+  $('#archOpen').disabled = $('#archDel').disabled = !a.length;
+}
+function archMsg(t){ const m = $('#archMsg'); m.textContent = t; clearTimeout(archMsg.t); archMsg.t = setTimeout(() => m.textContent = '', 3000); }
+function archSave(){
+  const a = archLoad(), base = archBase(cfg), n = 1 + Math.max(0, ...a.filter(e => e.base===base).map(e => e.n));
+  const e = {id:Date.now().toString(36), base, n, saved:new Date().toISOString(), cfg:clone(cfg)};
+  a.push(e);
+  if(!archStore(a)){ archMsg('Salvataggio non riuscito: memoria del browser piena o bloccata.'); return; }
+  renderArchive(e.id); archMsg(`Salvata: ${base} · n. ${n}`);
+}
+function archOpen(){
+  const e = archLoad().find(x => x.id===$('#archSel').value); if(!e) return;
+  cfg = normCfg(e.cfg); stairSel = 0; fillForm(); update(); renderArchive(e.id); archMsg(`Aperta: ${e.base} · n. ${e.n}`);
+}
+// esporta: un file .json con tutte le offerte; importa: aggiunge quelle che non ci sono già (stesso id), e se il numero
+// progressivo di quella misura è già usato prende il primo libero
+async function archExport(){
+  const a = archLoad(); if(!a.length){ archMsg('Archivio vuoto: niente da esportare.'); return; }
+  const filename = `archivio-offerte-${today()}.json`;
+  const blob = new Blob([JSON.stringify({tipo:'stagedeck-archivio', v:1, esportato:new Date().toISOString(), offerte:a}, null, 1)], {type:'application/json'});
+  let dl = null;
+  try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+  if(dl){ await dl.save({filename, data:blob}); archMsg(`Esportate ${a.length} offerte`); return; }
+  const l = document.createElement('a');
+  l.href = URL.createObjectURL(blob); l.download = filename;
+  document.body.appendChild(l); l.click(); l.remove();
+  setTimeout(() => URL.revokeObjectURL(l.href), 4000);
+  archMsg(`Esportate ${a.length} offerte`);
+}
+async function archImport(f){
+  try{
+    const j = JSON.parse(await f.text()), list = Array.isArray(j) ? j : j && j.offerte;
+    if(!Array.isArray(list)) throw new Error('formato');
+    const a = archLoad(); let added = 0, same = 0;
+    for(const e of list){
+      if(!e || typeof e.cfg!=='object' || !e.cfg) continue;
+      if(e.id && a.some(x => x.id===e.id)){ same++; continue; }
+      const c = normCfg(e.cfg), base = archBase(c);
+      let n = +e.n || 1; while(a.some(x => x.base===base && x.n===n)) n++;
+      a.push({id:e.id || Date.now().toString(36)+added, base, n, saved:e.saved || new Date().toISOString(), cfg:c}); added++;
+    }
+    if(!archStore(a)){ archMsg('Importazione non riuscita: memoria del browser piena o bloccata.'); return; }
+    renderArchive(); archMsg(`Importate ${added} offerte` + (same ? `, ${same} c'erano già` : '') + '.');
+  }catch(e){ archMsg('File non valido: serve un archivio esportato da StageDeck (.json).'); }
+}
+function archDel(){
+  const a = archLoad(), e = a.find(x => x.id===$('#archSel').value); if(!e) return;
+  if(!confirm(`Eliminare dall'archivio «${e.base} · n. ${e.n}»?`)) return;
+  archStore(a.filter(x => x !== e)); renderArchive(); archMsg('Offerta eliminata');
+}
+// palco standard: misure, su gambe telescopiche 40–60 cm (VTL40, regolate a 60), senza parapetti, scale, rampe e altri
+// accessori; restano dati cliente, pedana e prezzi dell'offerta corrente
+function applyPreset(v){
+  const [W,D] = v.split('x').map(Number); if(!W || !D) return;
+  const b = blankCfg();
+  for(const k of ['rails','stairs','ramps','extras','adj','mkRow','skirt','trolley','kick']) cfg[k] = clone(b[k]);
+  Object.assign(cfg, {shape:'rect', W, D, support:'legs', tele:true, H:60});
+  stairSel = 0; fillForm(); update(); archMsg(`Palco standard ${W} × ${D} m, gambe 40–60 cm`);
+}
+function renderPresets(){
+  $('#presetSel').innerHTML = '<option value="">Scegli una misura…</option>' + PRESET_W.map(w =>
+    `<optgroup label="Larghezza ${w} m">${PRESET_D.map(d => `<option value="${w}x${d}">${w} × ${d} m</option>`).join('')}</optgroup>`).join('');
+}
 
 /* --- scheda offerta --- */
 function fillForm(){
@@ -2320,6 +2410,12 @@ function bind(){
     if(again && !again.disabled) again.focus();
   });
   $('#adjReset').addEventListener('click', () => { cfg.adj = {}; cfg.mkRow = {}; update(); });
+  $('#presetSel').addEventListener('change', e => { if(e.target.value) applyPreset(e.target.value); e.target.value = ''; });
+  $('#archSave').addEventListener('click', archSave);
+  $('#archOpen').addEventListener('click', archOpen);
+  $('#archDel').addEventListener('click', archDel);
+  $('#archExp').addEventListener('click', archExport);
+  $('#archFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) archImport(f); e.target.value = ''; });
   $('#resetAll').addEventListener('click', () => {
     if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
     cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
@@ -2447,6 +2543,7 @@ load();
 loadPrices();
 bind();
 pricesInfo();
+renderPresets(); renderArchive();
 fillForm();
 renderRules();
 renderCatalog();
