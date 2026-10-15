@@ -82,6 +82,9 @@ input:disabled{opacity:.5}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
 .btn.small{padding:3px 9px;min-height:28px;font-size:13px}
+.planbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 8px}
+.planbar .hint{margin:0;font-size:12.5px;color:var(--muted)}
+#deckMix[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:6px}
 .item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
@@ -185,7 +188,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.planbar,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -354,6 +357,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
+      <div class="planbar">
+        <button type="button" class="btn small" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
+        <span class="hint" id="deckMixHint"></span>
+      </div>
       <div id="planBox"></div>
       <div class="legend">
         <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
@@ -431,7 +438,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <div class="panel">
     <h3>Come vengono contati i pezzi</h3>
     <ul class="assump">
-      <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Tra più soluzioni vince quella con il prezzo di listino più basso.</li>
+      <li>Il piano è rettangolare e viene coperto con i moduli più grandi possibile (2×1, 1×1, 2×0,5, 1×0,5, 0,5×0,5 m). Le pedane 2×1 sono tutte orientate nello stesso verso, in un blocco unico; dove la misura non è multipla del modulo, la striscia che avanza si chiude con i moduli più piccoli (mai con un 2×1 girato). Tra i due versi possibili vince quello con il prezzo di listino più basso, poi quello con meno pezzi.</li>
       <li>Ogni deck ha le sue 4 gambe. Con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe) servono i connettori tra le gambe: sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC. Con gambe più basse non servono. I giunti sono i lati in comune tra due deck.</li>
       <li>La scala modulare è fatta di elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...) e l'ultimo gradino sta 20 cm sotto il palco: per un palco da 60 cm sono VSM20 e VSM40. Si compone solo per palchi da 40 a 100 cm a passi di 20; con altre altezze si usa la scala regolabile. Un palco da 20 cm non ha scala.</li>
       <li>La scala regolabile va abbinata alle gambe telescopiche con la stessa escursione: VAS-2 con VTL40 (40–60 cm), VAS-4 con VTL60 (60–100), VAS-5 con VTL80 (80–140), VAS-7 con VTL100 (100–180). La VAS-2 non ha corrimano.</li>
@@ -653,12 +660,27 @@ function stairGeom(st, h, look){
   const run = Math.sqrt(Math.max(L*L - h*h, (L*0.3)**2));
   return {run, len:L, angle:Math.atan2(h, run)*180/Math.PI};
 }
-function tile(Wc, Dc, sizes, st){
+// Regola: pedane tutte nello stesso verso. Il modulo più grande (2×1) riempie un blocco unico a partire dall'angolo
+// retro-sinistra, tutto orientato come `main` ({w,h} in celle da 50 cm); le strisce che avanzano (misure non multiple
+// del modulo) si coprono con i moduli più piccoli, mai con il 2×1 girato. Senza `main`: copertura libera.
+function tile(Wc, Dc, sizes, st, main){
   const g = new Uint8Array(Wc*Dc), out = [], cands = [];
+  if(main){
+    const nx = Math.floor(Wc/main.w), ny = Math.floor(Dc/main.h);
+    for(let j=0;j<ny;j++) for(let i=0;i<nx;i++){
+      const x = i*main.w, y = j*main.h;
+      for(let b=y;b<y+main.h;b++) for(let a=x;a<x+main.w;a++) g[b*Wc+a] = 1;
+      out.push({x,y,w:main.w,h:main.h});
+    }
+  }
+  // con `main` i moduli rettangolari più piccoli si provano prima nello stesso verso delle pedane grandi
+  const sameH = main ? main.w>=main.h : st.preferH;
   for(const [a,b] of sizes){
     const seen = new Set();
-    for(const [w,h] of (st.preferH ? [[a,b],[b,a]] : [[b,a],[a,b]])){
-      if(seen.has(w+'x'+h)) continue; seen.add(w+'x'+h); cands.push({w,h});
+    for(const [w,h] of (sameH ? [[a,b],[b,a]] : [[b,a],[a,b]])){
+      if(seen.has(w+'x'+h)) continue; seen.add(w+'x'+h);
+      if(main && w===main.h && h===main.w && w!==h) continue;   // niente 2×1 girati
+      cands.push({w,h});
     }
   }
   cands.sort((p,q) => q.w*q.h - p.w*p.h);
@@ -719,15 +741,25 @@ function compute(cfg, R, look, kits){
   // --- piano
   const sizes = Object.keys(fam.codes).map(k => k.split('x').map(Number));
   const sizeKey = (w,h) => Math.max(w,h)+'x'+Math.min(w,h);
+  // Pedane tutte nello stesso verso (2×1 con il lato lungo sulla larghezza o sulla profondità): tra i due versi
+  // vince il prezzo di listino più basso, poi meno pezzi, poi il lato lungo sulla larghezza.
+  // La copertura libera (versi misti) resta solo come ultima possibilità.
+  const big = sizes.reduce((m,s) => s[0]*s[1] > m[0]*m[1] ? s : m);
+  const mains = big[0]===big[1] ? [{w:big[0],h:big[1]}] : [{w:big[0],h:big[1]}, {w:big[1],h:big[0]}];
+  // «Ottimizza pedane» (cfg.deckMix): copertura libera come prima, vince il prezzo più basso anche con versi misti.
   let best = null;
-  for(const st of STRATS){
-    const t = tile(Wc,Dc,sizes,st);
-    if(!t) continue;
-    const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
-    if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+  for(const main of cfg.deckMix ? [null] : [...mains, null]){
+    if(best && !main) break;
+    for(const st of STRATS){
+      const t = tile(Wc,Dc,sizes,st,main);
+      if(!t) continue;
+      const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
+      if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+    }
   }
   if(!best){ warn('bad','Non riesco a coprire la superficie con i moduli del piano scelto.'); return out; }
   const decks = best.t;
+  if(cfg.deckMix) warn('info','Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.');
   for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
   const byDeck = new Map();
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
@@ -954,7 +986,7 @@ function compute(cfg, R, look, kits){
   lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
-  if(invCodes.length) warn('inv', `Articoli integrati da fatture di acquisto, da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
+  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
   if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
   if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
   if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
@@ -1016,7 +1048,7 @@ const today = () => new Date().toISOString().slice(0,10);
 
 const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
-  W:4, D:4, H:60, family:'hexa', tele:false,
+  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false,
   rails:{back:true, left:true, right:true, front:false}, kick:false,
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
   markup:37, discount:0, vat:22, pdfCost:false
@@ -1059,6 +1091,8 @@ function fillForm(){
   $('#support').value = cfg.support;
   renderFamilies();
   for(const id of ['cliente','progetto','numero','data','W','D','H','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
+  $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
   $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#pdfCost').checked = !!cfg.pdfCost;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
@@ -1403,7 +1437,7 @@ function renderResult(){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="3">${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
-    for(const l of ls) html += `<tr${l.adj||l.fattura ? ` class="${[l.adj?'mod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">da fattura · controlla</span>` : ''}</td><td class="num"><span class="qed">`
+    for(const l of ls) html += `<tr${l.adj||l.fattura ? ` class="${[l.adj?'mod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}><td class="code">${esc(l.code)}</td><td>${esc(l.name)}${l.fattura ? ` <span class="invtag" title="${esc(l.fattura)}">fuori listino · controlla</span>` : ''}</td><td class="num"><span class="qed">`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
       + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost">${mkp}</td><td class="num">${money(l.unit)}</td><td class="num">${money(l.total)}</td></tr>`;
@@ -1615,7 +1649,7 @@ function renderCatalog(){
   const rows = ITEMS.filter(i => !q || (i.code+' '+i.name+' '+i.section).toLowerCase().includes(q));
   $('#qCount').textContent = `${rows.length} di ${ITEMS.length} articoli`;
   $('#catTable').innerHTML = `<thead><tr><th>Codice</th><th>Nome</th><th>Gruppo</th><th class="num">Acquisto €</th><th class="num">Peso kg</th><th>Imballo mm</th><th class="num">Volume m³</th></tr></thead><tbody>` +
-    rows.map(i => `<tr${i.fattura ? ' class="inv"' : ''}><td class="code">${esc(i.code)}</td><td>${esc(i.name)}${i.fattura ? ` <span class="invtag" title="${esc(i.fattura)}">da fattura</span>` : ''}</td><td>${esc(i.section)}</td><td class="num">${i.price==null?'–':money(i.price)}</td><td class="num">${i.kg==null?'–':dec(i.kg,2)}</td><td class="code">${i.pack?i.pack.join(' × '):'–'}</td><td class="num">${i.pack?dec(i.pack[0]*i.pack[1]*i.pack[2]/1e9,3):'–'}</td></tr>`).join('') + '</tbody>';
+    rows.map(i => `<tr${i.fattura ? ' class="inv"' : ''}><td class="code">${esc(i.code)}</td><td>${esc(i.name)}${i.fattura ? ` <span class="invtag" title="${esc(i.fattura)}">fuori listino</span>` : ''}</td><td>${esc(i.section)}</td><td class="num">${i.price==null?'–':money(i.price)}</td><td class="num">${i.kg==null?'–':dec(i.kg,2)}</td><td class="code">${i.pack?i.pack.join(' × '):'–'}</td><td class="num">${i.pack?dec(i.pack[0]*i.pack[1]*i.pack[2]/1e9,3):'–'}</td></tr>`).join('') + '</tbody>';
 }
 
 /* --- eventi --- */
@@ -1736,6 +1770,12 @@ function bind(){
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);
+  $('#deckMix').addEventListener('click', () => {
+    cfg.deckMix = !cfg.deckMix;
+    $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
+    $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
+    update();
+  });
   $('#priceFile').addEventListener('change', async e => {
     const f = e.target.files[0]; if(!f) return;
     try{

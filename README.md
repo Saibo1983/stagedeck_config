@@ -12,8 +12,8 @@ Configuratore di offerte per palchi modulari Everdeck. Inserisci misure, altezza
 
 ## Articoli integrati da fatture
 Il listino `Everdeck_STAGEDECKS_2026.04_integrato` aggiunge 48 pezzi e misure fuori catalogo, ricavati dalle fatture di acquisto: sono le righe con il codice evidenziato in azzurro. Lo script le riconosce dal colore e le marca nel catalogo con la nota di provenienza (colonne R e U del file: codice, fatture, come sono stati stimati peso e imballo).
-- Nell'offerta ogni riga con un articolo da fattura è azzurra con l'etichetta «da fattura · controlla» (passa sopra per leggere la nota), e un avviso in cima elenca i codici. Etichetta e avviso non escono nel PDF né nel testo copiato.
-- Nella scheda Listino gli stessi articoli hanno l'etichetta «da fattura».
+- Nell'offerta ogni riga con un articolo da fattura è azzurra con l'etichetta «fuori listino · controlla» (passa sopra per leggere la nota), e un avviso in cima elenca i codici. Etichetta e avviso non escono nel PDF né nel testo copiato.
+- Nella scheda Listino gli stessi articoli hanno l'etichetta «fuori listino».
 - Alcuni entrano da soli nei calcoli: i parapetti da 0,5 m (VH0.5) e la gamba fissa da 70 cm (VFL70), che ora ha il suo prezzo invece della media tra VFL60 e VFL80. Gli altri si aggiungono a mano da «Voci aggiuntive» e sono segnalati allo stesso modo.
 - Caricando un nuovo `prezzi.json`, i codici che non ci sono (per esempio le rampe) tengono il prezzo già caricato sul dispositivo.
 
@@ -34,6 +34,8 @@ Le regole dei pezzi accessori (morsetti, connettori, corrimano) sono modificabil
 I prezzi del listino sono di acquisto. La maggiorazione è fissa al 37% (il campo Maggiorazione % resta modificabile). L'offerta mostra per ogni riga acquisto, maggiorazione, prezzo di vendita e totale; sotto, totale acquisto, maggiorazione, subtotale vendita, sconto, imponibile, IVA e totale. Nel PDF dell'offerta acquisto e maggiorazione compaiono solo se è spuntato «Prezzi di acquisto nel PDF»; nel testo copiato non compaiono mai.
 
 ## Regole confermate
+- Pedane tutte orientate nello stesso verso: i 2×1 formano un blocco unico (dall'angolo retro-sinistra) con il lato lungo tutto sulla larghezza o tutto sulla profondità. Dove la misura non è multipla del modulo, la striscia che avanza (a destra e sul fronte) si chiude con 1×1, 2×0,5, 1×0,5 e 0,5×0,5, mai con un 2×1 girato. Tra i due versi vince il prezzo di listino più basso, poi meno pezzi, poi il lato lungo sulla larghezza.
+- Pulsante «Ottimizza pedane» sopra la pianta: se è attivo torna la copertura di prima, cioè la soluzione al prezzo più basso anche con pedane in versi diversi. La scelta resta salvata; un avviso in cima ricorda che è attiva e il pulsante non esce nel PDF.
 - Connettori tra le gambe solo con gambe oltre 80 cm (fisse sopra 80 cm, telescopiche VTL60 60–100 cm e più lunghe): sul perimetro, dove si incontrano 2 gambe, un connettore doppio VLC; all'interno, dove se ne incontrano 4, un connettore quadro V4LC.
 - Connettori d'angolo parapetti VHCC: 2 per ogni angolo a 90° dove due lati con parapetto si incontrano (parapetto su 3 lati = 4 connettori, su 4 lati = 8).
 - Connettori e livellatori: 1 pezzo per ogni metro di lato connesso, uguale per StageDeck e Spider.
