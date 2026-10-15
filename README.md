@@ -80,6 +80,9 @@ A destra dei disegni dei bancali c'è il riepilogo dei colli (per esempio «1 ba
 - referente per la consegna: nominativo e telefono per il preavviso.
 «Crea email» apre il programma di posta con la mail già scritta; «Copia testo» la copia. Le scelte restano salvate; «Nuova offerta: azzera tutto» le riporta ai valori iniziali.
 
+## Posizione dei dati offerta
+In alto nel riquadro «Dati offerta» si sceglie la posizione dei dati: «A lato» (colonna a sinistra, come prima) oppure «Sopra»: sotto la barra del totale e sopra la pianta, con Dati offerta, Palco, Scale, Parapetti, ecc. in riquadri affiancati (quanti ne stanno nella larghezza della pagina). La scelta resta salvata nel browser.
+
 ## Larghezza della pagina
 Sul bordo destro della pagina c'è una barra verticale: trascinala per allargare la pagina fino a tutto lo schermo. Doppio clic per tornare alla larghezza normale. La larghezza resta salvata nel browser. Non c'è su schermi stretti.
 
