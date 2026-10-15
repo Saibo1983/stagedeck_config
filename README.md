@@ -8,7 +8,14 @@ Configuratore di offerte per palchi modulari Everdeck. Inserisci misure, altezza
 3. Apri `https://<utente>.github.io/stagedeck_config/` e, da Chrome o Safari, scegli "Installa app" / "Aggiungi a Home".
 
 ## Aggiornare il listino
-`python3 tools/aggiorna_listino.py nuovo_listino.xlsx rampe.xlsx` (serve `pip install openpyxl`; il file rampe è facoltativo) riscrive listino e kit rampe dentro `index.html`. Poi cambia `VERSION` in `sw.js`.
+`python3 tools/aggiorna_listino.py nuovo_listino.xlsx rampe.xlsx` (serve `pip install openpyxl`; il file rampe è facoltativo: senza, restano i kit rampe già presenti) riscrive listino e kit rampe dentro `index.html`. Poi cambia `VERSION` in `sw.js`.
+
+## Articoli integrati da fatture
+Il listino `Everdeck_STAGEDECKS_2026.04_integrato` aggiunge 48 pezzi e misure fuori catalogo, ricavati dalle fatture di acquisto: sono le righe con il codice evidenziato in azzurro. Lo script le riconosce dal colore e le marca nel catalogo con la nota di provenienza (colonne R e U del file: codice, fatture, come sono stati stimati peso e imballo).
+- Nell'offerta ogni riga con un articolo da fattura è azzurra con l'etichetta «da fattura · controlla» (passa sopra per leggere la nota), e un avviso in cima elenca i codici. Etichetta e avviso non escono nel PDF né nel testo copiato.
+- Nella scheda Listino gli stessi articoli hanno l'etichetta «da fattura».
+- Alcuni entrano da soli nei calcoli: i parapetti da 0,5 m (VH0.5) e la gamba fissa da 70 cm (VFL70), che ora ha il suo prezzo invece della media tra VFL60 e VFL80. Gli altri si aggiungono a mano da «Voci aggiuntive» e sono segnalati allo stesso modo.
+- Caricando un nuovo `prezzi.json`, i codici che non ci sono (per esempio le rampe) tengono il prezzo già caricato sul dispositivo.
 
 ## Attenzione
 I prezzi NON sono nel repository. `index.html` contiene solo codici, nomi, pesi e imballi. I prezzi di acquisto stanno in `prezzi.json` (ignorato da git, non va caricato su GitHub). Apri l'app, scheda Listino, e premi «Carica prezzi»: restano salvati solo sul tuo dispositivo. Va fatto una volta per ogni dispositivo e browser.

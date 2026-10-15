@@ -4,6 +4,9 @@
 Uso:  python3 tools/aggiorna_listino.py listino.xlsx [rampe.xlsx]
 Legge il foglio "Tabelle1" del listino (e, se c'e', un file rampe con un foglio per altezza)
 e riscrive il blocco <script id="catalog"> di index.html.
+Senza file rampe tiene i kit rampe e i loro articoli gia' presenti in index.html.
+Le righe con il codice evidenziato in azzurro sono articoli integrati da fatture di acquisto:
+nel catalogo hanno il campo "fattura" (nota di provenienza) e l'app li segnala nell'offerta.
 """
 import json
 import re
@@ -20,6 +23,7 @@ CORREZIONI = {
     "SPHA-2X1": {"pack": [2050, 1050, 60]}, "SPHB-2X1": {"pack": [2050, 1050, 60]},
     "SPHA-1X1": {"pack": [1050, 1050, 60]}, "SPHB-1X1": {"pack": [1050, 1050, 60]},
 }
+AZZURRO = "BDD7EE"  # riempimento delle righe integrate da fatture di acquisto
 DIM = re.compile(r"^\s*(\d+)\s*[x×]\s*(\d+)\s*[x×]\s*(\d+)\s*$", re.I)
 
 
@@ -41,6 +45,8 @@ def parse(xlsx):
     items, seen, sezione = [], set(), ""
     for r in range(1, ws.max_row + 1):
         code, name, price, pkgprice, kg, pdim, p1, p2 = (ws.cell(r, c).value for c in (3, 4, 5, 6, 7, 9, 10, 11))
+        fill = ws.cell(r, 3).fill
+        azzurro = bool(fill.fill_type) and str(fill.fgColor.rgb or "").upper().endswith(AZZURRO)
         name = str(name).strip() if name else ""
         code = str(code).strip() if code else ""
         if code == "Product Code":
@@ -74,6 +80,10 @@ def parse(xlsx):
             n = num(pkgprice) / num(price)
             if n > 1.05 and abs(n - round(n)) < 0.05:
                 item["pkg"] = int(round(n))
+        if azzurro:
+            # colonna R: provenienza (codice, fatture), colonna U: come sono stati ricavati peso e misure
+            nota = " · ".join(re.sub(r"\s+", " ", str(v)).strip() for v in (ws.cell(r, 18).value, ws.cell(r, 21).value) if v)
+            item["fattura"] = nota or "articolo integrato da fatture di acquisto"
         item.update(CORREZIONI.get(key, {}))
         items.append(item)
     return items
@@ -108,27 +118,37 @@ def main():
         sys.exit(__doc__)
     xlsx = Path(sys.argv[1])
     items = parse(xlsx)
-    kit = []
+    html_path = Path(__file__).resolve().parent.parent / "index.html"
+    html = html_path.read_text(encoding="utf-8")
+    pat = re.compile(r'(<script type="application/json" id="catalog">)(.*?)(</script>)', re.S)
+    vecchio = pat.search(html)
+    if not vecchio:
+        sys.exit("Blocco catalog non trovato in index.html")
+    gia = {norm(i["code"]) for i in items}
     if len(sys.argv) == 3:
-        extra, kit = parse_rampe(sys.argv[2], {norm(i["code"]) for i in items})
-        items += extra
+        extra, kit = parse_rampe(sys.argv[2], gia)
+    else:  # nessun file rampe: tengo kit e articoli rampe gia' in index.html
+        old = json.loads(vecchio.group(2).replace("<\\/", "</"))
+        kit = old.get("rampKits", [])
+        extra = [i for i in old["items"] if i.get("section") == "RAMPE" and norm(i["code"]) not in gia]
+        if kit:
+            print(f"Kit rampe tenuti da index.html: {len(kit)} kit, {len(extra)} articoli (prezzi non inclusi in prezzi.json).")
+    items += extra
     m = re.search(r"\d{4}\.\d{2}", xlsx.stem)
     label = f"Everdeck STAGEDECKS {m.group(0)}" if m else xlsx.stem
     # i prezzi NON vanno nel repository: restano in prezzi.json (ignorato da git)
-    prezzi = {norm(i["code"]): i["price"] for i in items}
+    prezzi = {norm(i["code"]): i["price"] for i in items if i.get("price") is not None}
     for i in items:
         i.pop("price", None)
     (Path(__file__).resolve().parent.parent / "prezzi.json").write_text(
         json.dumps({"listino": label, "prezzi": prezzi}, ensure_ascii=False, indent=0), encoding="utf-8")
     payload = json.dumps({"listino": label, "items": items, "rampKits": kit}, ensure_ascii=False, separators=(",", ":"))
     payload = payload.replace("</", "<\\/")
-    html_path = Path(__file__).resolve().parent.parent / "index.html"
-    html = html_path.read_text(encoding="utf-8")
-    pat = re.compile(r'(<script type="application/json" id="catalog">)(.*?)(</script>)', re.S)
-    if not pat.search(html):
-        sys.exit("Blocco catalog non trovato in index.html")
     html_path.write_text(pat.sub(lambda mo: mo.group(1) + payload + mo.group(3), html, count=1), encoding="utf-8")
     print(f"{len(items)} articoli scritti in index.html ({label}), senza prezzi.")
+    fatt = [i["code"] for i in items if i.get("fattura")]
+    if fatt:
+        print(f"{len(fatt)} articoli integrati da fatture (righe azzurre): {', '.join(fatt)}")
     print("Prezzi salvati in prezzi.json: NON caricarlo su GitHub, caricalo nell'app (scheda Listino).")
 
 
