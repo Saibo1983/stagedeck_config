@@ -23,12 +23,37 @@ CORREZIONI = {
     "SPHA-2X1": {"pack": [2050, 1050, 60]}, "SPHB-2X1": {"pack": [2050, 1050, 60]},
     "SPHA-1X1": {"pack": [1050, 1050, 60]}, "SPHB-1X1": {"pack": [1050, 1050, 60]},
 }
+IMG_DIR = Path(__file__).resolve().parent.parent / "img"
 AZZURRO = "BDD7EE"  # riempimento delle righe integrate da fatture di acquisto
 DIM = re.compile(r"^\s*(\d+)\s*[x×]\s*(\d+)\s*[x×]\s*(\d+)\s*$", re.I)
 
 
 def norm(code):
     return re.sub(r"\s+", "", code).replace("×", "x").upper()
+
+
+def foto_key(name):
+    """Nome foto normalizzato per l'abbinamento: senza estensione (anche 'VS750H-1x1jpg' senza punto), come norm()."""
+    stem = re.sub(r"\.?(jpe?g|png|webp)\s*$", "", str(name).strip(), flags=re.I)
+    return norm(stem)
+
+
+def img_file(key):
+    """Nome del file in img/ per una chiave foto: solo lettere, cifre, punto, trattino (la virgola diventa _)."""
+    return re.sub(r"[^A-Z0-9.-]+", "_", key) + ".jpg"
+
+
+def assegna_immagini(items):
+    """Mette in ogni articolo il campo "img" se in img/ c'e' la sua foto (nome da colonna A, altrimenti codice)."""
+    n = 0
+    for i in items:
+        i.pop("img", None)
+        for key in (i.get("foto"), norm(i["code"])):
+            if key and (IMG_DIR / img_file(key)).exists():
+                i["img"] = img_file(key)
+                n += 1
+                break
+    return n
 
 
 def dims(v):
@@ -45,6 +70,7 @@ def parse(xlsx):
     items, seen, sezione = [], set(), ""
     for r in range(1, ws.max_row + 1):
         code, name, price, pkgprice, kg, pdim, p1, p2 = (ws.cell(r, c).value for c in (3, 4, 5, 6, 7, 9, 10, 11))
+        foto = ws.cell(r, 1).value
         fill = ws.cell(r, 3).fill
         azzurro = bool(fill.fill_type) and str(fill.fgColor.rgb or "").upper().endswith(AZZURRO)
         name = str(name).strip() if name else ""
@@ -80,6 +106,8 @@ def parse(xlsx):
             n = num(pkgprice) / num(price)
             if n > 1.05 and abs(n - round(n)) < 0.05:
                 item["pkg"] = int(round(n))
+        if foto and str(foto).strip() and str(foto).strip() != "Product Photo Name":
+            item["foto"] = foto_key(foto)
         if azzurro:
             # colonna R: provenienza (codice, fatture), colonna U: come sono stati ricavati peso e misure
             nota = " · ".join(re.sub(r"\s+", " ", str(v)).strip() for v in (ws.cell(r, 18).value, ws.cell(r, 21).value) if v)
@@ -134,6 +162,7 @@ def main():
         if kit:
             print(f"Kit rampe tenuti da index.html: {len(kit)} kit, {len(extra)} articoli (prezzi non inclusi in prezzi.json).")
     items += extra
+    n_img = assegna_immagini(items)
     m = re.search(r"\d{4}\.\d{2}", xlsx.stem)
     label = f"Everdeck STAGEDECKS {m.group(0)}" if m else xlsx.stem
     # i prezzi NON vanno nel repository: restano in prezzi.json (ignorato da git)
@@ -146,6 +175,7 @@ def main():
     payload = payload.replace("</", "<\\/")
     html_path.write_text(pat.sub(lambda mo: mo.group(1) + payload + mo.group(3), html, count=1), encoding="utf-8")
     print(f"{len(items)} articoli scritti in index.html ({label}), senza prezzi.")
+    print(f"Immagini trovate in img/: {n_img} articoli.")
     fatt = [i["code"] for i in items if i.get("fattura")]
     if fatt:
         print(f"{len(fatt)} articoli integrati da fatture (righe azzurre): {', '.join(fatt)}")

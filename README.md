@@ -80,6 +80,14 @@ A destra dei disegni dei bancali c'è il riepilogo dei colli (per esempio «1 ba
 - referente per la consegna: nominativo e telefono per il preavviso.
 «Crea email» apre il programma di posta con la mail già scritta; «Copia testo» la copia. Le scelte restano salvate; «Nuova offerta: azzera tutto» le riporta ai valori iniziali.
 
+## Illustrazioni degli articoli
+Le immagini stanno in `img/` (lato lungo 600 px, bordo bianco tolto) e il catalogo le indica nel campo `img`. Per aggiungerle o sostituirle:
+`python3 tools/importa_immagini.py immagini.zip` (oppure una cartella; serve `pip install pillow`), poi cambia `VERSION` in `sw.js`.
+- Ogni immagine si abbina all'articolo con lo stesso nome della colonna «Product Photo Name» del listino, oppure con lo stesso codice. I nomi diversi noti (es. `VS750P-2×1B` per `VS750PB-2×1`, `VASH` per i due corrimano, `rollriser` per tutti i Rollrisers) sono in `ALIAS` dentro lo script.
+- Lo script elenca le immagini che non trovano un articolo e gli articoli ancora senza immagine.
+- `aggiorna_listino.py` ricollega da solo le immagini già presenti in `img/`.
+Nell'app la miniatura compare nell'offerta (anche nel PDF per il cliente), nella scheda Listino e sotto ogni sezione della configurazione (Palco, Scale, Parapetti, ...) con i pezzi che quella scelta mette in offerta. Tocca una miniatura per ingrandirla.
+
 ## Posizione dei dati offerta
 In alto nel riquadro «Dati offerta» si sceglie la posizione dei dati: «A lato» (colonna a sinistra, come prima) oppure «Sopra»: sotto la barra del totale e sopra la pianta, con Dati offerta, Palco, Scale, Parapetti, ecc. in riquadri affiancati (quanti ne stanno nella larghezza della pagina). La scelta resta salvata nel browser.
 
