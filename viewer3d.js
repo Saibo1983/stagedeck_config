@@ -447,7 +447,23 @@ function create(canvas){
     }
     request();
   });
-  canvas.addEventListener('wheel', e => { e.preventDefault(); cam.userMoved = true; cam.dist = Math.min(cam.fit*4, Math.max(cam.fit*0.12, cam.dist*Math.exp(e.deltaY*0.001))); request(); }, {passive:false});
+  // rotellina: senza Ctrl (o ⌘) scorre la pagina come altrove; lo zoom è con Ctrl + rotellina (il pizzico del touchpad
+  // arriva già con Ctrl). Al primo giro senza Ctrl compare per un attimo l'avviso sopra la vista.
+  let tip = null, tipT = 0;
+  canvas.addEventListener('wheel', e => {
+    if(!e.ctrlKey && !e.metaKey){
+      if(!tip){
+        tip = document.createElement('div');
+        tip.textContent = 'Ctrl + rotellina per lo zoom';
+        tip.style.cssText = 'position:absolute;left:50%;top:12px;transform:translateX(-50%);background:rgba(18,32,43,.78);color:#fff;font-size:13px;padding:5px 12px;border-radius:6px;pointer-events:none;transition:opacity .3s;opacity:0';
+        const box = canvas.parentElement; if(getComputedStyle(box).position==='static') box.style.position = 'relative';
+        box.appendChild(tip);
+      }
+      tip.style.opacity = '1'; clearTimeout(tipT); tipT = setTimeout(() => { tip.style.opacity = '0'; }, 1200);
+      return;
+    }
+    e.preventDefault(); cam.userMoved = true; cam.dist = Math.min(cam.fit*4, Math.max(cam.fit*0.12, cam.dist*Math.exp(e.deltaY*0.001))); request();
+  }, {passive:false});
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 
   function resize(){
