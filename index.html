@@ -97,7 +97,7 @@ input:disabled{opacity:.5}
 .btn.small{padding:3px 9px;min-height:28px;font-size:13px}
 .planbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 8px}
 .planbar .hint{margin:0;font-size:12.5px;color:var(--muted)}
-#deckMix[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+#v3Xray[aria-pressed="true"],#deckMix[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:6px}
 .item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
@@ -450,7 +450,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button></div>
       <div id="v3On" hidden>
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
-        <div class="actions"><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+        <div class="actions"><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: Spider Deck e Rollrisers sono mostrati con gambe e pedane StageDeck.</p>
       </div>
     </div>
@@ -2027,6 +2027,11 @@ function bind(){
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
   $('#v3Png').addEventListener('click', save3d);
   $('#v3Glb').addEventListener('click', saveGlb);
+  $('#v3Xray').addEventListener('click', e => {
+    const on = e.currentTarget.getAttribute('aria-pressed')!=='true';
+    e.currentTarget.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if(v3.view) v3.view.setXray(on);
+  });
   $('#v3Html').addEventListener('click', saveHtml3d);
 
   // regole
