@@ -698,6 +698,35 @@ function clipCircle(rect, R){
   }
   return poly;
 }
+// Gambe di un pezzo speciale: sempre 4 (schede GlobalTruss «Stage Deck Curved»). Negli angoli del pezzo; due angoli più
+// vicini di 35 cm hanno una gamba sola; se gli angoli sono meno di 4, le gambe che mancano vanno sul lato curvo, distribuite
+// lungo l'arco. aligned = angolo diritto dentro il cerchio: lì la gamba è allineata con quelle dei pezzi vicini (connettore).
+function roundLegs(pl, r, R){
+  const onRect = ([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6);
+  const onCircle = ([x,y]) => Math.abs(Math.hypot(x,y)-R) < 1e-3;   // il cerchio è un poligono fine: 1 mm di tolleranza
+  let legs = pl.filter(onRect).map(p => ({p, aligned:!onCircle(p)}));
+  const d = (a,b) => Math.hypot(a.p[0]-b.p[0], a.p[1]-b.p[1]);
+  for(;;){   // angoli troppo vicini (o più di 4): resta quello diritto
+    let bi = -1, bj = -1, bd = Infinity;
+    for(let i=0;i<legs.length;i++) for(let j=i+1;j<legs.length;j++){ const v = d(legs[i],legs[j]); if(v < bd){ bd = v; bi = i; bj = j; } }
+    if(bi<0 || (bd >= 0.35 && legs.length <= 4)) break;
+    const keep = legs[bj].aligned && !legs[bi].aligned ? bj : bi;
+    legs.splice(keep===bi ? bj : bi, 1);
+  }
+  if(legs.length < 4){   // gambe sul lato curvo: arco = tratto di vertici sul cerchio
+    const n = pl.length, arc = [];
+    const start = pl.findIndex((v,i) => onCircle(v) && !onCircle(pl[(i+1)%n]));   // ultimo vertice dell'arco
+    for(let k=1;k<=n;k++){ const v = pl[(start+k)%n]; if(onCircle(v)) arc.push(v); }
+    const len = arc.slice(1).reduce((s,v,i) => s + Math.hypot(v[0]-arc[i][0], v[1]-arc[i][1]), 0), add = 4 - legs.length;
+    for(let k=1;k<=add;k++){
+      let t = len*k/(add+1), acc = 0;
+      for(let i=1;i<arc.length;i++){ const L = Math.hypot(arc[i][0]-arc[i-1][0], arc[i][1]-arc[i-1][1]);
+        if(acc+L >= t){ const f = (t-acc)/L; legs.push({p:[arc[i-1][0]+(arc[i][0]-arc[i-1][0])*f, arc[i-1][1]+(arc[i][1]-arc[i-1][1])*f], aligned:false}); break; }
+        acc += L; }
+    }
+  }
+  return legs;
+}
 // pezzi del palco rotondo: poligoni in coordinate di pianta (m, origine retro-sinistra, y verso il fronte)
 const roundPieces = (() => {
   const cache = {};
@@ -731,8 +760,9 @@ const roundPieces = (() => {
       const bw = Math.max(...xs)-Math.min(...xs), bh = Math.max(...ys)-Math.min(...ys);
       out.push({std:false, rect:r, poly:pl.map(toPlan), type:types.get(k), code:`KOLO${Dm}-${types.get(k)}`, bw, bh,
         area: Math.abs(pl.reduce((s,v,i) => { const w = pl[(i+1)%pl.length]; return s + v[0]*w[1]-w[0]*v[1]; }, 0))/2,
-        // angoli del pezzo (vertici sui lati del rettangolo): servono per gambe e giunti
-        corners: pl.filter(([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6)).map(toPlan)});
+        // angoli del pezzo (vertici sui lati del rettangolo): servono per i giunti
+        corners: pl.filter(([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6)).map(toPlan),
+        legs: roundLegs(pl, r, R).map(g => ({p:toPlan(g.p), aligned:g.aligned}))});
     }
     return cache[Dm] = out;
   };
@@ -1004,16 +1034,18 @@ function compute(cfg, R, look, kits){
   }
 
   // --- metriche per le regole
-  // palco rotondo: ogni pezzo ha una gamba in ogni suo angolo (4 per le pedane 2×1, 3–5 per i pezzi speciali)
+  // palco rotondo: 4 gambe per ogni pezzo, anche per quelli con il lato curvo
   const area = round ? Math.PI*Dm*Dm/4 : W*D;
-  const legsN = decks.length*4 + specials.reduce((s,q) => s + q.corners.length, 0);
+  const legsN = decks.length*4 + specials.reduce((s,q) => s + q.legs.length, 0);
   const M = {deck:decks.length + specials.length, deck_corner:legsN, m2:Math.ceil(area-1e-9), fixed:1};
   const vmap = new Map();
   for(const d of decks) for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
     const k = cx+','+cy; vmap.set(k,(vmap.get(k)||0)+1);
   }
-  for(const q of specials) for(const [x,y] of q.corners){   // in celle da 50 cm, come le pedane
-    const k = r2(x*2)+','+r2(y*2); vmap.set(k,(vmap.get(k)||0)+1);
+  // pezzi speciali: contano per i connettori tra le gambe solo le gambe allineate (angoli diritti in comune);
+  // quelle sul lato curvo non sono allineate con le altre e non hanno connettore
+  for(const q of specials) for(const g of q.legs){
+    const k = g.aligned ? r2(g.p[0]*2)+','+r2(g.p[1]*2) : 'curva'+Math.random(); vmap.set(k,(vmap.get(k)||0)+1);
   }
   M.vertex = vmap.size; M.vertex1 = 0; M.junction2 = 0; M.junction34 = 0;
   for(const n of vmap.values()){ if(n===1) M.vertex1++; else if(n===2) M.junction2++; else M.junction34++; }
@@ -1525,10 +1557,10 @@ function planSVG(p, H){
     for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
       const k = cx+','+cy; if(!corners.has(k)) corners.set(k, []); corners.get(k).push(legAt(cx,cy,sx,sy));
     }
-    for(const q of specials){   // pezzi speciali: una gamba in ogni angolo, spostata verso il centro del pezzo
+    for(const q of specials){   // pezzi speciali: 4 gambe (angoli e lato curvo), spostate verso il centro del pezzo
       const c = centroid(q.poly);
-      for(const [x,y] of q.corners){
-        const dx = c[0]-x, dy = c[1]-y, l = Math.hypot(dx,dy) || 1, k = r2(x*2)+','+r2(y*2);
+      for(const g of q.legs){
+        const [x,y] = g.p, dx = c[0]-x, dy = c[1]-y, l = Math.hypot(dx,dy) || 1, k = g.aligned ? r2(x*2)+','+r2(y*2) : 'curva'+Math.random();   // gambe non allineate: niente connettore
         if(!corners.has(k)) corners.set(k, []);
         corners.get(k).push([x*100 + dx/l*ins*1.41, y*100 + dy/l*ins*1.41]);
       }

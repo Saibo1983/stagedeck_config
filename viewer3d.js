@@ -195,7 +195,7 @@ function create(canvas){
         const pts = q.poly.map(([x,y]) => [x*1000, y*1000]);
         addBatch([rawMat(...extrude(pts, ty, ty+72, false), FRAME_DARK[fam] ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5), Object.assign(rawMat(...extrude(pts, ty+72, ty+90), topCol, 0.15), {top:true})], [IDT]);
         const cx = pts.reduce((s,v) => s+v[0],0)/pts.length, cz = pts.reduce((s,v) => s+v[1],0)/pts.length;
-        for(const [x,y] of q.corners){
+        for(const {p:[x,y]} of q.legs){
           const X = x*1000, Z = y*1000, l = Math.hypot(cx-X, cz-Z) || 1, gx = X + (cx-X)/l*60, gz = Z + (cz-Z)/l*60;
           legs.push({r:LR, t:[gx - la[0], ty + LT.t[1] - delta, gz - la[2]]});
         }

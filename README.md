@@ -95,7 +95,7 @@ Nel riquadro Palco, «Forma» → «Rotondo» e il diametro: 3, 4, 6, 8 o 10 m, 
 - Pedane 2×1 intere al centro e pezzi speciali ritagliati sul cerchio. I pezzi uguali (a meno di una rotazione) sono lo stesso tipo: articoli `KOLO<Ø>-<tipo>`, per esempio KOLO8-01. Conteggi come nei disegni: 4 m = 2 + 12 (6 tipi da 2), 6 m = 8 + 16 (4 tipi da 4), 8 m = 16 + 16.
 - Prezzo dei pezzi speciali dalla regola Everdeck (maggio 2026): fino a 1×1 m e fino a 2×1 m, chiavi `TONDO-SPEC-1X1` e `TONDO-SPEC-2X1` di `prezzi.json`. Sono in `prezzi_extra.json` (fuori da git), che `aggiorna_listino.py` aggiunge a `prezzi.json`.
 - Peso stimato dalla superficie (16 kg/m²), imballo dalle misure d'ingombro; nell'offerta sono segnalati come «fuori listino · controlla», con l'immagine della sagoma.
-- Gambe: una per ogni angolo di ogni pezzo; giunti e connettori calcolati sui lati in comune. Scale centrate sul lato. Niente parapetti, mascheratura e rampe (non ci sono pezzi curvi): se sono scelti, un avviso lo dice.
+- Gambe: sempre 4 per ogni pezzo, anche per quelli con il lato curvo (schede GlobalTruss «Stage Deck Curved»): negli angoli, una sola gamba per due angoli più vicini di 35 cm, e quelle che mancano sul lato curvo. Connettore tra le gambe solo dove le gambe sono perfettamente allineate (angoli diritti in comune tra pezzi vicini), non sul lato curvo. Connettori deck-deck calcolati sui lati in comune. Scale centrate sul lato. Niente parapetti, mascheratura e rampe (non ci sono pezzi curvi): se sono scelti, un avviso lo dice.
 - Pianta, vista 3D, spedizione e PDF funzionano anche per il palco rotondo.
 
 ## Rampe
