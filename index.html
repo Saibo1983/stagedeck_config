@@ -82,6 +82,9 @@ input:disabled{opacity:.5}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.primary:hover{color:var(--accent-ink);filter:brightness(1.08)}
 .btn.small{padding:3px 9px;min-height:28px;font-size:13px}
+.planbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 8px}
+.planbar .hint{margin:0;font-size:12.5px;color:var(--muted)}
+#deckMix[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .list{display:flex;flex-direction:column;gap:6px}
 .item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
@@ -185,7 +188,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   }
   @page{margin:12mm}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.planbar,.tabs,footer,#tiles,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -354,6 +357,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2 id="planTitle">Pianta</h2>
+      <div class="planbar">
+        <button type="button" class="btn small" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
+        <span class="hint" id="deckMixHint"></span>
+      </div>
       <div id="planBox"></div>
       <div class="legend">
         <span><i style="background:var(--deck);border:1px solid var(--deck-line)"></i>Deck</span>
@@ -739,8 +746,9 @@ function compute(cfg, R, look, kits){
   // La copertura libera (versi misti) resta solo come ultima possibilità.
   const big = sizes.reduce((m,s) => s[0]*s[1] > m[0]*m[1] ? s : m);
   const mains = big[0]===big[1] ? [{w:big[0],h:big[1]}] : [{w:big[0],h:big[1]}, {w:big[1],h:big[0]}];
+  // «Ottimizza pedane» (cfg.deckMix): copertura libera come prima, vince il prezzo più basso anche con versi misti.
   let best = null;
-  for(const main of [...mains, null]){
+  for(const main of cfg.deckMix ? [null] : [...mains, null]){
     if(best && !main) break;
     for(const st of STRATS){
       const t = tile(Wc,Dc,sizes,st,main);
@@ -751,6 +759,7 @@ function compute(cfg, R, look, kits){
   }
   if(!best){ warn('bad','Non riesco a coprire la superficie con i moduli del piano scelto.'); return out; }
   const decks = best.t;
+  if(cfg.deckMix) warn('info','Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.');
   for(const d of decks) d.code = fam.codes[sizeKey(d.w,d.h)];
   const byDeck = new Map();
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
@@ -1039,7 +1048,7 @@ const today = () => new Date().toISOString().slice(0,10);
 
 const DEFAULT_CFG = {
   cliente:'', progetto:'', numero:'', data:today(),
-  W:4, D:4, H:60, family:'hexa', tele:false,
+  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false,
   rails:{back:true, left:true, right:true, front:false}, kick:false,
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{},
   markup:37, discount:0, vat:22, pdfCost:false
@@ -1082,6 +1091,8 @@ function fillForm(){
   $('#support').value = cfg.support;
   renderFamilies();
   for(const id of ['cliente','progetto','numero','data','W','D','H','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
+  $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
   $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#pdfCost').checked = !!cfg.pdfCost;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
@@ -1759,6 +1770,12 @@ function bind(){
   $$('[data-cap]').forEach(i => i.addEventListener('input', e => { R.params.cap[i.dataset.cap] = +e.target.value || DEFAULT_RULES.params.cap[i.dataset.cap]; update(); }));
   $('#rampOpening').addEventListener('input', e => { R.params.rampOpening = +e.target.value || 1; update(); });
   $('#q').addEventListener('input', renderCatalog);
+  $('#deckMix').addEventListener('click', () => {
+    cfg.deckMix = !cfg.deckMix;
+    $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
+    $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
+    update();
+  });
   $('#priceFile').addEventListener('change', async e => {
     const f = e.target.files[0]; if(!f) return;
     try{
