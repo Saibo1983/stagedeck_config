@@ -257,7 +257,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   body[data-print="disegni"] #offerPanel,body[data-print="disegni"] #shipPanel{display:none!important}
   #shipPanel .tiles{display:flex!important}
   #shipPanel{break-before:page}
-  body[data-print="disegni"] .plan{max-height:none}
+  /* pianta, titolo, intestazione e legenda devono stare su una pagina A4 (anche con intestazione e piè di pagina
+     del browser): con palchi più profondi che larghi il disegno altrimenti supera la pagina e lascia pagine vuote */
+  body[data-print="disegni"] .plan{max-height:185mm}
+  #planPanel .legend{break-before:avoid}
   body[data-print="offerta"] #v3Panel,#v3Off,#v3Note{display:none!important}
   #v3Panel:has(#v3On[hidden]){display:none!important}
   #v3Panel{break-inside:avoid}
