@@ -101,6 +101,8 @@ Nel riquadro Palco, «Forma» → «Rotondo» e il diametro: 3, 4, 6, 8 o 10 m, 
 ## Rampe
 I kit rampe per altezza (20, 40, 60, 80–100, 120–140 cm) vengono da `RAMPS_list.xlsx`, con i prezzi: `python3 tools/aggiorna_listino.py listino.xlsx RAMPS_list.xlsx`. Le immagini per altezza («20.jpg» = rampa, «20cm e palco.jpg» = rampa montata al palco) si importano con `importa_immagini.py` e diventano `img/RAMPA-<h>.jpg` e `img/RAMPA-<h>-PALCO.jpg`. Con una rampa in offerta, l'immagine dell'altezza più vicina al palco compare nella sezione Rampe (rampa e rampa con palco) e sulla riga «Rampe» dell'offerta, anche nel PDF.
 
+- Nella vista 3D la rampa è disegnata come nei disegni Everdeck del kit (Rampe.pdf): pedane larghe 1 m in salita dalla più lunga (a terra) alla più corta (verso il palco), telaio in alluminio, lamiera mandorlata a terra (ER-SE) e sul palco (ER-EE), piedini tondi per 20 e 40 cm, gambe telescopiche tonde con traverso sotto i giunti e in cima per le altezze maggiori. L'inquadratura comprende le rampe.
+
 ## Posizione dei dati offerta
 In alto nel riquadro «Dati offerta» si sceglie la posizione dei dati: «A lato» (colonna a sinistra, come prima) oppure «Sopra»: sotto la barra del totale e sopra la pianta, con Dati offerta, Palco, Scale, Parapetti, ecc. in riquadri affiancati (quanti ne stanno nella larghezza della pagina). La scelta resta salvata nel browser.
 
