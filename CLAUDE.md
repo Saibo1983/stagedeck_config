@@ -9,3 +9,4 @@
 - I prezzi non vanno mai nel repository: restano in `prezzi.json` (ignorato da git), che si consegna all'utente come file. I prezzi che non sono nel listino Excel (es. pezzi speciali dei palchi rotondi) stanno in `prezzi_extra.json`, anche lui fuori da git.
 - Dopo ogni modifica a `index.html` o agli altri file in cache, cambia `VERSION` in `sw.js`.
 - Gli articoli del listino con il campo `fattura` vengono da fatture di acquisto (righe azzurre dell'Excel): vanno segnalati nell'offerta, mai nel PDF né nel testo per il cliente.
+- Ogni testo nuovo dell'interfaccia, del PDF o delle copie va aggiunto anche in tedesco in `tools/traduzioni_de.py` (poi `python3 tools/traduzioni_de.py`).
