@@ -3,7 +3,7 @@
 
 Uso:  python3 tools/importa_descrizioni.py lista_con_descrizione.xlsx
 Legge il primo foglio (colonne: Codice, Denominazione, Descrizione (it)) e riscrive il blocco
-<script id="descrizioni"> di index.html: codice normalizzato -> {"nome": denominazione, "desc": descrizione}.
+<script id="descrizioni"> di index.html: codice normalizzato -> {"cod": codice originale della lista, "nome": denominazione, "desc": descrizione}.
 Le descrizioni gia' presenti restano: quelle del file nuovo le aggiungono o le sostituiscono (la lista puo' essere parziale).
 E' una tabella separata dal catalogo, cosi' aggiorna_listino.py non la tocca.
 Niente prezzi: questo blocco puo' stare nel repository.
@@ -51,7 +51,7 @@ def main():
         code, nome, testo = (list(row) + [None] * 3)[:3]
         if not code or r == 0 and str(code).strip().lower() == "codice":
             continue
-        voce = {"nome": pulisci(nome), "desc": pulisci(testo)}
+        voce = {"cod": str(code).strip(), "nome": pulisci(nome), "desc": pulisci(testo)}  # cod: codice come scritto nella lista
         if not voce["nome"] and not voce["desc"]:
             continue
         chiavi = [norm(c) for c in ALIAS.get(norm(code), [code])]
