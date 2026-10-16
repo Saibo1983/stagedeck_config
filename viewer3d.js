@@ -272,8 +272,13 @@ function create(canvas){
         pos += Lm;
       }
     }
-    if(r2.length) addBatch(plain('rail2'), r2);
-    if(r1.length) addBatch(plain('rail1'), r1);
+    if(cfg.safety){   // parapetto di sicurezza VHX: modello disegnato qui (non c'è un modello 3D del produttore)
+      if(r2.length) addBatch(vhxMats(2000), r2);
+      if(r1.length) addBatch(vhxMats(1000), r1);
+    } else {
+      if(r2.length) addBatch(plain('rail2'), r2);
+      if(r1.length) addBatch(plain('rail1'), r1);
+    }
     if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
     // --- scale
@@ -585,6 +590,20 @@ function create(canvas){
     cam.target = [(mn[0]+mx[0])/2, (mn[1]+mx[1])/2, (mn[2]+mx[2])/2];
     cam.az = spec.az!=null ? spec.az : 0.62; cam.el = spec.el!=null ? spec.el : 0.42; cam.dist = cam.fit = r/Math.tan(0.31)*1.08; cam.userMoved = true;
     bg = [1,1,1]; dirty = true; draw();
+  }
+  // parapetto di sicurezza VHX (dalle immagini Everdeck/GlobalTruss): corrimano tondo in alto, due montanti quadri,
+  // traverso basso e montanti tondi ogni ~11 cm, tubo quadro di base sotto il bordo; alto 115 cm sul piano; misure in mm
+  function vhxMats(L){
+    const z0 = -40, z1 = L - 60, x = -22, P = [], I = [];
+    const add = g => { const o = P.length/3; P.push(...g[0]); I.push(...g[1].map(i => i+o)); };
+    add(cyl([x,1060,z0],[x,1060,z1], 24));
+    add([box([x-12,140,z0+20],[x+12,165,z1-20]), BOX_IDX]);
+    add([box([x-20,-70,z0+60],[x+20,-30,z1-60]), BOX_IDX]);
+    const posts = [z0+0.09*(z1-z0), z1-0.09*(z1-z0)];
+    for(const zp of posts) add([box([x-25,-90,zp-25],[x+25,1040,zp+25]), BOX_IDX]);
+    const n = Math.round((z1-z0)/115);
+    for(let k=1;k<n;k++){ const zb = z0 + k*(z1-z0)/n; if(posts.some(zp => Math.abs(zb-zp) < 45)) continue; add(cyl([x,160,zb],[x,1040,zb], 8, 8)); }
+    return [rawMat(P, I, [0.09,0.09,0.10], 0.35)];
   }
   const box = (a,b) => [a[0],a[1],a[2], b[0],a[1],a[2], b[0],b[1],a[2], a[0],b[1],a[2], a[0],a[1],b[2], b[0],a[1],b[2], b[0],b[1],b[2], a[0],b[1],b[2]];
   // prisma da un poligono convesso in pianta [[x,z],...] tra le quote y0 e y1

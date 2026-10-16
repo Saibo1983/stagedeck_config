@@ -155,4 +155,5 @@ Nel riquadro Parapetti, «Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)» met
 - Statica per 100 kg/m: anticaduta e antiscavalcamento, non antisfondamento (la nota tecnica dell'offerta lo dice).
 - Non esiste l'elemento da 0,5 m: se su un lato avanza mezzo metro, un avviso lo segnala e quel tratto va chiuso a parte.
 - Non sono nel listino Everdeck: gli articoli sono aggiunti nell'app (come VH0.5) con peso e imballo dalla mail di D. Pielot (VHX2.0 36 kg, 2000×1280×100 mm; VHX1.0 22 kg, 1000×1280×100; VHXC 0,2 kg, 70×38×38; VHXCC 0,25 kg, 73×72×43) e sono segnalati «fuori listino · controlla». I prezzi (165, 95, 5, 6 €) stanno in `prezzi_extra.json`, fuori da git.
-- Nella vista 3D sono mostrati con il modello del parapetto standard.
+- Immagini in `img/` (VHX2.0, VHX1.0, VHXC, VHXCC.jpg, fornite dall'utente): `importa_immagini.py` accetta anche gli articoli aggiunti dall'app (elenco `AGGIUNTI_APP`).
+- Nella vista 3D hanno un modello proprio, disegnato dalle immagini: corrimano tondo, due montanti quadri, montanti tondi fitti, alto 115 cm.

@@ -2108,8 +2108,8 @@ for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VH
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
 // Parapetti di sicurezza 1 kN/m (100 kg/m): non sono nel listino Everdeck; prezzi in prezzi_extra.json, pesi e imballi dalla mail
 const VHX_NOTE = 'Non nel listino: prezzo, peso e imballo dalla mail Everdeck (D. Pielot, prezzi del 13/05/2024 confermati il 18/05/2026). Statica per 100 kg/m.';
-for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', kg:22, pack:[1000,1280,100]},
-                 {code:'VHXC', name:'Safety handrail connection', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', kg:0.25, pack:[73,72,43]}])
+for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', img:'VHX2.0.jpg', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', img:'VHX1.0.jpg', kg:22, pack:[1000,1280,100]},
+                 {code:'VHXC', name:'Safety handrail connection', img:'VHXC.jpg', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', img:'VHXCC.jpg', kg:0.25, pack:[73,72,43]}])
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', fattura:VHX_NOTE});
 // pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
 for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);
