@@ -436,6 +436,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="check"><input type="checkbox" data-side="right"> Destra</label>
       </div>
       <label class="check"><input type="checkbox" id="kick"> Con battipiede</label>
+      <label class="check"><input type="checkbox" id="safety"> Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)</label>
     </div>
 
     <div class="sec">
@@ -843,6 +844,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "sinistra":"links",
 "destra":"rechts",
 "Con battipiede":"Mit Bordbrett",
+"Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)":"Sicherheitsgeländer 1 kN/m (VHX, 115 cm hoch)",
+"Lato {}: il parapetto di sicurezza non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.":"Seite {0}: Das Sicherheitsgeländer gibt es nicht mit 0,5 m, ein Abschnitt von 0,5 m muss separat geschlossen werden.",
+"Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.":"Sicherheitsgeländer VHX: absturzsicher und übersteigsicher, Belastbarkeit 1 kN/m (100 kg/m), Höhe 115 cm; nicht durchbruchsicher.",
 "Mascheratura":"Verkleidung",
 "Numero di lati con mascheratura":"Anzahl Seiten mit Verkleidung",
 "Stoffa":"Stoff",
@@ -1921,7 +1925,9 @@ function compute(cfg, R, look, kits){
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
 
   // --- parapetti
-  const c2 = cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = cfg.kick ? 'VHK1.0' : 'VH1.0', c05 = cfg.kick ? 'VHK0.5' : 'VH0.5';
+  // parapetto di sicurezza VHX (1 kN/m): elementi da 2 m e 1 m, non esiste da 0,5 m; senza battipiede
+  const safe = !!cfg.safety;
+  const c2 = safe ? 'VHX2.0' : cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = safe ? 'VHX1.0' : cfg.kick ? 'VHK1.0' : 'VH1.0', c05 = cfg.kick ? 'VHK0.5' : 'VH0.5';
   const halfEdges = s => decks.filter(d => s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc)
     .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
   const runs = []; let rails = 0, railLinks = 0;
@@ -1931,6 +1937,7 @@ function compute(cfg, R, look, kits){
     const L = sideLen[s] - start;
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
     const pc = railPieces(L);
+    if(safe && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto di sicurezza non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
     const n = pc.n2+pc.n1+pc.n05;
     runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
     rails += n; railLinks += n-1;
@@ -1943,7 +1950,7 @@ function compute(cfg, R, look, kits){
   M.rail = rails; M.rail_link = railLinks;
   M.rail_corner = round ? 0 : [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
   if(round && Object.values(cfg.rails).some(Boolean)) warn('warn','Palco rotondo: non ci sono parapetti curvi, i parapetti non sono in offerta.');
-  if(rails) out.notes.push('Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
+  if(rails) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
 
   // --- regole accessori
   let legRules = 0; const trigUsed = new Set();
@@ -1962,6 +1969,8 @@ function compute(cfg, R, look, kits){
     if(code==='@LEG'){ if(!leg) continue; code = leg.code; legRules++; group = 'Gambe'; }
     else if(/^@RR[124]$/.test(code)){ if(!rrOK) continue; code = `RR${H}-${code.slice(3)}`; group = 'Gambe'; }
     if(!code) continue;
+    // con il parapetto di sicurezza i connettori sono quelli della serie VHX
+    if(safe && (r.trigger==='rail_link' || r.trigger==='rail_corner')) code = {VHC:'VHXC', VHCC:'VHXCC'}[ncode(code)] || code;
     if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
     const n = r.trigger==='joint_m' ? joints.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
     if(n>0){ out.lines.push({group: group || (TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n}); trigUsed.add(r.trigger+'|'+r.when); }
@@ -2097,6 +2106,11 @@ const ITEMS = CATALOG.items;
 // Parapetti da 0,5 m: non sono nel listino Everdeck, li aggiungo senza prezzo, peso e imballo (prezzo da prezzi.json se c'è).
 for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VHK0.5', name:'0,5m handrail with kickboard (fuori listino)'}])
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
+// Parapetti di sicurezza 1 kN/m (100 kg/m): non sono nel listino Everdeck; prezzi in prezzi_extra.json, pesi e imballi dalla mail
+const VHX_NOTE = 'Non nel listino: prezzo, peso e imballo dalla mail Everdeck (D. Pielot, prezzi del 13/05/2024 confermati il 18/05/2026). Statica per 100 kg/m.';
+for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', kg:22, pack:[1000,1280,100]},
+                 {code:'VHXC', name:'Safety handrail connection', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', kg:0.25, pack:[73,72,43]}])
+  if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', fattura:VHX_NOTE});
 // pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
 for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
@@ -2222,7 +2236,7 @@ const DEFAULT_CFG = {
   cliente:'', cli:null, progetto:'', numero:'', data:today(),
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
-  rails:{back:true, left:true, right:true, front:false}, kick:false,
+  rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{},
   markup:37, discount:0, vat:22, pdfCost:false, descShow:false, descPdf:false, lingua:'it'
 };
@@ -2459,7 +2473,7 @@ async function cliImport(f){
 function applyPreset(v){
   const [W,D] = v.split('x').map(Number); if(!W || !D) return;
   const b = blankCfg();
-  for(const k of ['rails','stairs','ramps','extras','adj','mkRow','skirt','trolley','kick']) cfg[k] = clone(b[k]);
+  for(const k of ['rails','stairs','ramps','extras','adj','mkRow','skirt','trolley','kick','safety']) cfg[k] = clone(b[k]);
   Object.assign(cfg, {shape:'rect', W, D, support:'legs', tele:true, H:60});
   stairSel = 0; fillForm(); update(); archMsg(`Palco standard ${W} × ${D} m, gambe 40–60 cm`);
 }
@@ -2478,7 +2492,7 @@ function fillForm(){
   renderShape();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
-  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
+  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
   $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
@@ -3235,6 +3249,9 @@ function bind(){
   $$('#shapeSeg button').forEach(b => b.addEventListener('click', () => { cfg.shape = b.dataset.shape; renderShape(); update(); }));
   $('#cfgForm').addEventListener('input', e => {
     const t = e.target;
+    // battipiede e parapetto di sicurezza non vanno insieme (il VHX non ha battipiede)
+    if(t.id==='safety' && t.checked){ cfg.kick = false; $('#kick').checked = false; }
+    if(t.id==='kick' && t.checked){ cfg.safety = false; $('#safety').checked = false; }
     if(t.id==='cliente' && cliName(cfg.cli)!==t.value){
       const c = cliLoad().find(x => cliName(x).toLowerCase()===t.value.trim().toLowerCase());
       cfg.cli = c ? clone(c) : null; cliHint();
