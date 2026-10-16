@@ -272,8 +272,13 @@ function create(canvas){
         pos += Lm;
       }
     }
-    if(r2.length) addBatch(plain('rail2'), r2);
-    if(r1.length) addBatch(plain('rail1'), r1);
+    if(cfg.safety){   // parapetto di sicurezza VHX: modello disegnato qui (non c'è un modello 3D del produttore)
+      if(r2.length) addBatch(vhxMats(2000), r2);
+      if(r1.length) addBatch(vhxMats(1000), r1);
+    } else {
+      if(r2.length) addBatch(plain('rail2'), r2);
+      if(r1.length) addBatch(plain('rail1'), r1);
+    }
     if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
     // --- scale
@@ -323,24 +328,52 @@ function create(canvas){
     }
     if(sRail.length) addBatch(plain('stairrail'), sRail);
 
-    // --- rampe: cuneo semplice dal pavimento al piano del palco
-    const ramps = [], rl = (plan.rampLen||2)*1000, top = ty + 90;
-    const rbySide = {back:0,front:0,left:0,right:0};
+    // --- rampe (disegni Everdeck dei kit): pedane in salita larghe 1 m, telaio in alluminio, lamiera mandorlata
+    // a terra (ER-SE) e sul palco (ER-EE), piedini tondi (20 e 40 cm) o gambe telescopiche tonde con traverso
+    // sotto i giunti e in cima; pedane dalla più lunga (a terra) alla più corta (verso il palco)
+    const top = ty + 90, rbySide = {back:0,front:0,left:0,right:0};
     (cfg.ramps||[]).forEach(r => { if(rbySide[r.side]!==undefined) rbySide[r.side]++; });
+    const decksR = (plan.rampDecks && plan.rampDecks.length ? plan.rampDecks : [plan.rampLen||2]).map(x => x*1000);
+    const rl = decksR.reduce((a,b) => a+b, 0), g0 = 25;                 // g0: quota del piano sopra l'elemento di partenza
+    const yAt = z => top - (top-g0)*z/rl;                                // z: distanza dal bordo del palco, verso fuori
+    const mk = () => ({P:[], I:[]});
+    const RB = mk(), RA = mk(), RG = mk();                               // piano nero, alluminio, lamiera
+    const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
     for(const side of Object.keys(rbySide)){
       for(let j=0;j<rbySide[side];j++){
         const o = OUT[side], horiz = side==='back'||side==='front';
         const along = ((plan.stairs[side]||0)*opening + (j+0.5)*(plan.rampOpening||1)*1000);
-        const base = sideStart[side], w2 = (plan.rampOpening||1)*500 - 20;
+        const base = sideStart[side], w2 = Math.min(500, (plan.rampOpening||1)*500) - 10;
         const cx = base[0] + (horiz ? along : 0), cz = base[1] + (horiz ? 0 : along);
         const px = horiz ? [1,0,0] : [0,0,1];
-        const P0 = [[-w2,0,0],[w2,0,0],[w2,top,0],[-w2,top,0],[-w2,0,rl],[w2,0,rl]]; // x lungo il fronte, z in uscita, y su
-        const pts = P0.map(([x,y,z]) => [cx + px[0]*x + o[0]*z, y, cz + px[2]*x + o[2]*z]);
-        const pos = pts.flat();
-        ramps.push(rawMat(pos,[0,1,2, 0,2,3, 0,4,5, 0,5,1, 3,2,5, 3,5,4, 1,5,2, 0,3,4],[0.30,0.31,0.33],0.1));
+        const W = ([x,y,z]) => [cx + px[0]*x + o[0]*z, y, cz + px[2]*x + o[2]*z];
+        // prisma inclinato: x0..x1 di traverso, z0..z1 in uscita, piano superiore da yt0 a yt1, spessore t
+        const sbox = (m, x0, x1, z0, z1, yt0, yt1, t) => push(m, [[x0,yt0-t,z0],[x1,yt0-t,z0],[x1,yt0,z0],[x0,yt0,z0],[x0,yt1-t,z1],[x1,yt1-t,z1],[x1,yt1,z1],[x0,yt1,z1]].map(W).flat(), BOX_IDX);
+        const tube = (m, a, b, r) => push(m, ...cyl(W(a), W(b), r, 12));
+        let z = 0;
+        for(let k=decksR.length-1;k>=0;k--){                          // dal palco verso terra
+          const z0 = z, z1 = z + decksR[k];
+          sbox(RB, -w2+40, w2-40, z0+4, z1-4, yAt(z0+4), yAt(z1-4), 12);           // piano Hexa
+          sbox(RA, -w2, -w2+40, z0, z1, yAt(z0), yAt(z1), 90);                       // telaio laterale
+          sbox(RA, w2-40, w2, z0, z1, yAt(z0), yAt(z1), 90);
+          z = z1;
+        }
+        sbox(RG, -w2, w2, -190, 10, top+6, top+6, 6);                                // ER-EE sul palco
+        push(RG, [[-w2,g0,rl],[w2,g0,rl],[w2,0,rl+300],[-w2,0,rl+300],[-w2,0,rl],[w2,0,rl]].map(W).flat(),
+             [0,1,2, 0,2,3, 4,1,0, 4,5,1, 4,0,3, 5,2,1]);                            // ER-SE: cuneo a terra
+        // appoggi: in cima e sotto ogni giunto tra le pedane
+        const legZ = [80]; let acc = 0;
+        for(let k=decksR.length-1;k>0;k--){ acc += decksR[k]; legZ.push(acc); }
+        for(const lz of legZ){
+          const yb = yAt(lz) - 90;
+          for(const lx of [-w2+70, w2-70]) tube(RA, [lx,0,lz], [lx,Math.max(20,yb),lz], plan.rampFeet ? 30 : 24);
+          if(!plan.rampFeet && yb > 250) tube(RA, [-w2+70,yb*0.45,lz], [w2-70,yb*0.45,lz], 14);   // traverso tra le gambe
+        }
       }
     }
-    for(const m of ramps) addBatch([m],[IDT]);
+    if(RB.P.length) addBatch([rawMat(RB.P, RB.I, [0.06,0.06,0.07], 0.15)], [IDT]);
+    if(RA.P.length) addBatch([rawMat(RA.P, RA.I, [0.80,0.82,0.86], 0.5)], [IDT]);
+    if(RG.P.length) addBatch([rawMat(RG.P, RG.I, [0.56,0.57,0.59], 0.35)], [IDT]);
 
     // --- mascheratura (teli): lisci o plissettati
     const skCol = cfg.skirt && /^VSP/.test(cfg.skirt.fabric||'') ? [0.035,0.035,0.04] : [0.075,0.075,0.085];
@@ -363,9 +396,11 @@ function create(canvas){
     }
 
     // --- inquadratura
-    cam.target = [Wmm/2, (ty+90)/2, Dmm/2];
-    stageR = Math.hypot(Wmm, Dmm)/2 + 600;
+    // anche le rampe devono stare nell'inquadratura (l'ombra a terra resta quella del palco)
+    const ext = s => rbySide[s] ? rl + 300 : 0, fr = [-ext('left'), -ext('back'), Wmm + ext('right'), Dmm + ext('front')];
     rect = [0,0,Wmm,Dmm]; roundR = plan.round ? Wmm/2 : 0;
+    cam.target = [(fr[0]+fr[2])/2, (ty+90)/2, (fr[1]+fr[3])/2];
+    stageR = Math.hypot(fr[2]-fr[0], fr[3]-fr[1])/2 + 600;
     cam.fit = Math.max(stageR*2.1, 3500);
     if(!cam.userMoved) cam.dist = cam.fit;
     buildGround();
@@ -585,6 +620,20 @@ function create(canvas){
     cam.target = [(mn[0]+mx[0])/2, (mn[1]+mx[1])/2, (mn[2]+mx[2])/2];
     cam.az = spec.az!=null ? spec.az : 0.62; cam.el = spec.el!=null ? spec.el : 0.42; cam.dist = cam.fit = r/Math.tan(0.31)*1.08; cam.userMoved = true;
     bg = [1,1,1]; dirty = true; draw();
+  }
+  // parapetto di sicurezza VHX (dalle immagini Everdeck/GlobalTruss): corrimano tondo in alto, due montanti quadri,
+  // traverso basso e montanti tondi ogni ~11 cm, tubo quadro di base sotto il bordo; alto 115 cm sul piano; misure in mm
+  function vhxMats(L){
+    const z0 = -40, z1 = L - 60, x = -22, P = [], I = [];
+    const add = g => { const o = P.length/3; P.push(...g[0]); I.push(...g[1].map(i => i+o)); };
+    add(cyl([x,1060,z0],[x,1060,z1], 24));
+    add([box([x-12,140,z0+20],[x+12,165,z1-20]), BOX_IDX]);
+    add([box([x-20,-70,z0+60],[x+20,-30,z1-60]), BOX_IDX]);
+    const posts = [z0+0.09*(z1-z0), z1-0.09*(z1-z0)];
+    for(const zp of posts) add([box([x-25,-90,zp-25],[x+25,1040,zp+25]), BOX_IDX]);
+    const n = Math.round((z1-z0)/115);
+    for(let k=1;k<n;k++){ const zb = z0 + k*(z1-z0)/n; if(posts.some(zp => Math.abs(zb-zp) < 45)) continue; add(cyl([x,160,zb],[x,1040,zb], 8, 8)); }
+    return [rawMat(P, I, [0.09,0.09,0.10], 0.35)];
   }
   const box = (a,b) => [a[0],a[1],a[2], b[0],a[1],a[2], b[0],b[1],a[2], a[0],b[1],a[2], a[0],a[1],b[2], b[0],a[1],b[2], b[0],b[1],b[2], a[0],b[1],b[2]];
   // prisma da un poligono convesso in pianta [[x,z],...] tra le quote y0 e y1

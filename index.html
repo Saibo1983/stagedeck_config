@@ -1904,7 +1904,7 @@ function compute(cfg, R, look, kits){
   M.stair_adjustable_rail = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=1).length : 0;
   M.stair_adjustable_rail2 = stair && stair.kind==='adjustable' && stair.rails ? sr.filter(x => x>=2).length : 0;
   if(stair) for(const pt of stair.parts) out.lines.push({group:'Scale', code:pt.code, qty:pt.qty*nStairs});
-  let kit = null, rampLen = 0;
+  let kit = null, rampLen = 0, rampDecks = [], rampFeet = false;
   if(nRamps){
     kit = (kits||[]).find(k => H>=k.lo && H<=k.hi) || null;
     if(!kit) warn('bad',`Nessuna rampa nel listino per ${H} cm (disponibili: ${(kits||[]).map(k => k.lo===k.hi ? k.lo : k.lo+'–'+k.hi).join(', ')||'nessuna'} cm).`);
@@ -1912,8 +1912,11 @@ function compute(cfg, R, look, kits){
       for(const pt of kit.parts){
         out.lines.push({group:'Rampe', code:pt.code, qty:pt.qty*nRamps});
         const m = /^VS750H-(\d+(?:,\d+)?)[x×]/i.exec(pt.code);
-        if(m) rampLen += parseFloat(m[1].replace(',','.'))*pt.qty;
+        if(m){ const L = parseFloat(m[1].replace(',','.')); rampLen += L*pt.qty; for(let q=0;q<pt.qty;q++) rampDecks.push(L); }
+        if(/^VRA-/i.test(pt.code)) rampFeet = true;
       }
+      // per la vista 3D: pedane dalla più lunga (a terra) alla più corta (verso il palco), come nei disegni del kit
+      rampDecks.sort((a,b) => b-a);
     }
   }
   const opening = Math.max(0.5, +R.params.stairOpening || 1), rampOpening = Math.max(0.5, +R.params.rampOpening || 1);
@@ -2085,7 +2088,7 @@ function compute(cfg, R, look, kits){
   out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     vd2d: lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
     round: round ? {D:Dm, pieces:rp} : null,
-    skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, stairOk:!!stair,
+    skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
   out.info.famLabel = fam.label;
@@ -2108,8 +2111,8 @@ for(const it of [{code:'VH0.5', name:'0,5m handrail (fuori listino)'}, {code:'VH
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', kg:null, pack:null});
 // Parapetti di sicurezza 1 kN/m (100 kg/m): non sono nel listino Everdeck; prezzi in prezzi_extra.json, pesi e imballi dalla mail
 const VHX_NOTE = 'Non nel listino: prezzo, peso e imballo dalla mail Everdeck (D. Pielot, prezzi del 13/05/2024 confermati il 18/05/2026). Statica per 100 kg/m.';
-for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', kg:22, pack:[1000,1280,100]},
-                 {code:'VHXC', name:'Safety handrail connection', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', kg:0.25, pack:[73,72,43]}])
+for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', img:'VHX2.0.jpg', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', img:'VHX1.0.jpg', kg:22, pack:[1000,1280,100]},
+                 {code:'VHXC', name:'Safety handrail connection', img:'VHXC.jpg', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', img:'VHXCC.jpg', kg:0.25, pack:[73,72,43]}])
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', fattura:VHX_NOTE});
 // pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
 for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);

@@ -28,6 +28,8 @@ ALIAS = {
     "VLC0-48MM": ["VLCO-48MM"],  # nel file c'e' lo zero al posto della O
     "ROLLRISER": ["RR30-1", "RR30-2", "RR30-4", "RR40-1", "RR40-2", "RR40-4"],
 }
+# Articoli aggiunti dall'app (non nel listino Excel): l'immagine si salva in img/ e index.html la indica nel campo «img»
+AGGIUNTI_APP = {"VH0.5", "VHK0.5", "VHX2.0", "VHX1.0", "VHXC", "VHXCC"}
 EST = re.compile(r"\.(jpe?g|png|webp)$", re.I)
 # Articoli senza foto quasi uguali a un altro che ce l'ha: codice senza foto -> codice di cui usare la foto
 SIMILI = {
@@ -65,6 +67,7 @@ def main():
     cat = json.loads(m.group(2).replace("<\\/", "</"))
     chiavi = {i.get("foto") for i in cat["items"]} | {norm(i["code"]) for i in cat["items"]}
     chiavi.discard(None)
+    chiavi |= AGGIUNTI_APP
     IMG_DIR.mkdir(exist_ok=True)
     salvate, scartate = 0, []
     for name, data in sorgenti(sys.argv[1]):
