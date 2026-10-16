@@ -39,6 +39,17 @@
   --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
 }
+/* «Sfondo grigio» (pillola in alto): pagina dello stesso grigio del logo; i riquadri restano come sono.
+   Prima del blocco di stampa, che rimette lo sfondo bianco nei PDF. */
+:root[data-bg="grigio"]{--bg:#5E5E5E}
+:root[data-bg="grigio"] .top{border-bottom-color:#7A7A7A}
+:root[data-bg="grigio"] .brand .sub,:root[data-bg="grigio"] .tab,:root[data-bg="grigio"] footer{color:#E6E6E6}
+:root[data-bg="grigio"] .tab:hover{color:#FFFFFF}
+:root[data-bg="grigio"] .tab[aria-selected="true"]{color:var(--accent-ink)}
+:root[data-bg="grigio"] footer{border-top-color:#7A7A7A}
+:root[data-bg="grigio"] .wresize::before{background:#8A8A8A}
+:root[data-bg="grigio"] .logo{border-radius:0}
+.topright{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);padding-inline:16px;padding-block:0 32px}
@@ -335,11 +346,14 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <h1><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo" width="317" height="103"></h1>
     <span class="sub">Offerte per palchi modulari · <span id="listinoName"></span></span>
   </div>
+  <div class="topright">
+  <button type="button" class="tgl" id="bgGrey" aria-pressed="false" title="Sfondo della pagina dello stesso grigio del logo">Sfondo grigio</button>
   <nav class="tabs" role="tablist" aria-label="Sezioni">
     <button class="tab" role="tab" id="t-offerta" aria-selected="true" data-tab="offerta">Offerta</button>
     <button class="tab" role="tab" id="t-regole" aria-selected="false" data-tab="regole">Regole</button>
     <button class="tab" role="tab" id="t-listino" aria-selected="false" data-tab="listino">Listino</button>
   </nav>
+  </div>
 </header>
 
 <main>
@@ -2749,6 +2763,15 @@ function bind(){
   };
   $$('.layseg button').forEach(b => b.addEventListener('click', () => setLayout(b.dataset.layout)));
   try{ if(localStorage.getItem(LKEY)==='top') setLayout('top'); }catch(e){}
+  // sfondo grigio come il logo: scelta salvata nel browser
+  const BKEY = 'stagedeck.sfondo';
+  const setBg = on => {
+    if(on) document.documentElement.dataset.bg = 'grigio'; else delete document.documentElement.dataset.bg;
+    $('#bgGrey').setAttribute('aria-pressed', on ? 'true' : 'false');
+    try{ localStorage.setItem(BKEY, on ? 'grigio' : ''); }catch(e){}
+  };
+  $('#bgGrey').addEventListener('click', () => setBg(!document.documentElement.dataset.bg));
+  try{ if(localStorage.getItem(BKEY)==='grigio') setBg(true); }catch(e){}
   $('#shipPanel').addEventListener('click', e => {
     if(!e.target.closest('#trOpen')) return;
     trFill(); $('#trDlg').showModal();
