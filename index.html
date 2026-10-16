@@ -2085,7 +2085,8 @@ function compute(cfg, R, look, kits){
   const shTxt = shipSummary(out.ship);
   if(shTxt) out.notes.push(shTxt);
   const onLegs = support==='legs' && !!leg;
-  out.plan = {W, D, decks, legs:onLegs, conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
+  // pianta: con struttura a gambe sempre 4 gambe per pedana (anche se per quell'altezza manca la gamba: c'è l'avviso)
+  out.plan = {W, D, decks, legs:support==='legs', conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     vd2d: lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
     round: round ? {D:Dm, pieces:rp} : null,
     skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
