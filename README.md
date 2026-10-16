@@ -149,3 +149,10 @@ Due scelte indipendenti:
 - I nomi degli articoli restano quelli del listino Everdeck (in inglese); le descrizioni sono nella lingua scelta. L'ordine al fornitore resta in inglese.
 - Come funziona: il motore dell'app scrive in italiano e i testi passano dal dizionario tedesco (blocco `<script id="i18n">` in `index.html`). Le voci con `{}` sono modelli con una parte variabile (misure, codici, nomi). Il dizionario si modifica in `tools/traduzioni_de.py` e si riscrive con `python3 tools/traduzioni_de.py`, poi cambia `VERSION` in `sw.js`.
 - Un testo nuovo senza voce nel dizionario resta in italiano anche con il tedesco: nella console del browser `TR_MISS` elenca i testi che non hanno trovato traduzione.
+
+## Parapetti di sicurezza 1 kN/m (VHX)
+Nel riquadro Parapetti, «Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)» mette in offerta i parapetti a barriera Everdeck al posto di quelli standard: VHX2.0 (2 m) e VHX1.0 (1 m), con i loro connettori VHXC (dritto) e VHXCC (d'angolo) al posto di VHC e VHCC, nelle stesse quantità delle regole. Non si combina con il battipiede.
+- Statica per 100 kg/m: anticaduta e antiscavalcamento, non antisfondamento (la nota tecnica dell'offerta lo dice).
+- Non esiste l'elemento da 0,5 m: se su un lato avanza mezzo metro, un avviso lo segnala e quel tratto va chiuso a parte.
+- Non sono nel listino Everdeck: gli articoli sono aggiunti nell'app (come VH0.5) con peso e imballo dalla mail di D. Pielot (VHX2.0 36 kg, 2000×1280×100 mm; VHX1.0 22 kg, 1000×1280×100; VHXC 0,2 kg, 70×38×38; VHXCC 0,25 kg, 73×72×43) e sono segnalati «fuori listino · controlla». I prezzi (165, 95, 5, 6 €) stanno in `prezzi_extra.json`, fuori da git.
+- Nella vista 3D sono mostrati con il modello del parapetto standard.
