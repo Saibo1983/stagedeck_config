@@ -185,7 +185,24 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .shipside ul{margin:0;padding-left:16px;font-size:12.5px}
 @media (max-width:760px){.shiprow{grid-template-columns:minmax(0,1fr)}}
 #trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
-#trDlg::backdrop,#imgDlg::backdrop{background:rgba(10,20,30,.45)}
+#cliDlg{width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
+.cligrid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
+.clilist{display:flex;flex-direction:column;gap:8px;min-width:0}
+.clilist ul{list-style:none;margin:0;padding:4px;border:1px solid var(--line);border-radius:8px;max-height:min(460px,50vh);overflow:auto;min-height:120px}
+.clilist li button{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font:inherit;color:inherit}
+.clilist li button:hover,.clilist li button[aria-selected="true"]{background:var(--accent-soft)}
+.clilist li button span{font-size:12px;color:var(--muted)}
+.clilist li.bl button b::after{content:" · black list";font-weight:600;font-size:11px;color:var(--bad)}
+.clilist .xnone{color:var(--muted);padding:6px 8px;font-size:13px}
+.cliedit{display:flex;flex-direction:column;gap:12px;min-width:0}
+.clicols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.fisrow{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:8px;align-items:end}
+.fisok{font-size:12px;padding-bottom:8px;color:var(--muted)}
+.fisok.ok{color:var(--ok)} .fisok.ko{color:var(--bad)}
+.clirow{display:flex;gap:8px;align-items:center}
+.clirow input{flex:1 1 160px;min-width:0}
+@media (max-width:820px){.cligrid,.clicols{grid-template-columns:minmax(0,1fr)}.fisrow{grid-template-columns:minmax(0,1fr) auto}.fisrow .fisok{grid-column:1/-1;padding:0}}
+#trDlg::backdrop,#imgDlg::backdrop,#cliDlg::backdrop{background:rgba(10,20,30,.45)}
 /* illustrazioni degli articoli */
 .thumb{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:2px;margin:-4px 8px -4px 0;vertical-align:middle;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:zoom-in;flex:none}
 .thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
@@ -272,7 +289,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
-  @page{margin:12mm}
+  /* riquadri del margine definiti: Chrome ed Edge non stampano più le loro intestazioni e piè di pagina (indirizzo della pagina, data, titolo) */
+  @page{margin:12mm 12mm 14mm;
+    @top-left{content:""} @top-center{content:""} @top-right{content:""} @bottom-left{content:""} @bottom-center{content:""}
+    @bottom-right{content:"Pagina " counter(page) " di " counter(pages);font-family:sans-serif;font-size:8pt;color:#566774}}
+  .ph-cli{margin-top:6px;font-size:12px;line-height:1.4}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .top,.config,.actions,.bar,.planbar,.shipside,.wresize,.tabs,footer,.toprow,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
@@ -330,7 +351,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
       <div class="archrow"><button type="button" class="btn small" id="archSave" title="Salva l'offerta corrente nell'archivio: il titolo sono le misure con un numero progressivo">Salva offerta</button><button type="button" class="btn small" id="archDel">Elimina</button><button type="button" class="btn small" id="archExp" title="Scarica tutte le offerte salvate in un file .json">Esporta archivio</button><label class="btn small" for="archFile" style="cursor:pointer" title="Aggiunge all'archivio le offerte di un file esportato">Importa archivio</label><input type="file" id="archFile" accept=".json,application/json" hidden><span class="hint" id="archMsg" role="status" aria-live="polite"></span></div>
       <p class="hint" id="presetHint">Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.</p>
-      <label class="field"><span>Cliente</span><input type="text" id="cliente" autocomplete="off"></label>
+      <div class="field"><span id="cliLbl">Cliente</span>
+        <div class="clirow"><input type="text" id="cliente" autocomplete="off" list="cliNames" aria-labelledby="cliLbl"><button type="button" class="btn small" id="cliBtn" title="Anagrafica clienti: cerca, aggiungi, modifica, elimina e scegli il cliente dell'offerta">Anagrafica</button></div>
+        <p class="hint" id="cliHint" style="margin:0"></p>
+      </div>
+      <datalist id="cliNames"></datalist>
       <div class="row">
         <label class="field"><span>Progetto / evento</span><input type="text" id="progetto" autocomplete="off"></label>
         <label class="field"><span>Offerta n.</span><input type="text" id="numero" autocomplete="off"></label>
@@ -538,6 +563,56 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <div class="trhead"><h2 id="imgTitle"></h2><button type="submit" class="btn small" aria-label="Chiudi">✕</button></div>
         <img id="imgBig" alt="">
         <p class="hint" id="imgName"></p>
+      </form>
+    </dialog>
+    <dialog id="cliDlg" aria-labelledby="cliTitle">
+      <form method="dialog" class="trform" id="cliForm">
+        <div class="trhead"><h2 id="cliTitle">Anagrafica clienti</h2><button type="submit" class="btn small" aria-label="Chiudi">✕</button></div>
+        <div class="cligrid">
+          <div class="clilist">
+            <input type="search" id="cliQ" placeholder="Cerca: nome, città, P.IVA, email…" aria-label="Cerca cliente" autocomplete="off">
+            <ul id="cliList" role="listbox" aria-label="Clienti"></ul>
+            <div class="archrow"><button type="button" class="btn small" id="cliNew">Nuovo cliente</button><button type="button" class="btn small" id="cliExp" title="Scarica l'anagrafica in un file .json">Esporta</button><label class="btn small" for="cliFile" style="cursor:pointer" title="Aggiunge i clienti di un file esportato">Importa</label><input type="file" id="cliFile" accept=".json,application/json" hidden></div>
+            <p class="hint" style="margin:0">L'anagrafica resta in questo browser: per usarla su un altro dispositivo esportala e importala là.</p>
+          </div>
+          <div class="cliedit">
+            <div class="clicols">
+              <fieldset class="trset"><legend>Nome e indirizzo</legend>
+                <label class="field"><span>Nome1 (Cognome / Ragione sociale) *</span><input type="text" data-cf="nome1" autocomplete="off"></label>
+                <label class="field"><span>Nome2 (Nome)</span><input type="text" data-cf="nome2" autocomplete="off"></label>
+                <div class="row"><label class="field"><span>Nome di ricerca</span><input type="text" data-cf="ricerca" autocomplete="off"></label><label class="field"><span>Titolo</span><input type="text" data-cf="titolo" autocomplete="off"></label></div>
+                <label class="field"><span>Via (1)</span><input type="text" data-cf="via1" autocomplete="off"></label>
+                <label class="field"><span>Via (2)</span><input type="text" data-cf="via2" autocomplete="off"></label>
+                <div class="row3"><label class="field"><span>CAP</span><input type="text" data-cf="cap" autocomplete="off" inputmode="numeric"></label><label class="field"><span>Prov.</span><input type="text" data-cf="prov" autocomplete="off" maxlength="4"></label><label class="field"><span>Paese (sigla)</span><input type="text" data-cf="paese" autocomplete="off" maxlength="3" placeholder="IT"></label></div>
+                <label class="field"><span>Luogo / Comune</span><input type="text" data-cf="luogo" autocomplete="off"></label>
+                <label class="field"><span>Regione (Stato federale)</span><input type="text" data-cf="regione" autocomplete="off"></label>
+                <label class="check"><input type="checkbox" data-cf="blacklist"> Su elenco «Black list»</label>
+                <label class="field"><span>Regolamento fiscale speciale</span><select data-cf="fiscale" id="cliFiscale"></select></label>
+              </fieldset>
+              <fieldset class="trset"><legend>Contatti</legend>
+                <div class="row"><label class="field"><span>Telefono1</span><input type="text" data-cf="tel1" autocomplete="off" inputmode="tel"></label><label class="field"><span>Telefono2</span><input type="text" data-cf="tel2" autocomplete="off" inputmode="tel"></label></div>
+                <div class="row"><label class="field"><span>Telefono privato</span><input type="text" data-cf="telPriv" autocomplete="off" inputmode="tel"></label><label class="field"><span>Fax</span><input type="text" data-cf="fax" autocomplete="off" inputmode="tel"></label></div>
+                <label class="field"><span>Cellulare</span><input type="text" data-cf="cell" autocomplete="off" inputmode="tel"></label>
+                <label class="field"><span>e-Mail</span><input type="text" data-cf="email" autocomplete="off" inputmode="email"></label>
+                <label class="field"><span>PEC</span><input type="text" data-cf="pec" autocomplete="off" inputmode="email"></label>
+                <label class="field"><span>Internet</span><input type="text" data-cf="web" autocomplete="off"></label>
+                <label class="field"><span>Note</span><textarea data-cf="note" rows="4"></textarea></label>
+              </fieldset>
+            </div>
+            <fieldset class="trset"><legend>Dati fiscali</legend>
+              <div class="fisrow"><label class="field"><span>Partita IVA comunitaria</span><input type="text" data-cf="pivaUE" autocomplete="off" placeholder="IT12345678901"></label><span class="fisok" data-chk="pivaUE"></span><button type="button" class="btn small" data-verify="pivaUE" title="Copia il numero e apre il servizio VIES della Commissione europea">Verifica online</button></div>
+              <div class="fisrow"><label class="field"><span>Partita IVA</span><input type="text" data-cf="piva" autocomplete="off" inputmode="numeric"></label><span class="fisok" data-chk="piva"></span><button type="button" class="btn small" data-verify="piva" title="Copia il numero e apre la verifica dell'Agenzia delle Entrate">Verifica online</button></div>
+              <div class="fisrow"><label class="field"><span>Codice fiscale</span><input type="text" data-cf="cf" autocomplete="off"></label><span class="fisok" data-chk="cf"></span><button type="button" class="btn small" data-verify="cf" title="Copia il codice e apre la verifica dell'Agenzia delle Entrate">Verifica online</button></div>
+              <div class="fisrow"><label class="field"><span>Codice EORI</span><input type="text" data-cf="eori" autocomplete="off"></label><span class="fisok" data-chk="eori"></span><button type="button" class="btn small" data-verify="eori" title="Copia il codice e apre la verifica EORI della Commissione europea">Verifica online</button></div>
+            </fieldset>
+          </div>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button type="button" class="btn primary" id="cliUse">Usa nell'offerta</button>
+          <button type="button" class="btn" id="cliSave">Salva</button>
+          <button type="button" class="btn" id="cliDel">Elimina</button>
+          <span class="status" id="cliMsg" role="status" aria-live="polite"></span>
+        </div>
       </form>
     </dialog>
     <dialog id="trDlg" aria-labelledby="trTitle">
@@ -1431,7 +1506,7 @@ const KITS = CATALOG.rampKits || [];
 const today = () => new Date().toISOString().slice(0,10);
 
 const DEFAULT_CFG = {
-  cliente:'', progetto:'', numero:'', data:today(),
+  cliente:'', cli:null, progetto:'', numero:'', data:today(),
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false,
@@ -1540,6 +1615,134 @@ function archDel(){
   if(!confirm(`Eliminare dall'archivio «${e.base} · n. ${e.n}»?`)) return;
   archStore(a.filter(x => x !== e)); renderArchive(); archMsg('Offerta eliminata');
 }
+/* --- anagrafica clienti (in questo browser) ---
+   L'offerta tiene una copia del cliente scelto (cfg.cli): resta giusta anche se poi il cliente cambia o viene eliminato. */
+const CKEY = 'stagedeck.clienti';
+const FISCALE = {'':'----', split:'Split payment (pubblica amministrazione)', reverse:'Reverse charge (inversione contabile)',
+  intento:"Esente IVA con dichiarazione d'intento", intra:'Non imponibile: cessione intracomunitaria', export:'Non imponibile: esportazione'};
+const VERIFY = {pivaUE:'https://ec.europa.eu/taxation_customs/vies/#/vat-validation', piva:'https://telematici.agenziaentrate.gov.it/VerificaPIVA/Scegli.do?parameter=verificaPiva',
+  cf:'https://telematici.agenziaentrate.gov.it/VerificaCF/Scegli.do?parameter=verificaCf', eori:'https://ec.europa.eu/taxation_customs/dds2/eos/eori_validation.jsp'};
+function cliLoad(){ try{ const a = JSON.parse(localStorage.getItem(CKEY) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+function cliStore(a){ try{ localStorage.setItem(CKEY, JSON.stringify(a)); return true; }catch(e){ return false; } }
+const cliName = c => c ? [c.nome1, c.nome2].map(x => String(x||'').trim()).filter(Boolean).join(' ') : '';
+const cliPlace = c => [c.cap, c.luogo, c.prov ? `(${c.prov})` : ''].filter(Boolean).join(' ') + (c.paese && !/^it$/i.test(c.paese) ? ` – ${c.paese}` : '');
+const cliAddr = c => [[c.via1, c.via2].filter(Boolean).join(', '), cliPlace(c)].filter(Boolean);
+const cliTax = c => [c.piva ? 'P.IVA '+c.piva : c.pivaUE ? 'P.IVA '+c.pivaUE : '', c.cf && c.cf!==c.piva ? 'C.F. '+c.cf : ''].filter(Boolean).join(' · ');
+const cliFold = t => String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+// controlli formali (senza rete): partita IVA italiana con cifra di controllo, codice fiscale di persona (16) o di società (11)
+function pivaOk(v){
+  v = String(v).replace(/\s/g,''); if(!/^\d{11}$/.test(v)) return false;
+  let s = 0; for(let i=0;i<10;i++){ let d = +v[i]; if(i%2){ d *= 2; if(d>9) d -= 9; } s += d; }
+  return (10 - s%10)%10 === +v[10];
+}
+function cfOk(v){
+  v = String(v).replace(/\s/g,'').toUpperCase();
+  if(/^\d{11}$/.test(v)) return pivaOk(v);
+  if(!/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/.test(v)) return false;
+  const odd = [1,0,5,7,9,13,15,17,19,21,2,4,18,20,11,3,6,8,12,14,16,10,22,25,24,23];
+  let s = 0;
+  for(let i=0;i<15;i++){ const c = v[i], n = /\d/.test(c) ? +c : c.charCodeAt(0)-65; s += i%2 ? n : odd[n]; }
+  return String.fromCharCode(65 + s%26) === v[15];
+}
+function fisCheck(k, v){
+  v = String(v||'').replace(/\s/g,'').toUpperCase(); if(!v) return ['',''];
+  if(k==='piva') return pivaOk(v) ? ['ok','✓ formato valido'] : ['ko','✗ controlla'];
+  if(k==='cf') return cfOk(v) ? ['ok','✓ formato valido'] : ['ko','✗ controlla'];
+  if(k==='pivaUE'){ if(/^IT/.test(v)) return pivaOk(v.slice(2)) ? ['ok','✓ formato valido'] : ['ko','✗ controlla']; return /^[A-Z]{2}[0-9A-Z+*]{2,13}$/.test(v) ? ['','prefisso paese ok'] : ['ko','✗ serve il prefisso (es. IT, DE)']; }
+  if(k==='eori') return /^[A-Z]{2}[0-9A-Z]{1,15}$/.test(v) ? ['','formato ok'] : ['ko','✗ controlla'];
+  return ['',''];
+}
+let cliCur = null;
+function cliMsg(t){ const m = $('#cliMsg'); m.textContent = t; clearTimeout(cliMsg.t); cliMsg.t = setTimeout(() => m.textContent = '', 3000); }
+function cliNames(){ $('#cliNames').innerHTML = cliLoad().map(c => `<option value="${esc(cliName(c))}">${esc(cliPlace(c))}</option>`).join(''); }
+function cliRenderList(){
+  const words = cliFold($('#cliQ').value).split(/\s+/).filter(Boolean);
+  const a = cliLoad().filter(c => { const t = cliFold([c.nome1,c.nome2,c.ricerca,c.titolo,c.luogo,c.prov,c.piva,c.pivaUE,c.cf,c.email,c.pec,c.tel1,c.cell].join(' ')); return words.every(w => t.includes(w)); })
+    .sort((x,y) => (x.ricerca || cliName(x)).localeCompare(y.ricerca || cliName(y), 'it'));
+  $('#cliList').innerHTML = a.length ? a.map(c => `<li${c.blacklist ? ' class="bl"' : ''}><button type="button" role="option" data-cli="${esc(c.id)}" aria-selected="${c.id===cliCur}"><b>${esc(cliName(c) || '(senza nome)')}</b><span>${esc([cliPlace(c), c.piva ? 'P.IVA '+c.piva : ''].filter(Boolean).join(' · '))}</span></button></li>`).join('')
+    : `<li class="xnone">${cliLoad().length ? 'Nessun cliente trovato' : 'Anagrafica vuota: compila i dati e premi «Salva».'}</li>`;
+}
+function cliChecks(){ $$('#cliDlg [data-chk]').forEach(e => { const [cl, t] = fisCheck(e.dataset.chk, $(`#cliDlg [data-cf="${e.dataset.chk}"]`).value); e.className = 'fisok ' + cl; e.textContent = t; }); }
+function cliEdit(c){
+  cliCur = c && c.id || null;
+  $$('#cliDlg [data-cf]').forEach(e => { const v = c ? c[e.dataset.cf] : (e.dataset.cf==='paese' ? 'IT' : ''); if(e.type==='checkbox') e.checked = !!v; else e.value = v==null ? '' : v; });
+  $('#cliDel').disabled = !cliCur; cliChecks(); cliRenderList();
+}
+function cliRead(){
+  const c = {id: cliCur || 'c' + Date.now().toString(36)};
+  $$('#cliDlg [data-cf]').forEach(e => c[e.dataset.cf] = e.type==='checkbox' ? e.checked : e.value.trim());
+  for(const k of ['piva','cf','pivaUE','eori','prov','paese']) c[k] = c[k].replace(/\s/g,'').toUpperCase();
+  return c;
+}
+function cliSave(){
+  const c = cliRead();
+  if(!c.nome1){ cliMsg('Serve almeno Nome1 (cognome o ragione sociale).'); $('#cliDlg [data-cf="nome1"]').focus(); return null; }
+  const a = cliLoad(), i = a.findIndex(x => x.id===c.id);
+  c.mod = new Date().toISOString();
+  if(i>=0) a[i] = c; else a.push(c);
+  if(!cliStore(a)){ cliMsg('Salvataggio non riuscito: memoria del browser piena o bloccata.'); return null; }
+  cliCur = c.id; $('#cliDel').disabled = false; cliRenderList(); cliNames(); cliMsg('Cliente salvato');
+  // se è il cliente dell'offerta aggiorno la copia nell'offerta
+  if(cfg.cli && cfg.cli.id===c.id){ cfg.cli = clone(c); cfg.cliente = cliName(c); $('#cliente').value = cfg.cliente; update(); }
+  return c;
+}
+function cliDelete(){
+  const a = cliLoad(), c = a.find(x => x.id===cliCur); if(!c) return;
+  if(!confirm(`Eliminare dall'anagrafica «${cliName(c)}»? Le offerte già fatte tengono i suoi dati.`)) return;
+  cliStore(a.filter(x => x !== c)); cliNames(); cliEdit(null); cliMsg('Cliente eliminato');
+}
+function cliUse(){
+  const c = cliSave(); if(!c) return;
+  cfg.cli = clone(c); cfg.cliente = cliName(c); $('#cliente').value = cfg.cliente; update(); $('#cliDlg').close();
+}
+function cliOpen(){
+  $('#cliQ').value = '';
+  const c = cfg.cli && (cliLoad().find(x => x.id===cfg.cli.id) || cfg.cli);
+  cliEdit(c || null);
+  if(!c && cfg.cliente) $('#cliDlg [data-cf="nome1"]').value = cfg.cliente;
+  $('#cliDlg').showModal(); $('#cliQ').focus();
+}
+// sotto il campo cliente: indirizzo del cliente scelto dall'anagrafica
+function cliHint(){
+  const c = cfg.cli;
+  $('#cliHint').textContent = c ? ['Da anagrafica', cliAddr(c).join(', '), cliTax(c)].filter(Boolean).join(' · ') : '';
+}
+// avvisi a schermo (non escono nel PDF): black list e regime fiscale speciale del cliente dell'offerta
+function cliWarnings(){
+  const c = cfg.cli && (cliLoad().find(x => x.id===cfg.cli.id) || cfg.cli); if(!c) return [];
+  const w = [];
+  if(c.blacklist) w.push({level:'bad', text:`Cliente «${cliName(c)}» su elenco Black list.`});
+  if(c.fiscale) w.push({level:'warn', text:`Regolamento fiscale speciale del cliente: ${FISCALE[c.fiscale] || c.fiscale}. Controlla l'IVA (ora ${dec(+cfg.vat||0,0)}%).`});
+  return w;
+}
+async function cliExport(){
+  const a = cliLoad(); if(!a.length){ cliMsg('Anagrafica vuota: niente da esportare.'); return; }
+  const filename = `anagrafica-clienti-${today()}.json`;
+  const blob = new Blob([JSON.stringify({tipo:'stagedeck-clienti', v:1, esportato:new Date().toISOString(), clienti:a}, null, 1)], {type:'application/json'});
+  let dl = null;
+  try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+  if(dl){ await dl.save({filename, data:blob}); cliMsg(`Esportati ${a.length} clienti`); return; }
+  const l = document.createElement('a');
+  l.href = URL.createObjectURL(blob); l.download = filename;
+  document.body.appendChild(l); l.click(); l.remove();
+  setTimeout(() => URL.revokeObjectURL(l.href), 4000);
+  cliMsg(`Esportati ${a.length} clienti`);
+}
+async function cliImport(f){
+  try{
+    const j = JSON.parse(await f.text()), list = Array.isArray(j) ? j : j && j.clienti;
+    if(!Array.isArray(list)) throw new Error('formato');
+    const a = cliLoad(); let added = 0, upd = 0;
+    for(const c of list){
+      if(!c || typeof c!=='object' || !c.nome1) continue;
+      const i = c.id ? a.findIndex(x => x.id===c.id) : -1;
+      if(i>=0){ if((c.mod||'') > (a[i].mod||'')){ a[i] = c; upd++; } continue; }
+      a.push(Object.assign({}, c, {id: c.id || 'c' + Date.now().toString(36) + added})); added++;
+    }
+    if(!cliStore(a)){ cliMsg('Importazione non riuscita: memoria del browser piena o bloccata.'); return; }
+    cliNames(); cliRenderList(); cliMsg(`Importati ${added} clienti` + (upd ? `, ${upd} aggiornati` : '') + '.');
+  }catch(e){ cliMsg('File non valido: serve un\'anagrafica esportata da StageDeck (.json).'); }
+}
 // palco standard: misure, su gambe telescopiche 40–60 cm (VTL40, regolate a 60), senza parapetti, scale, rampe e altri
 // accessori; restano dati cliente, pedana e prezzi dell'offerta corrente
 function applyPreset(v){
@@ -1560,6 +1763,7 @@ function fillForm(){
   $('#support').value = cfg.support;
   renderFamilies();
   for(const id of ['cliente','progetto','numero','data','W','D','H','diam','family','markup','discount','vat','stairType']) $('#'+id).value = cfg[id];
+  cliHint();
   renderShape();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
@@ -2021,7 +2225,7 @@ function renderResult(){
     <div class="tile"><div class="k">Superficie</div><div class="v">${nf(t.area)} <small>m²</small></div></div>
     <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
   renderShip();
-  $('#notes').innerHTML = res.warnings.map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
+  $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   const title = `${stageName(p)} · altezza ${cfg.H} cm`;
@@ -2060,14 +2264,17 @@ function renderResult(){
     <div><span>IVA ${dec(+cfg.vat||0,0)}%</span><span class="num">${money(t.vat)} €</span></div>
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
-function update(){ save(); renderResult(); }
+function update(){ save(); renderResult(); cliHint(); }
 
 /* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
 function printPart(part){
   if(!res || !res.plan){ say('Niente da stampare'); return; }
   const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
-  const head = [cfg.numero ? 'Offerta n. '+cfg.numero : 'Offerta', cfg.cliente, cfg.progetto, d].filter(Boolean);
-  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`${stageName(res.plan)}, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>`;
+  const c = cfg.cli;
+  const head = [cfg.numero ? 'Offerta n. '+cfg.numero : 'Offerta', c && part==='offerta' ? '' : cfg.cliente, cfg.progetto, d].filter(Boolean);
+  // nell'offerta, con un cliente dell'anagrafica: nome, indirizzo e dati fiscali (niente telefoni, note e avvisi interni)
+  const cli = c && part==='offerta' ? `<div class="ph-cli">Spett.le<br><b>${esc(cfg.cliente || cliName(c))}</b>${[...cliAddr(c), cliTax(c)].filter(Boolean).map(t => '<br>'+esc(t)).join('')}</div>` : '';
+  $('#printHead').innerHTML = `<div class="ph-brand">StageDeck</div><div class="ph-title">${part==='offerta' ? 'Offerta' : 'Disegni'} · ${esc(`${stageName(res.plan)}, altezza ${cfg.H} cm`)}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
   document.title = [part==='offerta' ? 'Offerta' : 'Disegni', cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
@@ -2094,6 +2301,7 @@ function offerText(){
   const d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
   const out = [`OFFERTA PALCO MODULARE${cfg.numero ? ' n. '+cfg.numero : ''}`];
   if(cfg.cliente) out.push('Cliente: '+cfg.cliente);
+  if(cfg.cli) out.push(...[...cliAddr(cfg.cli), cliTax(cfg.cli)].filter(Boolean).map(t => '         '+t));
   if(cfg.progetto) out.push('Progetto: '+cfg.progetto);
   if(d) out.push('Data: '+d);
   out.push(`${stageName(p)}, altezza ${cfg.H} cm, ${res.info.famLabel}`, '');
@@ -2308,6 +2516,10 @@ function bind(){
   $$('#shapeSeg button').forEach(b => b.addEventListener('click', () => { cfg.shape = b.dataset.shape; renderShape(); update(); }));
   $('#cfgForm').addEventListener('input', e => {
     const t = e.target;
+    if(t.id==='cliente' && cliName(cfg.cli)!==t.value){
+      const c = cliLoad().find(x => cliName(x).toLowerCase()===t.value.trim().toLowerCase());
+      cfg.cli = c ? clone(c) : null; cliHint();
+    }
     if(t.id && t.id in cfg && !['stairs','extras','rails','nStairs'].includes(t.id)){
       cfg[t.id] = t.type==='checkbox' ? t.checked : (t.type==='number' ? (t.value===''?'':+t.value) : t.value);
       update();
@@ -2439,6 +2651,28 @@ function bind(){
   $('#archDel').addEventListener('click', archDel);
   $('#archExp').addEventListener('click', archExport);
   $('#archFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) archImport(f); e.target.value = ''; });
+  // anagrafica clienti
+  $('#cliFiscale').innerHTML = Object.entries(FISCALE).map(([k,v]) => `<option value="${k}">${esc(v)}</option>`).join('');
+  cliNames();
+  $('#cliBtn').addEventListener('click', cliOpen);
+  $('#cliQ').addEventListener('input', cliRenderList);
+  $('#cliList').addEventListener('click', e => { const b = e.target.closest('[data-cli]'); if(b) cliEdit(cliLoad().find(x => x.id===b.dataset.cli)); });
+  $('#cliList').addEventListener('dblclick', e => { if(e.target.closest('[data-cli]')) cliUse(); });
+  $('#cliNew').addEventListener('click', () => { cliEdit(null); $('#cliDlg [data-cf="nome1"]').focus(); });
+  $('#cliSave').addEventListener('click', cliSave);
+  $('#cliDel').addEventListener('click', cliDelete);
+  $('#cliUse').addEventListener('click', cliUse);
+  $('#cliExp').addEventListener('click', cliExport);
+  $('#cliFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) cliImport(f); e.target.value = ''; });
+  $('#cliForm').addEventListener('input', e => { if(e.target.dataset.cf) cliChecks(); });
+  // Invio in un campo non chiude la finestra
+  $('#cliForm').addEventListener('keydown', e => { if(e.key==='Enter' && e.target.matches('input')) e.preventDefault(); });
+  $$('[data-verify]').forEach(b => b.addEventListener('click', () => {
+    const v = $(`#cliDlg [data-cf="${b.dataset.verify}"]`).value.replace(/\s/g,'');
+    if(v) copy(v);
+    window.open(VERIFY[b.dataset.verify], '_blank', 'noopener');
+    cliMsg(v ? 'Numero copiato: incollalo nella pagina di verifica' : '');
+  }));
   $('#resetAll').addEventListener('click', () => {
     if(!confirm('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?')) return;
     cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
