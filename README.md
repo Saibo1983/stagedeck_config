@@ -136,3 +136,6 @@ Nei dati offerta, accanto al campo Cliente, il pulsante «Anagrafica» apre la f
 
 ## Stampa senza indirizzo della pagina
 Il PDF dell'offerta e dei disegni non riporta più l'indirizzo della pagina, la data e il titolo che il browser aggiunge in alto e in basso: al loro posto c'è solo «Pagina n di N» in basso a destra. Funziona con Chrome ed Edge; con Safari o Firefox, se compaiono ancora, togli la spunta a «Intestazioni e piè di pagina» nella finestra di stampa.
+
+## Logo
+In alto nell'app e nell'intestazione dei PDF (offerta e disegni) c'è il logo StageDeck (`img/logo-stagedeck.png`). Per cambiarlo basta sostituire il file con uno con lo stesso nome e cambiare `VERSION` in `sw.js`.
