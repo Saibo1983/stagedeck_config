@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#B3261E">
+<meta name="theme-color" content="#E3450D">
 <title>StageDeck</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -15,8 +15,8 @@
 /* Layout: sinistra pannello di configurazione, destra pianta e offerta; su telefono tutto in colonna.
    Palette: grigio-azzurro tecnico, blu petrolio come accento, arancio solo per i parapetti. */
 :root{
-  --bg:#EDC3C3; --brand:#A31F1A; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-  --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA;
+  --bg:#F2DFD5; --brand:#C73D0B; --surface:#FFFFFF; --surface-2:#E4E9ED; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+  --accent:#D2400C; --accent-ink:#FFFFFF; --accent-soft:#FBE0D3;
   --ok:#1C6B43; --warn:#80500A; --warn-bg:#FBEFD5; --bad:#A12A2A; --bad-bg:#F8DEDE; --info:#27506A; --info-bg:#E0ECF2; --inv:#1F5E99; --inv-bg:#DDEBF7;
   --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
   --f-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
@@ -25,16 +25,16 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-    --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
+    --bg:#2A1A13; --brand:#FF8A5C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+    --accent:#FF8A5C; --accent-ink:#3A1205; --accent-soft:#4A2818;
     --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
     --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#2E1416; --brand:#FF8A80; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
-  --accent:#FF8A80; --accent-ink:#3A0A08; --accent-soft:#4A1E1E;
+  --bg:#2A1A13; --brand:#FF8A5C; --surface:#16212A; --surface-2:#1E2D38; --ink:#E4ECF1; --muted:#94A6B3; --line:#2B3D4A;
+  --accent:#FF8A5C; --accent-ink:#3A1205; --accent-soft:#4A2818;
   --ok:#7BD3A0; --warn:#F2B35A; --warn-bg:#382B12; --bad:#FF9494; --bad-bg:#401C1C; --info:#9CCBE0; --info-bg:#183240; --inv:#9CC3EE; --inv-bg:#1A2E44;
   --deck:#3A4D5B; --deck-side-l:#2C3C48; --deck-side-r:#22313C; --pal-top:#8A6A44; --pal-l:#6E5233; --pal-r:#5A4228; --acc-top:#B08A45; --acc-l:#8C6C33; --acc-r:#735828; --deck-line:#5C7486; --rail:#F08A4B; --rail1:#C49AF0; --rail05:#F07AB0; --conn:#F2C14E; --conn4:#86B6FF; --leg:#E4ECF1; --stair:#5CC2E3; --ramp:#8FCB78;
   color-scheme:dark;
@@ -287,8 +287,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 .printhead{display:none}
 @media print{
   :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
-    --bg:#FFFFFF; --brand:#B3261E; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
-    --accent:#B3261E; --accent-ink:#FFFFFF; --accent-soft:#F8DCDA; --warn:#80500A; --warn-bg:#FFFFFF;
+    --bg:#FFFFFF; --brand:#D2400C; --surface:#FFFFFF; --surface-2:#ECEFF1; --ink:#12202B; --muted:#566774; --line:#C9D2D9;
+    --accent:#D2400C; --accent-ink:#FFFFFF; --accent-soft:#FBE0D3; --warn:#80500A; --warn-bg:#FFFFFF;
     --deck:#DCE4E9; --deck-side-l:#B7C4CD; --deck-side-r:#9AABB7; --pal-top:#D9B98C; --pal-l:#B8925E; --pal-r:#9C7848; --acc-top:#F2D49B; --acc-l:#D9AE5E; --acc-r:#BF9445; --deck-line:#7B8F9C; --rail:#C4560F; --rail1:#7A3FB0; --rail05:#B0306A; --conn:#B8860B; --conn4:#2463C9; --leg:#12202B; --stair:#0A5F7E; --ramp:#4C7A2E;
     color-scheme:light;
   }
@@ -2436,7 +2436,7 @@ async function saveHtml3d(){
 <title>${esc(title)}</title>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"><\/script>
 <style>html,body{margin:0;height:100%;font:15px/1.4 system-ui,sans-serif;background:#eef1f4;color:#12202b}
-header{padding:12px 16px;border-bottom:3px solid #b3261e;background:#fff}h1{margin:0;font-size:19px}p{margin:2px 0 0;color:#566774;font-size:13px}
+header{padding:12px 16px;border-bottom:3px solid #e3450d;background:#fff}h1{margin:0;font-size:19px}p{margin:2px 0 0;color:#566774;font-size:13px}
 model-viewer{width:100%;height:calc(100% - 74px);background:linear-gradient(#fff,#e3e8ec)}</style></head><body>
 <header><h1>${esc(title)}</h1><p>${meta ? meta+' · ' : ''}trascina per ruotare, rotellina o due dita per lo zoom</p></header>
 <model-viewer id="mv" camera-controls touch-action="pan-y" shadow-intensity="0.6" exposure="1.05" camera-orbit="35deg 65deg auto" alt="${esc(title)}"></model-viewer>
