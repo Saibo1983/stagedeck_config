@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Importa le descrizioni in italiano degli articoli dentro index.html.
+"""Importa le descrizioni degli articoli (italiano o tedesco) dentro index.html.
 
 Uso:  python3 tools/importa_descrizioni.py lista_con_descrizione.xlsx
-Legge il primo foglio (colonne: Codice, Denominazione, Descrizione (it)) e riscrive il blocco
-<script id="descrizioni"> di index.html: codice normalizzato -> {"cod": codice originale della lista, "nome": denominazione, "desc": descrizione}.
-Le descrizioni gia' presenti restano: quelle del file nuovo le aggiungono o le sostituiscono (la lista puo' essere parziale).
+      python3 tools/importa_descrizioni.py lista_con_descrizione_in_tedesco.xlsx
+Legge il primo foglio (colonne: codice, denominazione, descrizione). La lingua si riconosce dall'intestazione:
+«Codice / Denominazione / Descrizione (it)» = italiano, «Kode / Bezeichnung / Beschreibung (de)» = tedesco.
+Riscrive il blocco <script id="descrizioni"> di index.html: codice normalizzato ->
+  {"cod": codice originale della lista, "nome", "desc"  (italiano), "nome_de", "desc_de"  (tedesco)}.
+Le descrizioni gia' presenti restano: quelle del file nuovo le aggiungono o le sostituiscono (la lista puo' essere parziale),
+e l'altra lingua non viene toccata. Le voci importate prendono il posto di quelle generate da genera_descrizioni.py.
 E' una tabella separata dal catalogo, cosi' aggiorna_listino.py non la tocca.
 Niente prezzi: questo blocco puo' stare nel repository.
 """
@@ -25,6 +29,8 @@ ALIAS = {
     "VS750H-2X1T": ["VS750H-2x1T-R", "VS750H-2x1T-L"],  # pedana triangolare, destra e sinistra
     "VSP-S200X400": ["VSP-S 200x405"],               # telo velluto 20x40,5 cm
 }
+# campi per lingua: nome, descrizione, marca «generata»
+CAMPI = {"it": ("nome", "desc", "auto"), "de": ("nome_de", "desc_de", "auto_de")}
 
 
 def norm(code):
@@ -37,26 +43,39 @@ def pulisci(t):
     return re.sub(r"\n{3,}", "\n\n", "\n".join(righe)).strip()
 
 
+def lingua(intestazione):
+    t = " ".join(str(v or "") for v in intestazione).lower()
+    if "(de)" in t or "kode" in t or "beschreibung" in t:
+        return "de"
+    return "it"
+
+
 def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     ws = openpyxl.load_workbook(sys.argv[1], data_only=True).worksheets[0]
+    righe = list(ws.iter_rows(values_only=True))
+    lg = lingua(righe[0] if righe else [])
+    k_nome, k_desc, k_auto = CAMPI[lg]
     html = HTML.read_text(encoding="utf-8")
     vecchio = PAT.search(html)
     desc = json.loads(vecchio.group(2).replace("<\\/", "</")) if vecchio else {}
     cat = json.loads(CAT.search(html).group(0).split(">", 1)[1].rsplit("<", 1)[0].replace("<\\/", "</"))
     listino = {norm(i["code"]) for i in cat["items"]}
     nuovi, fuori = 0, []
-    for r, row in enumerate(ws.iter_rows(values_only=True)):
+    for r, row in enumerate(righe):
         code, nome, testo = (list(row) + [None] * 3)[:3]
-        if not code or r == 0 and str(code).strip().lower() == "codice":
+        if not code or r == 0 and str(code).strip().lower() in ("codice", "kode", "code"):
             continue
-        voce = {"cod": str(code).strip(), "nome": pulisci(nome), "desc": pulisci(testo)}  # cod: codice come scritto nella lista
-        if not voce["nome"] and not voce["desc"]:
+        nome, testo = pulisci(nome), pulisci(testo)
+        if not nome and not testo:
             continue
         chiavi = [norm(c) for c in ALIAS.get(norm(code), [code])]
         for k in chiavi:
-            desc[k] = voce
+            v = desc.setdefault(k, {})
+            v["cod"] = str(code).strip()  # codice come scritto nella lista
+            v[k_nome], v[k_desc] = nome, testo
+            v.pop(k_auto, None)
             nuovi += 1
         if not any(k in listino for k in chiavi):
             fuori.append(str(code).strip())
@@ -68,11 +87,12 @@ def main():
         m = CAT.search(html)
         html = html[:m.end()] + "\n" + blocco + html[m.end():]
     HTML.write_text(html, encoding="utf-8")
-    print(f"{nuovi} descrizioni importate, {len(desc)} in tutto in index.html.")
+    print(f"Lingua: {'tedesco' if lg == 'de' else 'italiano'}. {nuovi} descrizioni importate, {len(desc)} voci in index.html.")
     if fuori:
         print(f"Non nel listino (tenute per quando ci saranno): {', '.join(fuori)}")
-    senza = sorted(i["code"] for i in cat["items"] if norm(i["code"]) not in desc)
-    print(f"Articoli del listino ancora senza descrizione: {len(senza)} di {len(cat['items'])}.")
+    senza = sorted(i["code"] for i in cat["items"] if not (desc.get(norm(i["code"])) or {}).get(k_desc))
+    print(f"Articoli del listino senza descrizione in questa lingua: {len(senza)} di {len(cat['items'])}"
+          " (rilancia tools/genera_descrizioni.py per comporle).")
     print("Ora cambia VERSION in sw.js.")
 
 
