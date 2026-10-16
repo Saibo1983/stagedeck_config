@@ -126,12 +126,12 @@ Le descrizioni in italiano degli articoli (denominazione e descrizione tecnica) 
 - Nella scheda Listino la denominazione italiana compare sotto il nome (passa sopra per la descrizione), e la ricerca del Listino e delle voci aggiuntive trova anche le parole italiane.
 
 ## Anagrafica clienti
-Nei dati offerta, accanto al campo Cliente, il pulsante «Anagrafica» apre la finestra dei clienti. I campi sono quelli della scheda anagrafica del gestionale: Nome1 (cognome o ragione sociale, obbligatorio), Nome2, nome di ricerca, titolo, due righe di via, CAP, provincia, paese, luogo, regione; telefoni, fax, cellulare, email, PEC, sito, note; black list, regolamento fiscale speciale; partita IVA comunitaria, partita IVA, codice fiscale, EORI.
+Nei dati offerta, accanto al campo Cliente, il pulsante «Anagrafica» apre la finestra dei clienti. I campi sono quelli della scheda anagrafica del gestionale: Nome1 (cognome o ragione sociale, obbligatorio), Nome2, titolo, due righe di via, CAP, provincia, paese, luogo, regione; telefoni, fax, cellulare, email, PEC, sito, note; regolamento fiscale speciale; partita IVA comunitaria, partita IVA, codice fiscale.
 - A sinistra c'è l'elenco con la ricerca (tutte le parole scritte, in nome, città, provincia, P.IVA, C.F., email, telefono). Tocca un cliente per modificarlo, doppio clic per usarlo nell'offerta. Ci sono anche «Nuovo cliente», «Salva», «Elimina» (chiede conferma), «Esporta» e «Importa» (file .json, come l'archivio offerte).
-- Partita IVA e codice fiscale hanno un controllo del formato con la cifra di controllo, senza rete. «Verifica online» copia il numero e apre il servizio ufficiale (VIES, Agenzia delle Entrate, EORI), dove va incollato.
+- Partita IVA e codice fiscale hanno un controllo del formato con la cifra di controllo, senza rete. «Verifica online» copia il numero e apre il servizio ufficiale (VIES, Agenzia delle Entrate), dove va incollato.
 - «Usa nell'offerta» mette il nome nel campo Cliente e una copia dei dati nell'offerta: l'offerta salvata resta giusta anche se il cliente cambia o viene eliminato. Scrivendo a mano nel campo Cliente il nome di un cliente dell'anagrafica (c'è il suggerimento), si collega da solo; con un altro nome il collegamento si toglie.
-- Nel PDF dell'offerta, sotto l'intestazione, compaiono «Spett.le», nome, indirizzo, P.IVA e C.F.; nel testo copiato le stesse righe sotto «Cliente». Telefoni, note, black list e regime fiscale non escono mai.
-- Black list e regolamento fiscale speciale danno un avviso in cima all'offerta (solo a schermo); l'IVA non viene cambiata da sola.
+- Nel PDF dell'offerta, sotto l'intestazione, compaiono «Spett.le», nome, indirizzo, P.IVA e C.F.; nel testo copiato le stesse righe sotto «Cliente». Telefoni, note e regime fiscale non escono mai.
+- Il regolamento fiscale speciale dà un avviso in cima all'offerta (solo a schermo); l'IVA non viene cambiata da sola.
 - L'anagrafica resta nel browser (come archivio e prezzi): per un altro dispositivo esportala e importala.
 
 ## Stampa senza indirizzo della pagina

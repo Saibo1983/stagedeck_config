@@ -192,7 +192,6 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .clilist li button{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:5px 8px;cursor:pointer;font:inherit;color:inherit}
 .clilist li button:hover,.clilist li button[aria-selected="true"]{background:var(--accent-soft)}
 .clilist li button span{font-size:12px;color:var(--muted)}
-.clilist li.bl button b::after{content:" · black list";font-weight:600;font-size:11px;color:var(--bad)}
 .clilist .xnone{color:var(--muted);padding:6px 8px;font-size:13px}
 .cliedit{display:flex;flex-direction:column;gap:12px;min-width:0}
 .clicols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
@@ -580,13 +579,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
               <fieldset class="trset"><legend>Nome e indirizzo</legend>
                 <label class="field"><span>Nome1 (Cognome / Ragione sociale) *</span><input type="text" data-cf="nome1" autocomplete="off"></label>
                 <label class="field"><span>Nome2 (Nome)</span><input type="text" data-cf="nome2" autocomplete="off"></label>
-                <div class="row"><label class="field"><span>Nome di ricerca</span><input type="text" data-cf="ricerca" autocomplete="off"></label><label class="field"><span>Titolo</span><input type="text" data-cf="titolo" autocomplete="off"></label></div>
+                <label class="field"><span>Titolo</span><input type="text" data-cf="titolo" autocomplete="off"></label>
                 <label class="field"><span>Via (1)</span><input type="text" data-cf="via1" autocomplete="off"></label>
                 <label class="field"><span>Via (2)</span><input type="text" data-cf="via2" autocomplete="off"></label>
                 <div class="row3"><label class="field"><span>CAP</span><input type="text" data-cf="cap" autocomplete="off" inputmode="numeric"></label><label class="field"><span>Prov.</span><input type="text" data-cf="prov" autocomplete="off" maxlength="4"></label><label class="field"><span>Paese (sigla)</span><input type="text" data-cf="paese" autocomplete="off" maxlength="3" placeholder="IT"></label></div>
                 <label class="field"><span>Luogo / Comune</span><input type="text" data-cf="luogo" autocomplete="off"></label>
                 <label class="field"><span>Regione (Stato federale)</span><input type="text" data-cf="regione" autocomplete="off"></label>
-                <label class="check"><input type="checkbox" data-cf="blacklist"> Su elenco «Black list»</label>
                 <label class="field"><span>Regolamento fiscale speciale</span><select data-cf="fiscale" id="cliFiscale"></select></label>
               </fieldset>
               <fieldset class="trset"><legend>Contatti</legend>
@@ -603,7 +601,6 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
               <div class="fisrow"><label class="field"><span>Partita IVA comunitaria</span><input type="text" data-cf="pivaUE" autocomplete="off" placeholder="IT12345678901"></label><span class="fisok" data-chk="pivaUE"></span><button type="button" class="btn small" data-verify="pivaUE" title="Copia il numero e apre il servizio VIES della Commissione europea">Verifica online</button></div>
               <div class="fisrow"><label class="field"><span>Partita IVA</span><input type="text" data-cf="piva" autocomplete="off" inputmode="numeric"></label><span class="fisok" data-chk="piva"></span><button type="button" class="btn small" data-verify="piva" title="Copia il numero e apre la verifica dell'Agenzia delle Entrate">Verifica online</button></div>
               <div class="fisrow"><label class="field"><span>Codice fiscale</span><input type="text" data-cf="cf" autocomplete="off"></label><span class="fisok" data-chk="cf"></span><button type="button" class="btn small" data-verify="cf" title="Copia il codice e apre la verifica dell'Agenzia delle Entrate">Verifica online</button></div>
-              <div class="fisrow"><label class="field"><span>Codice EORI</span><input type="text" data-cf="eori" autocomplete="off"></label><span class="fisok" data-chk="eori"></span><button type="button" class="btn small" data-verify="eori" title="Copia il codice e apre la verifica EORI della Commissione europea">Verifica online</button></div>
             </fieldset>
           </div>
         </div>
@@ -1621,7 +1618,7 @@ const CKEY = 'stagedeck.clienti';
 const FISCALE = {'':'----', split:'Split payment (pubblica amministrazione)', reverse:'Reverse charge (inversione contabile)',
   intento:"Esente IVA con dichiarazione d'intento", intra:'Non imponibile: cessione intracomunitaria', export:'Non imponibile: esportazione'};
 const VERIFY = {pivaUE:'https://ec.europa.eu/taxation_customs/vies/#/vat-validation', piva:'https://telematici.agenziaentrate.gov.it/VerificaPIVA/Scegli.do?parameter=verificaPiva',
-  cf:'https://telematici.agenziaentrate.gov.it/VerificaCF/Scegli.do?parameter=verificaCf', eori:'https://ec.europa.eu/taxation_customs/dds2/eos/eori_validation.jsp'};
+  cf:'https://telematici.agenziaentrate.gov.it/VerificaCF/Scegli.do?parameter=verificaCf'};
 function cliLoad(){ try{ const a = JSON.parse(localStorage.getItem(CKEY) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
 function cliStore(a){ try{ localStorage.setItem(CKEY, JSON.stringify(a)); return true; }catch(e){ return false; } }
 const cliName = c => c ? [c.nome1, c.nome2].map(x => String(x||'').trim()).filter(Boolean).join(' ') : '';
@@ -1649,7 +1646,6 @@ function fisCheck(k, v){
   if(k==='piva') return pivaOk(v) ? ['ok','✓ formato valido'] : ['ko','✗ controlla'];
   if(k==='cf') return cfOk(v) ? ['ok','✓ formato valido'] : ['ko','✗ controlla'];
   if(k==='pivaUE'){ if(/^IT/.test(v)) return pivaOk(v.slice(2)) ? ['ok','✓ formato valido'] : ['ko','✗ controlla']; return /^[A-Z]{2}[0-9A-Z+*]{2,13}$/.test(v) ? ['','prefisso paese ok'] : ['ko','✗ serve il prefisso (es. IT, DE)']; }
-  if(k==='eori') return /^[A-Z]{2}[0-9A-Z]{1,15}$/.test(v) ? ['','formato ok'] : ['ko','✗ controlla'];
   return ['',''];
 }
 let cliCur = null;
@@ -1657,9 +1653,9 @@ function cliMsg(t){ const m = $('#cliMsg'); m.textContent = t; clearTimeout(cliM
 function cliNames(){ $('#cliNames').innerHTML = cliLoad().map(c => `<option value="${esc(cliName(c))}">${esc(cliPlace(c))}</option>`).join(''); }
 function cliRenderList(){
   const words = cliFold($('#cliQ').value).split(/\s+/).filter(Boolean);
-  const a = cliLoad().filter(c => { const t = cliFold([c.nome1,c.nome2,c.ricerca,c.titolo,c.luogo,c.prov,c.piva,c.pivaUE,c.cf,c.email,c.pec,c.tel1,c.cell].join(' ')); return words.every(w => t.includes(w)); })
-    .sort((x,y) => (x.ricerca || cliName(x)).localeCompare(y.ricerca || cliName(y), 'it'));
-  $('#cliList').innerHTML = a.length ? a.map(c => `<li${c.blacklist ? ' class="bl"' : ''}><button type="button" role="option" data-cli="${esc(c.id)}" aria-selected="${c.id===cliCur}"><b>${esc(cliName(c) || '(senza nome)')}</b><span>${esc([cliPlace(c), c.piva ? 'P.IVA '+c.piva : ''].filter(Boolean).join(' · '))}</span></button></li>`).join('')
+  const a = cliLoad().filter(c => { const t = cliFold([c.nome1,c.nome2,c.titolo,c.luogo,c.prov,c.piva,c.pivaUE,c.cf,c.email,c.pec,c.tel1,c.cell].join(' ')); return words.every(w => t.includes(w)); })
+    .sort((x,y) => cliName(x).localeCompare(cliName(y), 'it'));
+  $('#cliList').innerHTML = a.length ? a.map(c => `<li><button type="button" role="option" data-cli="${esc(c.id)}" aria-selected="${c.id===cliCur}"><b>${esc(cliName(c) || '(senza nome)')}</b><span>${esc([cliPlace(c), c.piva ? 'P.IVA '+c.piva : ''].filter(Boolean).join(' · '))}</span></button></li>`).join('')
     : `<li class="xnone">${cliLoad().length ? 'Nessun cliente trovato' : 'Anagrafica vuota: compila i dati e premi «Salva».'}</li>`;
 }
 function cliChecks(){ $$('#cliDlg [data-chk]').forEach(e => { const [cl, t] = fisCheck(e.dataset.chk, $(`#cliDlg [data-cf="${e.dataset.chk}"]`).value); e.className = 'fisok ' + cl; e.textContent = t; }); }
@@ -1671,7 +1667,7 @@ function cliEdit(c){
 function cliRead(){
   const c = {id: cliCur || 'c' + Date.now().toString(36)};
   $$('#cliDlg [data-cf]').forEach(e => c[e.dataset.cf] = e.type==='checkbox' ? e.checked : e.value.trim());
-  for(const k of ['piva','cf','pivaUE','eori','prov','paese']) c[k] = c[k].replace(/\s/g,'').toUpperCase();
+  for(const k of ['piva','cf','pivaUE','prov','paese']) c[k] = c[k].replace(/\s/g,'').toUpperCase();
   return c;
 }
 function cliSave(){
@@ -1707,11 +1703,10 @@ function cliHint(){
   const c = cfg.cli;
   $('#cliHint').textContent = c ? ['Da anagrafica', cliAddr(c).join(', '), cliTax(c)].filter(Boolean).join(' · ') : '';
 }
-// avvisi a schermo (non escono nel PDF): black list e regime fiscale speciale del cliente dell'offerta
+// avviso a schermo (non esce nel PDF): regime fiscale speciale del cliente dell'offerta
 function cliWarnings(){
   const c = cfg.cli && (cliLoad().find(x => x.id===cfg.cli.id) || cfg.cli); if(!c) return [];
   const w = [];
-  if(c.blacklist) w.push({level:'bad', text:`Cliente «${cliName(c)}» su elenco Black list.`});
   if(c.fiscale) w.push({level:'warn', text:`Regolamento fiscale speciale del cliente: ${FISCALE[c.fiscale] || c.fiscale}. Controlla l'IVA (ora ${dec(+cfg.vat||0,0)}%).`});
   return w;
 }
