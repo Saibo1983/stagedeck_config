@@ -576,6 +576,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" class="btn" id="copyText">Copia offerta</button>
           <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
           <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
+          <button type="button" class="btn" id="dlXml" title="Righe dell'offerta in un file .xml da importare nel programma gestionale">Esporta XML</button>
           <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità e maggiorazioni</button>
           <span class="status" id="status" role="status" aria-live="polite"></span>
         </div>
@@ -1023,6 +1024,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Niente da ordinare":"Nichts zu bestellen",
 "Ordine salvato":"Bestellung gespeichert",
 "Ordine scaricato":"Bestellung heruntergeladen",
+"Esporta XML":"XML exportieren",
+"Righe dell'offerta in un file .xml da importare nel programma gestionale":"Angebotspositionen als .xml-Datei für den Import ins Warenwirtschaftsprogramm",
+"Niente da esportare":"Nichts zu exportieren",
+"File XML":"XML-Datei",
 "Disegni":"Zeichnungen",
 "Spett.le":"An",
 "Chiudi":"Schließen",
@@ -3211,6 +3216,52 @@ function offerTsv(){
   return rows.map(r => r.join('\t')).join('\n');
   });
 }
+/* --- righe dell'offerta per il programma gestionale (VkAngebotPositionen.xml) ---
+   Valgono i dati del configuratore: codici, nomi e descrizioni (nella lingua di stampa), quantità, acquisto, maggiorazione, IVA.
+   Lo sconto sul totale va su ogni riga (prezzi «Rabattiert» e importi); gli articoli da fattura non sono segnalati. */
+function offerXml(){
+  if(!res || !res.plan) return '';
+  return inLang(cfg.lingua, () => {
+  const x = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\r?\n/g, '\r\n');
+  const n = v => String(r2(v));
+  const iva = +cfg.vat||0, sc = +cfg.discount||0;
+  const rows = res.lines.filter(l => l.qty>0).map((l, i) => {
+    const d = descOf(l.code), nome = (d && d.nome) || tr(l.name);
+    const ep = l.unit, epR = r2(ep*(1-sc/100)), es = l.unitCost, q = l.qty;
+    const mwstU = r2(ep*iva/100), netto = r2(epR*q), mwst = r2(netto*iva/100), lordo = r2(netto+mwst), lordoNoSc = r2(ep*q), costo = r2(es*q);
+    const db = epR ? (epR-es)/epR*100 : 0, zu = es ? (epR-es)/es*100 : 0;
+    const a = {Zeilentyp:'Normal', Zeilennummer:i+1, Position:(i+1)*10, Abschnitt:i+1, Leerzeile:0, Textzeile:0, Artikel2InVerwendung:0, StuecklisteVerzoegertEntfalten:0,
+      ArtikelBestandsrelevant:1, ArtikelLagerrelevant:1, BezeichnungDokumentsprache:nome, Ausgangsmenge:q, Menge:q, MengeBE:q, MengeBasiseinheitBewegt:q, OffeneMenge:q,
+      Abgeschlossen:0, MengeStatistikeinheit:q, UmweltbeitragConai:0, UmweltbeitragPFU:0, Verrechnungsart:'ProEinheit', PreisPro:1,
+      Einstandspreis:n(es), EinstandspreisDW:n(es), Selbstkostenpreis:n(es), SelbstkostenpreisDW:n(es), Zuschlag:n(l.mk), Deckungsbeitrag:n(db),
+      Ausgangspreis:n(ep), AusgangspreisDW:n(ep), ZuschlagAusgangspreisDW:n(ep-es), PreisNettoBruttoDW:n(ep), Einzelpreis:n(ep), EinzelpreisDW:n(ep),
+      EinzelpreisMwSt:n(mwstU), EinzelpreisMwStDW:n(mwstU), EinzelpreisBrutto:n(ep+mwstU), EinzelpreisBruttoDW:n(ep+mwstU),
+      EinzelpreisBE:n(ep), EinzelpreisBEDW:n(ep), EinzelpreisBEBrutto:n(ep+mwstU), EinzelpreisBEBruttoDW:n(ep+mwstU),
+      EinzelpreisRabattiert:n(epR), EinzelpreisRabattiertDW:n(epR), EinzelpreisRabattiertOhneKopfrabatte:n(ep), EinzelpreisRabattiertOhneKopfrabatteDW:n(ep),
+      EinzelpreisStatistikeinheit:n(epR), EinzelpreisStatistikeinheitDW:n(epR), BetragNettoBruttoDW:n(netto), MwStGrundlage:n(netto), MwStGrundlageDW:n(netto),
+      MwStBetrag:n(mwst), MwStBetragDW:n(mwst), Bruttobetrag:n(lordo), BruttobetragDW:n(lordo), Bruttobetraege:0, MwStGrundlageOffen:n(netto), MwStGrundlageOffenDW:n(netto),
+      MwStGrundlageOhneRabatte:n(lordoNoSc), MwStGrundlageOhneRabatteDW:n(lordoNoSc), Einstandsbetrag:n(costo), Selbstkostenbetrag:n(costo),
+      Deckungsbetrag1:n(netto-costo), Deckungsbetrag1Prozent:n(db), SymbolEW:'EUR', SymbolDW:'EUR', SymbolFSW:'EUR', SetArtikelNettopreis:0, Rabattfaehig:1,
+      Bearbeitungsspesen:0, Herstellerkode:l.code, Steuerrueckbehalt:1, Sozialabgaben:0, Umsatzrelevant:1, Stuecklistenkopf:0, Stuecklistenposition:0,
+      Lagerbewegung:0, StuecklisteEntfalten:0, StuecklistePositionenAktualisieren:1, Lageranweisungen:0, Kolli:q, Verbraucherstueckzahl:q, Vollbezeichnung:nome,
+      EinstandspreisFix:0, Frachtspesenart:'Frachtspesen_Inklusive', DeckungsbeitragEsPrs:n(db), ZuschlagEsPrs:n(zu), ZuschlagDB1:n(zu), EsPrsPlusZuschlag:n(epR),
+      EinstandspreisClc:n(es), EinzelpreisRechnungsempfaengerDW:n(epR), RabatteAlsPreisAusweisen:0};
+    const code = c => `    <${c[0]} Code="${x(c[1])}"/>`;
+    return `  <VkAngebotPosition ${Object.entries(a).map(([k,v]) => `${k}="${x(v)}"`).join(' ')}>\r\n` + [
+      code(['Artikel', l.code]),
+      `    <Beschreibung>${x(d ? d.desc : '')}</Beschreibung>`,
+      ...[['Einheit', l.isSet ? 'SET' : 'ST'], ['Artikelart','MAT'], ['Produktbuchungsgruppe','PODESTE'], ['ProduktMwStGruppe', iva], ['MwStKode', iva], ['Druckattribut','F']].map(code),
+      '    <BestaendeLager>\r\n    </BestaendeLager>', '    <BestaendeLagerplatzgruppen>\r\n    </BestaendeLagerplatzgruppen>'].join('\r\n') + '\r\n  </VkAngebotPosition>';
+  });
+  return '<?xml version="1.0" encoding="UTF-8"?><VkAngebotPositionen>\r\n' + rows.join('\r\n') + '\r\n</VkAngebotPositionen>';
+  });
+}
+async function downloadXml(){
+  const xml = offerXml();
+  if(!xml){ say('Niente da esportare'); return; }
+  const ref = (cfg.numero || cfg.progetto || cfg.data || 'offerta').toString().replace(/[^\w\-]+/g,'_');
+  await saveBlob(new Blob([xml], {type:'application/xml'}), `VkAngebotPositionen_${ref}.xml`, 'File XML');
+}
 
 /* --- regole --- */
 function ruleHint(r){
@@ -3430,6 +3481,7 @@ function bind(){
   $('#descPdf').addEventListener('change', e => { cfg.descPdf = e.target.checked; save(); });
   $('#pdfDraw').addEventListener('click', () => printPart('disegni'));
   $('#dlOrder').addEventListener('click', downloadOrder);
+  $('#dlXml').addEventListener('click', downloadXml);
   $('#v3Show').addEventListener('click', show3d);
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
   $('#v3Png').addEventListener('click', save3d);
