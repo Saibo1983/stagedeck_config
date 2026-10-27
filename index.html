@@ -208,6 +208,7 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .fold::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid currentColor;transition:transform .15s}
 .fold:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 .panel.shut .fold::before{transform:rotate(-90deg)}
+.planinfo{margin:-4px 0 10px;color:var(--muted);font-weight:600}
 @media screen{.panel.shut > :not(h2){display:none!important}.panel.shut > h2{margin-bottom:0}}
 .shiprow{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:start;margin-top:14px}
 .shiprow .palgrid{margin-top:0}
@@ -333,6 +334,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   body{padding:0;background:#fff;color:#000}
   .panel{border:0;padding:0}
   .fold::before{display:none}
+  .planinfo{display:none}
   #v3Panel.shut{display:none!important}
   #planPanel,#stairPanel{break-inside:avoid}
   .stack{gap:10mm}
@@ -571,6 +573,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Vista schematica</button></h2>
+      <p class="planinfo" id="planInfo"></p>
       <div class="planbar">
         <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
@@ -3545,9 +3548,10 @@ function renderResult(){
     <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
   renderShip();
   $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
-  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#planInfo').textContent = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
+  $('#planInfo').textContent = stageTitle(p, ' · ');
   $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
   draw3d();
   $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
