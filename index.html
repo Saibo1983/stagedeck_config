@@ -3231,6 +3231,8 @@ function offerXml(){
   return inLang(cfg.lingua, () => {
   const x = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\r?\n/g, '\r\n');
   const n = v => String(r2(v));
+  // la denominazione del gestionale tiene 60 caratteri: oltre si taglia all'ultima parola intera (il nome completo resta in Vollbezeichnung e nella descrizione)
+  const corto = t => { if(t.length<=60) return t; const c = t.slice(0,61), i = c.search(/\s\S*$/); return (i>0 ? c.slice(0,i) : c.slice(0,60)).replace(/[\s,;:–-]+$/,''); };
   const iva = +cfg.vat||0, sc = +cfg.discount||0, jolly = xmlJolly().trim();
   const rows = res.lines.filter(l => l.qty>0).map((l, i) => {
     const d = descOf(l.code), jl = !!l.fattura, nome = (jl ? l.code+' ' : '') + ((d && d.nome) || tr(l.name));
@@ -3238,7 +3240,7 @@ function offerXml(){
     const mwstU = r2(ep*iva/100), netto = r2(epR*q), mwst = r2(netto*iva/100), lordo = r2(netto+mwst), lordoNoSc = r2(ep*q), costo = r2(es*q);
     const db = epR ? (epR-es)/epR*100 : 0, zu = es ? (epR-es)/es*100 : 0;
     const a = {Zeilentyp:'Normal', Zeilennummer:i+1, Position:(i+1)*10, Abschnitt:i+1, Leerzeile:0, Textzeile:0, Artikel2InVerwendung:0, StuecklisteVerzoegertEntfalten:0,
-      ArtikelBestandsrelevant:jl&&!jolly ? 0 : 1, ArtikelLagerrelevant:jl&&!jolly ? 0 : 1, BezeichnungDokumentsprache:nome, Ausgangsmenge:q, Menge:q, MengeBE:q, MengeBasiseinheitBewegt:q, OffeneMenge:q,
+      ArtikelBestandsrelevant:jl&&!jolly ? 0 : 1, ArtikelLagerrelevant:jl&&!jolly ? 0 : 1, BezeichnungDokumentsprache:corto(nome), Ausgangsmenge:q, Menge:q, MengeBE:q, MengeBasiseinheitBewegt:q, OffeneMenge:q,
       Abgeschlossen:0, MengeStatistikeinheit:q, UmweltbeitragConai:0, UmweltbeitragPFU:0, Verrechnungsart:'ProEinheit', PreisPro:1,
       Einstandspreis:n(es), EinstandspreisDW:n(es), Selbstkostenpreis:n(es), SelbstkostenpreisDW:n(es), Zuschlag:n(l.mk), Deckungsbeitrag:n(db),
       Ausgangspreis:n(ep), AusgangspreisDW:n(ep), ZuschlagAusgangspreisDW:n(ep-es), PreisNettoBruttoDW:n(ep), Einzelpreis:n(ep), EinzelpreisDW:n(ep),
