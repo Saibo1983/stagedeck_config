@@ -337,9 +337,9 @@ function create(canvas){
             const s0 = Q(-82), s1 = Q(-17), hd0 = Q(-21), hd1 = Q(-13), n0 = Q(-86), n1 = Q(-76);
             push(PL, ...cyl([s0[0], y, s0[1]], [s1[0], y, s1[1]], 4, 8));                        // vite M8
             push(PL, ...cyl([hd0[0], y, hd0[1]], [hd1[0], y, hd1[1]], 7.5, 6));                 // testa esagonale
-            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 7, 10));                      // dado a farfalla
-            const m = Q(-81);
-            push(WN, box([m[0]-3, y-21, m[1]-3], [m[0]+3, y+21, m[1]+3]), BOX_IDX);                // alette
+            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 6.5, 10));                    // dado a farfalla
+            const w0 = Q(-82.5), w1 = Q(-79.5);                                                     // alette: due orecchie tonde
+            for(const dy2 of [-12, 12]) push(WN, ...cyl([w0[0], y+dy2, w0[1]], [w1[0], y+dy2, w1[1]], 8, 12));
           }
         }
       }
