@@ -203,6 +203,12 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .palcard figcaption{font-size:12.5px;display:flex;flex-direction:column;gap:2px;margin-top:6px}
 .palcard figcaption span{color:var(--muted)}
 #shipPanel .tiles{margin-top:10px}
+/* riquadri grandi richiudibili: il titolo è un pulsante con il triangolino */
+.fold{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:10px;font:inherit;color:inherit;border-radius:4px}
+.fold::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid currentColor;transition:transform .15s}
+.fold:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.panel.shut .fold::before{transform:rotate(-90deg)}
+@media screen{.panel.shut > :not(h2){display:none!important}.panel.shut > h2{margin-bottom:0}}
 .shiprow{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:start;margin-top:14px}
 .shiprow .palgrid{margin-top:0}
 .shipside{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface-2)}
@@ -326,6 +332,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   .grid2{display:block}
   body{padding:0;background:#fff;color:#000}
   .panel{border:0;padding:0}
+  .fold::before{display:none}
+  #v3Panel.shut{display:none!important}
   #planPanel,#stairPanel{break-inside:avoid}
   .stack{gap:10mm}
   .printhead{display:block;border-bottom:2px solid var(--brand);padding-bottom:6px}
@@ -562,7 +570,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     </div>
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
-      <h2 id="planTitle">Pianta</h2>
+      <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Vista schematica</button></h2>
       <div class="planbar">
         <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
@@ -592,7 +600,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="stairparts" id="stairParts"></div>
     </div>
     <div class="panel" id="v3Panel">
-      <h2>Vista 3D</h2>
+      <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Vista 3D</button></h2>
       <div id="v3Off"><p class="hint" style="margin:0 0 10px">Il palco montato con i pezzi reali (pedane, gambe, morsetti, parapetti, scale, mascheratura). Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom (la rotellina da sola scorre la pagina).</p>
         <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button></div>
       <div id="v3On" hidden>
@@ -606,7 +614,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
     </div>
     <div class="panel" id="offerPanel">
-      <h2 id="offerTitle">Offerta</h2>
+      <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Offerta</button></h2>
       <div class="tablewrap" id="offerTable"></div>
       <div class="sum" id="sum"></div>
       <p class="tribnotice" hidden></p>
@@ -1002,6 +1010,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "a terra circa {} cm · {}°":"am Boden ca. {0} cm · {1}°",
 "ultimo gradino {} cm":"letzte Stufe {0} cm",
 "{} gradini · cosciale {} cm":"{0} Stufen · Wange {1} cm",
+"Vista schematica":"Schematische Ansicht",
+"Chiudi o apri il riquadro":"Bereich schließen oder öffnen",
 "Vista 3D":"3D-Ansicht",
 "Il palco montato con i pezzi reali (pedane, gambe, morsetti, parapetti, scale, mascheratura). Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom (la rotellina da sola scorre la pagina).":"Die Bühne mit den echten Teilen aufgebaut (Podeste, Beine, Klammern, Geländer, Treppen, Verkleidung). Ziehen zum Drehen, Strg + Mausrad oder Zwei-Finger-Geste zum Zoomen (das Mausrad allein scrollt die Seite).",
 "Mostra vista 3D":"3D-Ansicht zeigen",
@@ -3510,7 +3520,7 @@ function renderShip(){
     sh.carts.length ? `Carrelli a parte: ${sh.carts.map(c => c.qty+' × '+c.code).join(', ')}.` : '',
     sh.noDims.length ? `Senza misure d'imballo, non conteggiati: ${listCodes(sh.noDims)}.` : ''
   ].filter(Boolean);
-  box.innerHTML = `<h2>Spedizione</h2>
+  box.innerHTML = `<h2><button type="button" class="fold" aria-expanded="${!box.classList.contains('shut')}" title="Chiudi o apri il riquadro">Spedizione</button></h2>
     <div class="tiles">
       <div class="tile"><div class="k">Peso totale</div><div class="v">${dec(t.kg,0)} <small>kg</small></div></div>
       <div class="tile"><div class="k">Volume imballi</div><div class="v">${dec(t.m3,2)} <small>m³</small></div></div>
@@ -3537,9 +3547,6 @@ function renderResult(){
   $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
-  const title = stageTitle(p, ' · ');
-  $('#planTitle').textContent = title;
-  $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
   $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
   draw3d();
@@ -3587,7 +3594,7 @@ function printPart(part){
   const head = [cfg.numero ? tr('Offerta n.')+' '+cfg.numero : tr('Offerta'), c && part==='offerta' ? '' : cfg.cliente, cfg.progetto, d].filter(Boolean);
   // nell'offerta, con un cliente dell'anagrafica: nome, indirizzo e dati fiscali (niente telefoni, note e avvisi interni)
   const cli = c && part==='offerta' ? `<div class="ph-cli">${esc(tr('Spett.le'))}<br><b>${esc(cfg.cliente || cliName(c))}</b>${[...cliAddr(c), cliTax(c)].filter(Boolean).map(t => '<br>'+esc(t)).join('')}</div>` : '';
-  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(stageTitle(res.plan)))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
+  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(part==='offerta' ? `${stageTitle(res.plan)}, ${res.info.famLabel}` : stageTitle(res.plan)))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
   document.title = [tr(part==='offerta' ? 'Offerta' : 'Disegni'), cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
@@ -4171,6 +4178,18 @@ function bind(){
   };
   $('#bgGrey').addEventListener('click', () => setBg(!document.documentElement.dataset.bg));
   try{ if(localStorage.getItem(BKEY)==='grigio') setBg(true); }catch(e){}
+  // riquadri grandi richiudibili con il triangolino; lo stato resta salvato
+  const FKEY = 'stagedeck.chiusi';
+  const setShut = (panel, shut) => {
+    panel.classList.toggle('shut', shut);
+    const b = panel.querySelector(':scope > h2 .fold'); if(b) b.setAttribute('aria-expanded', String(!shut));
+  };
+  try{ JSON.parse(localStorage.getItem(FKEY) || '[]').forEach(id => { const el = document.getElementById(id); if(el) setShut(el, true); }); }catch(e){}
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.panel > h2 .fold'); if(!b) return;
+    const panel = b.closest('.panel'); setShut(panel, !panel.classList.contains('shut'));
+    try{ localStorage.setItem(FKEY, JSON.stringify($$('.panel.shut').map(x => x.id).filter(Boolean))); }catch(e){}
+  });
   $('#shipPanel').addEventListener('click', e => {
     if(!e.target.closest('#trOpen')) return;
     trFill(); $('#trDlg').showModal();
