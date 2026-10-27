@@ -389,27 +389,53 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     </div>
 
     <div class="sec">
-      <h3>Palco</h3>
-      <div class="field"><span>Forma</span>
+      <h3 id="secStage">Palco</h3>
+      <div class="field"><span>Tipo</span>
+        <div class="seg" id="kindSeg" role="group" aria-label="Palco o tribuna">
+          <button type="button" data-kind="palco" aria-pressed="true">Palco</button>
+          <button type="button" data-kind="tribuna" aria-pressed="false">Tribuna</button>
+        </div>
+      </div>
+      <div class="field stageOnly"><span>Forma</span>
         <div class="seg" id="shapeSeg" role="group" aria-label="Forma del palco">
           <button type="button" data-shape="rect" aria-pressed="true">Rettangolare</button>
           <button type="button" data-shape="round" aria-pressed="false">Rotondo</button>
         </div>
       </div>
-      <div class="row3">
+      <div class="row3 stageOnly">
         <label class="field rectOnly"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field rectOnly"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
         <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="220" step="5" inputmode="numeric"></label>
       </div>
-      <label class="field"><span>Struttura</span><select id="support"></select></label>
+      <div class="tribOnly" hidden>
+        <div class="row">
+          <label class="field"><span>Larghezza (m)</span><input type="number" data-trib="W" min="1" max="60" step="0.5" inputmode="decimal"></label>
+          <label class="field"><span>Numero di file</span><input type="number" data-trib="rows" min="1" max="30" step="1" inputmode="numeric"></label>
+        </div>
+        <div class="row3">
+          <label class="field"><span>Profondità fila</span><select data-trib="depth"><option value="1">1 m</option><option value="0.5">50 cm</option></select></label>
+          <label class="field"><span>1ª fila (cm)</span><input type="number" data-trib="h1" min="10" max="200" step="1" inputmode="numeric" title="Altezza della prima fila, la più bassa (davanti). Sotto i 20 cm la gamba da 20 cm si taglia a misura"></label>
+          <label class="field"><span>Alzata (cm)</span><input type="number" data-trib="rise" min="5" max="40" step="1" inputmode="numeric" title="Quanto ogni fila è più alta di quella davanti: standard 20 cm. Le altezze intermedie usano le gambe telescopiche"></label>
+        </div>
+        <div class="field"><span>Corridoi (larghi 1 m)</span>
+          <div class="sides">
+            <label class="check"><input type="checkbox" data-aisle="left"> Al bordo sinistro</label>
+            <label class="check"><input type="checkbox" data-aisle="center"> Centrale</label>
+            <label class="check"><input type="checkbox" data-aisle="right"> Al bordo destro</label>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" data-trib="chairStop"> Bordi anticaduta per le sedie (SKBP sul bordo davanti di ogni fila)</label>
+        <p class="hint">La fila 1 è davanti, la più bassa. Ogni fila ha le sue gambe per la sua altezza. Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
+      </div>
+      <label class="field stageOnly"><span>Struttura</span><select id="support"></select></label>
       <label class="field"><span>Pedana</span><select id="family"></select></label>
       <label class="field"><span>Gambe</span><select id="legShape"><option value="square">Quadre 60×60 (VFL, telescopiche VTL)</option><option value="round">Tonde Ø 48 (VRL, telescopiche VRLT)</option><option value="roundAdj">Tonde Ø 48 con piedino regolabile (VRLA)</option></select></label>
       <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
       <p class="hint" id="legHint"></p>
     </div>
 
-    <div class="sec">
+    <div class="sec stageOnly">
       <h3>Scale</h3>
       <div class="row">
         <label class="field"><span>Numero di scale</span><input type="number" id="nStairs" min="0" max="12" step="1" inputmode="numeric"></label>
@@ -443,7 +469,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <label class="check"><input type="checkbox" id="safety"> Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)</label>
     </div>
 
-    <div class="sec">
+    <div class="sec stageOnly">
       <h3>Mascheratura</h3>
       <div class="seg" id="skSeg" role="group" aria-label="Numero di lati con mascheratura">
         <button type="button" data-n="0">Nessuna</button>
@@ -474,7 +500,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
     </div>
 
-    <div class="sec">
+    <div class="sec stageOnly">
       <h3>Rampe</h3>
       <div class="list" id="rampList"></div>
       <div><button type="button" class="btn small" id="addRamp">+ Aggiungi rampa</button></div>
@@ -711,6 +737,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m; se avanza mezzo metro (2,5, 3,5 m...) un elemento da 0,5 m, sulla pedana da mezzo metro del bordo.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
+      <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.</li>
       <li>Gambe tonde Ø 48 (scelta «Gambe»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
     </ul>
@@ -990,6 +1017,65 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Con altezza {} cm non ci sono gambe tonde fisse (20–120 cm a passi di 10). Se il cliente le richiede, spunta «Gambe telescopiche» (VRLT, 45–220 cm).":"Bei {0} cm Höhe gibt es keine festen Rundbeine (20–120 cm in 10er-Schritten). Wenn der Kunde es wünscht, «Teleskopbeine» ankreuzen (VRLT, 45–220 cm).",
 "Gambe tonde Ø 48 (scelta «Gambe»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.":"Rundbeine Ø 48 (Auswahl «Beine»): fest VRL oder VRLA (mit verstellbarem Fuß) von 20 bis 120 cm in 10er-Schritten, im 4er-Set; Teleskop VRLT einzeln, von 45 bis 220 cm. Mit Rundbeinen sind die Beinverbinder VLC-48MM und V4LC-48MM.",
 "Lato {}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.":"Seite {0}: Das Spider-Geländer gibt es nicht mit 0,5 m, ein Abschnitt von 0,5 m bleibt separat zu schließen.",
+"Tipo":"Typ",
+"Tribuna":"Tribüne",
+"Palco o tribuna":"Bühne oder Tribüne",
+"Numero di file":"Anzahl Reihen",
+"Profondità fila":"Reihentiefe",
+"1ª fila (cm)":"1. Reihe (cm)",
+"Alzata (cm)":"Stufenhöhe (cm)",
+"Altezza della prima fila, la più bassa (davanti). Sotto i 20 cm la gamba da 20 cm si taglia a misura":"Höhe der ersten, niedrigsten Reihe (vorne). Unter 20 cm wird das 20-cm-Bein auf Maß gekürzt",
+"Quanto ogni fila è più alta di quella davanti: standard 20 cm. Le altezze intermedie usano le gambe telescopiche":"Um wie viel jede Reihe höher ist als die davor: Standard 20 cm. Zwischenhöhen verwenden Teleskopbeine",
+"Corridoi (larghi 1 m)":"Gänge (1 m breit)",
+"Al bordo sinistro":"Am linken Rand",
+"Centrale":"Mittig",
+"Al bordo destro":"Am rechten Rand",
+"Bordi anticaduta per le sedie (SKBP sul bordo davanti di ogni fila)":"Stuhlanschläge (SKBP an der Vorderkante jeder Reihe)",
+"La fila 1 è davanti, la più bassa. Ogni fila ha le sue gambe per la sua altezza. Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.":"Reihe 1 ist vorne und am niedrigsten. Jede Reihe hat Beine für ihre Höhe. Vor jedem Gang gibt es eine Zugangstreppe, wenn die erste Reihe höher als 20 cm ist; bei Stufenhöhen über 20 cm haben die Gänge Zwischenstufen. Geländer im Bereich «Geländer»: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft.",
+"Tribuna {} × {} m":"Tribüne {0} × {1} m",
+"{} · {} file da {} a {} cm":"{0} · {1} Reihen von {2} bis {3} cm",
+"{}, {} file da {} a {} cm":"{0}, {1} Reihen von {2} bis {3} cm",
+"{} · {} fila da {} a {} cm":"{0} · {1} Reihe von {2} bis {3} cm",
+"{}, {} fila da {} a {} cm":"{0}, {1} Reihe von {2} bis {3} cm",
+"corridoio":"Gang",
+"retro (ultima fila)":"hinten (letzte Reihe)",
+"fronte (fila 1)":"vorne (Reihe 1)",
+"Sezione":"Schnitt",
+"alzata":"Stufenhöhe",
+"Gambe per fila: {}.":"Beine pro Reihe: {0}.",
+"Tribuna {} × {} m: {} file profonde {}, prima fila a {} cm, alzata {} cm, ultima fila a {} cm.":"Tribüne {0} × {1} m: {2} Reihen, {3} tief, erste Reihe auf {4} cm, Stufenhöhe {5} cm, letzte Reihe auf {6} cm.",
+"Tribuna {} × {} m: {} fila profonda {}, prima fila a {} cm, alzata {} cm, ultima fila a {} cm.":"Tribüne {0} × {1} m: {2} Reihe, {3} tief, erste Reihe auf {4} cm, Stufenhöhe {5} cm, letzte Reihe auf {6} cm.",
+"Nessuna gamba per le file alte {} cm.":"Keine Beine für die Reihen mit {0} cm.",
+"Gambe da tagliare a misura: {}.":"Auf Maß zu kürzende Beine: {0}.",
+"fila {} ({} cm) {} tagliata a {} cm":"Reihe {0} ({1} cm) {2} gekürzt auf {3} cm",
+"Gambe telescopiche (altezze intermedie): {}. Dopo la regolazione vanno bloccate con il dado autobloccante.":"Teleskopbeine (Zwischenhöhen): {0}. Nach dem Einstellen mit der selbstsichernden Mutter blockieren.",
+"fila {} ({} cm) {}":"Reihe {0} ({1} cm) {2}",
+"gamba fissa da {} cm tagliata a {} cm":"festes Bein {0} cm, gekürzt auf {1} cm",
+"Gambe tonde fino a {} cm: verificare la portata con Everdeck.":"Rundbeine bis {0} cm: Tragfähigkeit mit Everdeck prüfen.",
+"Portata ridotta a 500 kg/m² con gambe 60×60 oltre 120 cm (tabella Larcher).":"Tragfähigkeit reduziert auf 500 kg/m² mit Beinen 60×60 über 120 cm (Larcher-Tabelle).",
+"File da 80 cm in su: connettori tra le gambe, al massimo 20 cm sotto il deck.":"Reihen ab 80 cm: Beinverbinder, höchstens 20 cm unter dem Deck.",
+"Parapetti laterali a gradini: un elemento per fila, alla sua altezza.":"Gestufte Seitengeländer: ein Element pro Reihe, auf ihrer Höhe.",
+"Bordi anticaduta per le sedie (SKBP) sul bordo davanti di ogni fila, fuori dai corridoi.":"Stuhlanschläge (SKBP) an der Vorderkante jeder Reihe, außerhalb der Gänge.",
+"Scala d'accesso alla prima fila ({} cm) davanti a ogni corridoio: {}.":"Zugangstreppe zur ersten Reihe ({0} cm) vor jedem Gang: {1}.",
+"Corridoi: alzata di {} cm, in ogni corridoio {} (VSM) tra una fila e l'altra.":"Gänge: Stufenhöhe {0} cm, in jedem Gang {1} (VSM) zwischen den Reihen.",
+"un gradino intermedio":"eine Zwischenstufe",
+"{} gradini intermedi":"{0} Zwischenstufen",
+"Con un'alzata di {} cm i gradini dei corridoi non sono tutti uguali (elementi da 20 cm): meglio un'alzata multipla di 20 cm.":"Bei {0} cm Stufenhöhe sind die Gangstufen nicht alle gleich (Elemente zu 20 cm): besser ein Vielfaches von 20 cm.",
+"capacità {} m² di deck ciascuno per {} m² di tribuna":"Kapazität je {0} m² Deck für {1} m² Tribüne",
+"Tribuna per il pubblico: verificare le norme sulle tribune temporanee (carichi, parapetti, corridoi, capienza) prima dell'uso.":"Zuschauertribüne: vor der Nutzung die Normen für temporäre Tribünen prüfen (Lasten, Geländer, Gänge, Kapazität).",
+"La tribuna non si fa con lo Spider: uso pedane StageDeck su gambe.":"Die Tribüne gibt es nicht mit Spider: verwendet werden StageDeck-Podeste auf Beinen.",
+"La tribuna non si fa con i Rollrisers: uso pedane StageDeck su gambe.":"Die Tribüne gibt es nicht mit Rollrisers: verwendet werden StageDeck-Podeste auf Beinen.",
+"{}: non ci sono pedane profonde 50 cm, uso HEXA.":"{0}: keine 50 cm tiefen Podeste, verwendet wird HEXA.",
+"Alzata tra le file: {} cm (da 5 a 40 cm).":"Stufenhöhe zwischen den Reihen: {0} cm (5 bis 40 cm).",
+"Inserisci la larghezza della tribuna.":"Breite der Tribüne eingeben.",
+"Larghezza arrotondata a {} m: le pedane sono multipli di {}.":"Breite gerundet auf {0} m: die Podeste sind Vielfache von {1}.",
+"Tribuna troppo stretta per i corridoi scelti: servono almeno 50 cm di posti tra un corridoio e l'altro.":"Tribüne zu schmal für die gewählten Gänge: zwischen zwei Gängen sind mindestens 50 cm Sitzfläche nötig.",
+"Nessun corridoio: l'accesso alle file va previsto a parte.":"Kein Gang: der Zugang zu den Reihen ist separat vorzusehen.",
+"Non riesco a coprire le file con le pedane del piano scelto.":"Die Reihen lassen sich mit den Podesten der gewählten Platte nicht belegen.",
+"Il parapetto di sicurezza non esiste da 0,5 m: un tratto di 0,5 m resta da chiudere a parte.":"Das Sicherheitsgeländer gibt es nicht mit 0,5 m: ein Abschnitt von 0,5 m bleibt separat zu schließen.",
+"Bordo anticaduta: lato di pedana da {} m senza profilo a listino.":"Stuhlanschlag: Podestseite {0} m ohne Profil in der Preisliste.",
+"Nessuna scala d'accesso per la prima fila a {} cm.":"Keine Zugangstreppe für die erste Reihe auf {0} cm.",
+"Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder, wo die Tribüne höher als 80 cm ist, Podestverbinder nur zwischen Podesten derselben Reihe. Gänge 1 m breit; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe. Stuhlanschläge SKBP an der Vorderkante jeder Reihe, außerhalb der Gänge.",
 "Gambe tonde a {} cm: verificare la portata con Everdeck.":"Rundbeine bei {0} cm: Tragfähigkeit mit Everdeck prüfen.",
 "Scala regolabile {} ({}–{} cm).":"Verstellbare Treppe {0} ({1}–{2} cm).",
 "gamba tonda fissa":"festes Rundbein",
@@ -1064,6 +1150,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Chiudi":"Schließen",
 "OFFERTA PALCO MODULARE n. {}":"ANGEBOT MODULARE BÜHNE Nr. {0}",
 "OFFERTA PALCO MODULARE":"ANGEBOT MODULARE BÜHNE",
+"OFFERTA TRIBUNA MODULARE n. {}":"ANGEBOT MODULARE TRIBÜNE Nr. {0}",
+"OFFERTA TRIBUNA MODULARE":"ANGEBOT MODULARE TRIBÜNE",
 "Cliente:":"Kunde:",
 "Progetto:":"Projekt:",
 "Data:":"Datum:",
@@ -1799,6 +1887,66 @@ function railOrder(pc, start, edges){
 }
 const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length-5}` : a.join(', ');
 
+// Voci aggiuntive, aggregazione, confezioni, maggiorazioni, prezzi, pesi, volumi e spedizione: comune a palco e tribuna
+function finishOffer(out, cfg, R, look, area, warn){
+  // --- voci aggiuntive
+  for(const x of cfg.extras) if(x.code && x.qty>0) out.lines.push({group:'Varie', code:x.code, qty:Math.ceil(x.qty)});
+
+  // --- aggregazione, prezzi, pesi, volumi
+  const agg = new Map();
+  for(const l of out.lines){
+    const k = l.group+'|'+ncode(l.code);
+    if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
+  }
+  // maggiorazione: quella generale, oppure quella della singola voce cambiata a mano con + e − (cfg.mkRow)
+  const mkAll = +cfg.markup||0, mkRow = cfg.mkRow || {};
+  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [], mkNotes = [], invCodes = [];
+  const adjMap = cfg.adj || {};
+  for(const l of agg.values()){
+    const it = look.get(ncode(l.code));
+    if(!it){ warn('bad',`Il codice ${l.code} non è nel listino.`); continue; }
+    if(it.price==null) noPrice.push(it.code);
+    if(it.fattura && !invCodes.includes(it.code)) invCodes.push(it.code);
+    const pr = it.price||0;
+    // Confezioni: le gambe sono vendute a set da 4 (qui qty e prezzo sono per set); i connettori da 3 restano a pezzi.
+    const pk = it.pkg||1, autoPieces = Math.ceil(l.qty/pk-1e-9)*pk;
+    const isSet = pk===4 && /leg/i.test(it.name);
+    if(autoPieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${autoPieces}`);
+    // Quantità modificata a mano con + e −: un passo = 1 pezzo, o 1 confezione per gli articoli in confezione.
+    const key = l.group+'|'+ncode(l.code), adj = Math.max(-autoPieces/pk, Math.round(+adjMap[key]||0));
+    const pieces = autoPieces + adj*pk, sets = pieces/pk;
+    if(adj) adjNotes.push(`${it.code} ${adj>0?'+':'−'}${Math.abs(adj)*(isSet?1:pk)}${isSet?' set':''}`);
+    const mkp = mkRow[key]!=null ? +mkRow[key] : mkAll, mkMod = mkRow[key]!=null && +mkRow[key]!==mkAll;
+    if(mkMod) mkNotes.push(`${it.code} ${dec(mkp, mkp%1 ? 1 : 0)}%`);
+    const qty = isSet ? sets : pieces, unit = r2(pr*(1+mkp/100)*(isSet ? pk : 1));
+    const kg = it.kg!=null ? it.kg*sets : null;
+    const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
+    if(kg==null) noKg.push(it.code);
+    if(m3==null) noVol.push(it.code);
+    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
+  }
+  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
+  if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
+  // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
+  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto o pezzi speciali su misura), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
+  if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
+  if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
+  if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
+  if(noVol.length) warn('warn',`Misure dell'imballo mancanti nel listino per: ${listCodes(noVol)}. Il volume totale è parziale.`);
+  const gross = r2(lines.reduce((s,l) => s+l.total,0));
+  const disc = r2(gross*(+cfg.discount||0)/100);
+  const net = r2(gross-disc);
+  const vat = r2(net*(+cfg.vat||0)/100);
+  out.lines = lines;
+  const cost = r2(lines.reduce((s,l) => s+l.cost,0));
+  out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
+    kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
+    pieces: lines.reduce((s,l) => s+l.pieces,0), area: r2(area)};
+  out.ship = shipping(lines, look, R.params.pal || {});
+  const shTxt = shipSummary(out.ship);
+  if(shTxt) out.notes.push(shTxt);
+}
 function compute(cfg, R, look, kits){
   const out = {lines:[], warnings:[], notes:[], plan:null, totals:null, info:{}};
   const warn = (level,text) => out.warnings.push({level,text});
@@ -2082,63 +2230,8 @@ function compute(cfg, R, look, kits){
     out.notes.push(`Carrelli ${tr.type}: ${+tr.qty>0 ? 'quantità scelta' : `capacità ${nf(cap)} m² di deck ciascuno per ${nf(area)} m² di palco`}.`);
   }
 
-  // --- voci aggiuntive
-  for(const x of cfg.extras) if(x.code && x.qty>0) out.lines.push({group:'Varie', code:x.code, qty:Math.ceil(x.qty)});
-
-  // --- aggregazione, prezzi, pesi, volumi
-  const agg = new Map();
-  for(const l of out.lines){
-    const k = l.group+'|'+ncode(l.code);
-    if(agg.has(k)) agg.get(k).qty += l.qty; else agg.set(k,{...l});
-  }
-  // maggiorazione: quella generale, oppure quella della singola voce cambiata a mano con + e − (cfg.mkRow)
-  const mkAll = +cfg.markup||0, mkRow = cfg.mkRow || {};
-  const lines = []; const noKg = [], noVol = [], noPrice = [], packNotes = [], adjNotes = [], mkNotes = [], invCodes = [];
-  const adjMap = cfg.adj || {};
-  for(const l of agg.values()){
-    const it = look.get(ncode(l.code));
-    if(!it){ warn('bad',`Il codice ${l.code} non è nel listino.`); continue; }
-    if(it.price==null) noPrice.push(it.code);
-    if(it.fattura && !invCodes.includes(it.code)) invCodes.push(it.code);
-    const pr = it.price||0;
-    // Confezioni: le gambe sono vendute a set da 4 (qui qty e prezzo sono per set); i connettori da 3 restano a pezzi.
-    const pk = it.pkg||1, autoPieces = Math.ceil(l.qty/pk-1e-9)*pk;
-    const isSet = pk===4 && /leg/i.test(it.name);
-    if(autoPieces!==l.qty) packNotes.push(`${it.code} ${l.qty}→${autoPieces}`);
-    // Quantità modificata a mano con + e −: un passo = 1 pezzo, o 1 confezione per gli articoli in confezione.
-    const key = l.group+'|'+ncode(l.code), adj = Math.max(-autoPieces/pk, Math.round(+adjMap[key]||0));
-    const pieces = autoPieces + adj*pk, sets = pieces/pk;
-    if(adj) adjNotes.push(`${it.code} ${adj>0?'+':'−'}${Math.abs(adj)*(isSet?1:pk)}${isSet?' set':''}`);
-    const mkp = mkRow[key]!=null ? +mkRow[key] : mkAll, mkMod = mkRow[key]!=null && +mkRow[key]!==mkAll;
-    if(mkMod) mkNotes.push(`${it.code} ${dec(mkp, mkp%1 ? 1 : 0)}%`);
-    const qty = isSet ? sets : pieces, unit = r2(pr*(1+mkp/100)*(isSet ? pk : 1));
-    const kg = it.kg!=null ? it.kg*sets : null;
-    const m3 = it.pack ? it.pack[0]*it.pack[1]*it.pack[2]/1e9*sets : null;
-    if(kg==null) noKg.push(it.code);
-    if(m3==null) noVol.push(it.code);
-    lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
-  }
-  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
-  if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
-  if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
-  // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
-  if(invCodes.length) warn('inv', `Articoli fuori listino (da fatture di acquisto o pezzi speciali su misura), da controllare (codice, prezzo, peso, imballo): ${invCodes.join(', ')}.`);
-  if(packNotes.length) out.notes.push('Articoli venduti in confezione, quantità arrotondata per eccesso: '+packNotes.join(', ')+'.');
-  if(noPrice.length) warn('bad',`Prezzo mancante per: ${listCodes(noPrice)}. Carica il file dei prezzi nella sezione Listino.`);
-  if(noKg.length) warn('warn',`Peso mancante nel listino per: ${listCodes(noKg)}. Il peso totale è parziale.`);
-  if(noVol.length) warn('warn',`Misure dell'imballo mancanti nel listino per: ${listCodes(noVol)}. Il volume totale è parziale.`);
-  const gross = r2(lines.reduce((s,l) => s+l.total,0));
-  const disc = r2(gross*(+cfg.discount||0)/100);
-  const net = r2(gross-disc);
-  const vat = r2(net*(+cfg.vat||0)/100);
-  out.lines = lines;
-  const cost = r2(lines.reduce((s,l) => s+l.cost,0));
-  out.totals = {gross, cost, disc, net, vat, grand:r2(net+vat),
-    kg: lines.reduce((s,l) => s+(l.kg||0),0), m3: lines.reduce((s,l) => s+(l.m3||0),0),
-    pieces: lines.reduce((s,l) => s+l.pieces,0), area: r2(area)};
-  out.ship = shipping(lines, look, R.params.pal || {});
-  const shTxt = shipSummary(out.ship);
-  if(shTxt) out.notes.push(shTxt);
+  finishOffer(out, cfg, R, look, area, warn);
+  const lines = out.lines;
   const onLegs = support==='legs' && !!leg;
   // pianta: con struttura a gambe sempre 4 gambe per pedana (anche se per quell'altezza manca la gamba: c'è l'avviso)
   out.plan = {W, D, decks, legs:support==='legs', legRound:!!(leg && leg.round), conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
@@ -2149,6 +2242,228 @@ function compute(cfg, R, look, kits){
   out.info.metrics = M;
   out.info.famLabel = fam.label;
   out.info.support = support;
+  return out;
+}
+/* ---------- tribuna ----------
+   File di pedane a gradoni. La fila 1 è davanti (la più bassa, alta h1), ogni fila dietro è più alta di `rise` cm.
+   Ogni fila è profonda 1 m o 50 cm ed è coperta da sola, con le pedane nello stesso verso (lato lungo lungo la fila).
+   Corridoi larghi 1 m: centrale e/o ai bordi vicino ai lati; tagliano tutte le file, senza bordi anticaduta per le sedie;
+   davanti ai corridoi il parapetto frontale si apre e, con la prima fila oltre 20 cm, c'è la scala d'accesso.
+   Gambe per fila: fisse se ci sono per quell'altezza, altrimenti telescopiche; sotto la gamba più corta la gamba
+   fissa più corta tagliata a misura (es. prima fila da 15–17 cm con la gamba da 20 cm). */
+const TRIB_DEF = {W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, chairStop:true};
+const AISLE_W = 1;   // m, larghezza di un corridoio
+const CHAIR_STOP = {2:'SKBP1970', 1:'SKBP970', 0.5:'SKBP470'};
+function tribLeg(h, cfg, look){
+  const shape = cfg.legShape, round = shape==='round' || shape==='roundAdj';
+  let leg = pickLeg(h, !!cfg.tele, shape);
+  if(leg && leg.mid && !look.has(ncode(leg.code))){
+    const a = look.get(ncode(leg.mid[0])), b = look.get(ncode(leg.mid[1]));
+    if(a && b) look.set(ncode(leg.code), {code:leg.code, name:`square leg ${h}cm (prezzo medio tra ${a.code} e ${b.code})`, section:a.section,
+      price: a.price!=null && b.price!=null ? Math.round((a.price+b.price)/2*100)/100 : null,
+      kg: a.kg!=null && b.kg!=null ? Math.round((a.kg+b.kg)/2*1000)/1000 : null, pack: b.pack, pkg: b.pkg||1});
+    else leg = null;
+  }
+  if(leg && leg.mid) leg = {...leg, note:'gamba fissa'};
+  if(!leg && !round && look.has(ncode('VFL'+h))) leg = {code:'VFL'+h, note:'gamba fissa', tele:false};
+  if(!leg) leg = pickLeg(h, true, shape);
+  if(!leg){
+    // più bassa (o tra due misure senza telescopica): la gamba fissa più corta che arriva, tagliata a misura
+    const fixed = round ? [20,30,40,50,60,70,80,90,100,110,120] : Object.keys(FIXED_LEGS).map(Number);
+    const f = fixed.find(x => x >= h);
+    if(f) leg = {code: round ? (shape==='roundAdj' ? 'VRLA' : 'VRL')+f : FIXED_LEGS[f], note:`gamba fissa da ${f} cm tagliata a ${h} cm`, tele:false, cut:true, round};
+  }
+  return leg;
+}
+function computeTribune(cfg, R, look){
+  const out = {lines:[], warnings:[], notes:[], plan:null, totals:null, info:{}};
+  const warn = (level,text) => out.warnings.push({level,text});
+  look = new Map(look);
+  const T = Object.assign(clone(TRIB_DEF), cfg.trib||{});
+  T.aisles = Object.assign({}, TRIB_DEF.aisles, (cfg.trib||{}).aisles||{});
+  if(cfg.support==='spider') warn('warn','La tribuna non si fa con lo Spider: uso pedane StageDeck su gambe.');
+  else if(cfg.support==='roll') warn('warn','La tribuna non si fa con i Rollrisers: uso pedane StageDeck su gambe.');
+  const depth = +T.depth===0.5 ? 0.5 : 1;
+  let fam = FAMILIES[cfg.family];
+  if(!fam || fam.support!=='deck' || (depth===0.5 && fam.step>0.5)){
+    if(fam && fam.support==='deck') warn('warn',`${fam.label}: non ci sono pedane profonde 50 cm, uso HEXA.`);
+    fam = FAMILIES.hexa;
+  }
+  const N = Math.max(1, Math.min(30, Math.round(+T.rows||1)));
+  const rise = Math.max(5, Math.min(40, Math.round(+T.rise||20)));
+  const h1 = Math.max(10, Math.min(200, Math.round(+T.h1||20)));
+  if(+T.rise!==rise) warn('info',`Alzata tra le file: ${rise} cm (da 5 a 40 cm).`);
+  let W = Math.ceil((+T.W||0)/fam.step-1e-9)*fam.step;
+  if(!(W>0)){ warn('bad','Inserisci la larghezza della tribuna.'); return out; }
+  if(W>60){ warn('bad','Le misure oltre 60 m non sono supportate.'); return out; }
+  if(Math.abs(W-(+T.W))>1e-9) warn('info',`Larghezza arrotondata a ${nf(W)} m: le pedane sono multipli di ${fam.step===1?'1 m':'50 cm'}.`);
+  const D = N*depth, hTop = h1 + (N-1)*rise;
+  const P = code => { const it = look.get(ncode(code)); return it && it.price!=null ? it.price : 0; };
+
+  // --- corridoi: tratti [a,b] in m sulla larghezza
+  const aisles = [];
+  if(T.aisles.left) aisles.push([0, AISLE_W]);
+  if(T.aisles.center){ const a = Math.round((W-AISLE_W)/2/0.5)*0.5; aisles.push([a, a+AISLE_W]); }
+  if(T.aisles.right) aisles.push([W-AISLE_W, W]);
+  aisles.sort((p,q) => p[0]-q[0]);
+  for(let i=1;i<aisles.length;i++) if(aisles[i][0] < aisles[i-1][1]+0.5-1e-9){ warn('bad','Tribuna troppo stretta per i corridoi scelti: servono almeno 50 cm di posti tra un corridoio e l\'altro.'); return out; }
+  if(!aisles.length) warn('warn','Nessun corridoio: l\'accesso alle file va previsto a parte.');
+  // tratti da coprire: corridoi e blocchi di posti tra i corridoi
+  const segs = []; let x = 0;
+  for(const [a,b] of aisles){ if(a>x+1e-9) segs.push({a:x, b:a, aisle:false}); segs.push({a, b, aisle:true}); x = b; }
+  if(W>x+1e-9) segs.push({a:x, b:W, aisle:false});
+
+  // --- pedane: ogni tratto di fila coperto con il modulo grande nel verso della fila, poi i più piccoli
+  const sizes = Object.keys(fam.codes).map(k => k.split('x').map(Number)).filter(([w,h]) => Math.min(w,h) <= depth*2);
+  const sizeKey = (w,h) => Math.max(w,h)+'x'+Math.min(w,h);
+  const Dc = Math.round(depth*2);
+  const tileSeg = Wc => {
+    const big = sizes.filter(([w,h]) => Math.min(w,h)===Dc).reduce((m,s) => !m || s[0]*s[1] > m[0]*m[1] ? s : m, null);
+    let best = null;
+    for(const main of [big ? {w:Math.max(...big), h:Dc} : null, null]) for(const st of STRATS){
+      const t = tile(Wc, Dc, sizes, st, main);
+      if(!t) continue;
+      const c = t.reduce((s,p) => s + P(fam.codes[sizeKey(p.w,p.h)]), 0);
+      if(!best || c<best.c-1e-9 || (Math.abs(c-best.c)<1e-9 && t.length<best.t.length)) best = {t,c};
+    }
+    return best && best.t;
+  };
+  const pattern = [];
+  for(const sg of segs){
+    const t = tileSeg(Math.round((sg.b-sg.a)*2));
+    if(!t){ warn('bad','Non riesco a coprire le file con le pedane del piano scelto.'); return out; }
+    for(const d of t) pattern.push({...d, x:d.x + Math.round(sg.a*2), aisle:sg.aisle});
+  }
+  const rows = [], decks = [];
+  for(let i=0;i<N;i++){
+    const h = h1 + i*rise, y = (N-1-i)*Dc;      // pianta: retro in alto (fila più alta), fila 1 davanti in basso
+    const leg = tribLeg(h, cfg, look);
+    const rd = pattern.map(d => ({...d, y:d.y + y, row:i, hc:h, code:fam.codes[sizeKey(d.w,d.h)]}));   // hc: altezza della fila (cm)
+    rows.push({i, h, y, leg, decks:rd.length});
+    decks.push(...rd);
+  }
+  const byDeck = new Map();
+  for(const d of decks) byDeck.set(d.code, (byDeck.get(d.code)||0)+1);
+  for(const [code,qty] of byDeck) out.lines.push({group:'Pedana', code, qty});
+  out.notes.push(`Tribuna ${nf(W)} × ${nf(D)} m: ${N} ${N===1?'fila profonda':'file profonde'} ${depth===1?'1 m':'50 cm'}, prima fila a ${h1} cm, alzata ${rise} cm, ultima fila a ${hTop} cm.`);
+
+  // --- gambe: 4 per pedana, scelte per l'altezza di ogni fila
+  const legRule = R.rows.find(r => r.on && r.code==='@LEG');
+  const noLeg = rows.filter(r => !r.leg).map(r => r.h);
+  if(noLeg.length) warn('bad',`Nessuna gamba per le file alte ${noLeg.join(', ')} cm.`);
+  if(!legRule) warn('warn','Nessuna regola attiva per le gambe: l\'offerta non le include.');
+  else for(const r of rows) if(r.leg) out.lines.push({group:'Gambe', code:r.leg.code, qty:Math.ceil(r.decks*4*(+legRule.qty||1)-1e-9)});
+  const cuts = rows.filter(r => r.leg && r.leg.cut), teles = rows.filter(r => r.leg && r.leg.tele);
+  if(cuts.length) out.notes.push('Gambe da tagliare a misura: ' + cuts.map(r => `fila ${r.i+1} (${r.h} cm) ${r.leg.code} tagliata a ${r.h} cm`).join(', ') + '.');
+  if(teles.length) out.notes.push('Gambe telescopiche (altezze intermedie): ' + teles.map(r => `fila ${r.i+1} (${r.h} cm) ${r.leg.code}`).join(', ') + '. Dopo la regolazione vanno bloccate con il dado autobloccante.');
+  const legRound = rows.some(r => r.leg && r.leg.round);
+  if(hTop > 120) out.notes.push(legRound ? `Gambe tonde fino a ${hTop} cm: verificare la portata con Everdeck.` : `Portata ridotta a 500 kg/m² con gambe 60×60 oltre 120 cm (tabella Larcher).`);
+  if(hTop >= 80) out.notes.push('File da 80 cm in su: connettori tra le gambe, al massimo 20 cm sotto il deck.');
+
+  // --- metriche per le regole
+  const area = W*D;
+  const vmap = new Map();
+  for(const d of decks) for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
+    const k = cx+','+cy, v = vmap.get(k) || {n:0, h:0}; v.n++; v.h = Math.max(v.h, d.hc); vmap.set(k, v);
+  }
+  const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(area-1e-9), fixed:1, vertex:vmap.size, vertex1:0, junction2:0, junction34:0};
+  for(const v of vmap.values()){ if(v.h < 80) continue; if(v.n===2) M.junction2++; else if(v.n>2) M.junction34++; }
+  // giunti tra pedane della stessa fila (alla stessa altezza): VD2D e VDL; le file vicine sono a quote diverse
+  const joints = [], joints20 = [], jointsHigh = [];
+  for(let i=0;i<decks.length;i++) for(let j=i+1;j<decks.length;j++){
+    const a = decks[i], b = decks[j]; if(a.row!==b.row) continue;
+    if(a.x+a.w===b.x || b.x+b.w===a.x){ const o = Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y); if(o>0){ joints.push(o/2); (a.hc===20 ? joints20 : jointsHigh).push(o/2); } }
+  }
+
+  // --- parapetti: dietro l'ultima fila, davanti alla prima (aperto ai corridoi), sui lati a gradini (un pezzo per fila)
+  const safe = !!cfg.safety, kick = !!cfg.kick && !safe;
+  const c2 = safe ? 'VHX2.0' : kick ? 'VHK2.0' : 'VH2.0', c1 = safe ? 'VHX1.0' : kick ? 'VHK1.0' : 'VH1.0', c05 = kick ? 'VHK0.5' : 'VH0.5';
+  const runs = []; let n2 = 0, n1 = 0, n05 = 0, links = 0;
+  const addRun = (side, start, L, h) => {
+    const pc = railPieces(L);
+    if(safe && pc.n05){ pc.n05 = 0; warn('warn','Il parapetto di sicurezza non esiste da 0,5 m: un tratto di 0,5 m resta da chiudere a parte.'); }
+    n2 += pc.n2; n1 += pc.n1; n05 += pc.n05; links += Math.max(0, pc.n2+pc.n1+pc.n05-1);
+    runs.push({side, start, L, h, pieces:railOrder(pc, start, [])});
+  };
+  if(cfg.rails.back) addRun('back', 0, W, hTop);
+  if(cfg.rails.front){ for(const sg of segs) if(!sg.aisle) addRun('front', sg.a, sg.b-sg.a, h1); }
+  for(const side of ['left','right']) if(cfg.rails[side]) for(const r of rows) addRun(side, (N-1-r.i)*depth, depth, r.h);
+  if(n2) out.lines.push({group:'Parapetti', code:c2, qty:n2});
+  if(n1) out.lines.push({group:'Parapetti', code:c1, qty:n1});
+  if(n05) out.lines.push({group:'Parapetti', code:c05, qty:n05});
+  M.rail = n2+n1+n05; M.rail_link = links;
+  const frontAtEdge = s => cfg.rails.front && !aisles.some(([a,b]) => s==='left' ? a<=1e-9 : b>=W-1e-9);
+  M.rail_corner = (cfg.rails.back && cfg.rails.left ? 1 : 0) + (cfg.rails.back && cfg.rails.right ? 1 : 0) + (frontAtEdge('left') && cfg.rails.left ? 1 : 0) + (frontAtEdge('right') && cfg.rails.right ? 1 : 0);
+  if(M.rail) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti laterali a gradini: un elemento per fila, alla sua altezza.');
+
+  // --- bordi anticaduta per le sedie: sul bordo davanti di ogni fila, fuori dai corridoi, un profilo per pedana
+  const stops = [];
+  if(T.chairStop){
+    for(const d of decks){
+      if(d.aisle) continue;
+      const L = d.w/2, code = CHAIR_STOP[L];
+      if(!code){ warn('warn',`Bordo anticaduta: lato di pedana da ${nf(L)} m senza profilo a listino.`); continue; }
+      out.lines.push({group:'Parapetti', code, qty:1});
+      stops.push({x:d.x, y:d.y+d.h, w:d.w, h:d.h, row:d.row});
+    }
+    out.notes.push('Bordi anticaduta per le sedie (SKBP) sul bordo davanti di ogni fila, fuori dai corridoi.');
+  }
+
+  // --- scale: d'accesso alla prima fila davanti a ogni corridoio; gradini intermedi nei corridoi con alzate oltre 20 cm
+  const leg0 = rows[0].leg;
+  const access = aisles.length && h1 > 20 ? pickStair(h1, cfg.stairType, leg0 && leg0.round ? null : leg0) : null;
+  if(aisles.length && h1 > 20 && !access) warn('bad',`Nessuna scala d'accesso per la prima fila a ${h1} cm.`);
+  if(access){
+    for(const pt of access.parts) out.lines.push({group:'Scale', code:pt.code, qty:pt.qty*aisles.length});
+    out.notes.push(`Scala d'accesso alla prima fila (${h1} cm) davanti a ogni corridoio: ${access.parts.map(p => p.code).join(' + ')}.`);
+  }
+  const inter = rise > 20 ? Math.round(rise/20) - 1 : 0;
+  if(inter && aisles.length && N>1){
+    for(let k=1;k<=inter;k++) out.lines.push({group:'Scale', code:'VSM'+20*k, qty:aisles.length*(N-1)});
+    out.notes.push(`Corridoi: alzata di ${rise} cm, in ogni corridoio ${inter===1?'un gradino intermedio':inter+' gradini intermedi'} (VSM) tra una fila e l'altra.`);
+    if(rise % 20) warn('warn',`Con un'alzata di ${rise} cm i gradini dei corridoi non sono tutti uguali (elementi da 20 cm): meglio un'alzata multipla di 20 cm.`);
+  }
+  M.stair = access ? aisles.length : 0; M.stair_modular = access && access.kind==='modular' ? aisles.length : 0;
+  M.stair_modular_rails = 0; M.stair_adjustable = access && access.kind==='adjustable' ? aisles.length : 0; M.stair_adjustable_rail = 0; M.stair_adjustable_rail2 = 0;
+  M.skirt_sides = 0;
+
+  // --- regole accessori (gambe già messe sopra, per fila)
+  for(const r of R.rows){
+    if(!r.on || r.code==='@LEG' || /^@RR/.test(r.code)) continue;
+    const w = r.when;
+    if(w==='roll' || w==='spider' || w==='perDeck') continue;
+    const q = +r.qty; if(!(q>0)) continue;
+    let code = r.code;
+    if(legRound && ROUND_CLAMP[ncode(code)]) code = ROUND_CLAMP[ncode(code)];
+    if(safe && (r.trigger==='rail_link' || r.trigger==='rail_corner')) code = {VHC:'VHXC', VHCC:'VHXCC'}[ncode(code)] || code;
+    if(!look.has(ncode(code))){ warn('bad',`Regola «${r.label}»: il codice ${code} non è nel listino.`); continue; }
+    const js = w==='deckHigh' ? jointsHigh : w==='deck20' ? joints20 : joints;
+    const n = r.trigger==='joint_m' ? js.reduce((s,l) => s + Math.ceil(l*q-1e-9), 0) : Math.ceil((M[r.trigger]||0)*q-1e-9);
+    if(n>0) out.lines.push({group:(TRIGGERS[r.trigger]||{group:'Varie'}).group, code, qty:n});
+  }
+
+  // --- carrelli
+  const tr = cfg.trolley || {};
+  if(tr.type && TROLLEYS[tr.type]){
+    const TT = TROLLEYS[tr.type];
+    if(TT.sys==='spider') warn('warn',`Il carrello ${tr.type} non è per questo tipo di palco.`);
+    const cap = (R.params.cap && +R.params.cap[tr.type] > 0) ? +R.params.cap[tr.type] : TT.cap;
+    const n = +tr.qty > 0 ? Math.round(+tr.qty) : Math.ceil(area/cap-1e-9);
+    if(n>0) out.lines.push({group:'Trasporto', code:tr.type, qty:n});
+    out.notes.push(`Carrelli ${tr.type}: ${+tr.qty>0 ? 'quantità scelta' : `capacità ${nf(cap)} m² di deck ciascuno per ${nf(area)} m² di tribuna`}.`);
+  }
+  out.notes.push('Tribuna per il pubblico: verificare le norme sulle tribune temporanee (carichi, parapetti, corridoi, capienza) prima dell\'uso.');
+
+  finishOffer(out, cfg, R, look, area, warn);
+  out.plan = {trib:true, W, D, N, depth, rise, h1, hTop, decks, rows, aisles, segs, runs, stops, legRound, c2, c1, c05,
+    conn:hTop >= 80 && R.rows.some(r => r.on && r.when==='legsHigh'),
+    vd2d: out.lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
+    access: access ? {...access, ...stairGeom(access, h1, look), H:h1} : null, inter,
+    stairs:{back:0,front:0,left:0,right:0}, ramps:{back:0,front:0,left:0,right:0}, skirt:[]};
+  out.info.metrics = M;
+  out.info.famLabel = fam.label;
+  out.info.support = 'legs';
+  out.info.leg = null;
   return out;
 }
 // ==ENGINE-END==
@@ -2297,6 +2612,7 @@ const DEFAULT_CFG = {
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
   room:{back:false, left:false, right:false, floor:false, clear:false},
+  kind:'palco', trib:{W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, chairStop:true},
   support:'legs', legShape:'square', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{},
   markup:37, discount:0, vat:22, pdfCost:false, descShow:false, descPdf:false, lingua:'it'
 };
@@ -2311,6 +2627,7 @@ function normCfg(src){
   c.skirt = Object.assign(clone(DEFAULT_CFG.skirt), c.skirt||{}); c.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), c.skirt.sides||{});
   c.trolley = Object.assign(clone(DEFAULT_CFG.trolley), c.trolley||{});
   c.room = Object.assign(clone(DEFAULT_CFG.room), c.room||{});
+  c.trib = Object.assign(clone(DEFAULT_CFG.trib), c.trib||{}); c.trib.aisles = Object.assign(clone(DEFAULT_CFG.trib.aisles), c.trib.aisles||{});
   c.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), c.trasporto||{});
   c.adj = (c.adj && typeof c.adj==='object') ? c.adj : {};
   c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
@@ -2353,7 +2670,7 @@ const AKEY = 'stagedeck.archivio';
 const PRESET_W = [3,4,5,6,7,8,9,10,11,12], PRESET_D = [2,3,4,5,6,7,8,9,10,11,12];
 function archLoad(){ try{ const a = JSON.parse(localStorage.getItem(AKEY) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
 function archStore(a){ try{ localStorage.setItem(AKEY, JSON.stringify(a)); return true; }catch(e){ return false; } }
-const archBase = c => (c.shape==='round' ? `Ø ${nf(+c.diam)} m` : `${nf(+c.W)} × ${nf(+c.D)} m`) + ` · h ${nf(+c.H)} cm`;
+const archBase = c => c.kind==='tribuna' && c.trib ? `Tribuna ${nf(+c.trib.W)} m · ${+c.trib.rows} file · h ${nf(+c.trib.h1)}+${nf(+c.trib.rise)} cm` : (c.shape==='round' ? `Ø ${nf(+c.diam)} m` : `${nf(+c.W)} × ${nf(+c.D)} m`) + ` · h ${nf(+c.H)} cm`;
 function renderArchive(sel){
   const a = archLoad().sort((x,y) => x.base.localeCompare(y.base, 'it', {numeric:true}) || x.n-y.n);
   $('#archSel').innerHTML = a.length
@@ -2542,7 +2859,7 @@ function applyPreset(v){
   const [W,D] = v.split('x').map(Number); if(!W || !D) return;
   const b = blankCfg();
   for(const k of ['rails','stairs','ramps','extras','adj','mkRow','skirt','trolley','kick','safety']) cfg[k] = clone(b[k]);
-  Object.assign(cfg, {shape:'rect', W, D, support:'legs', tele:true, H:60});
+  Object.assign(cfg, {kind:'palco', shape:'rect', W, D, support:'legs', tele:true, H:60});
   stairSel = 0; fillForm(); update(); archMsg(`Palco standard ${W} × ${D} m, gambe 40–60 cm`);
 }
 function renderPresets(){
@@ -2557,7 +2874,7 @@ function fillForm(){
   renderFamilies();
   for(const id of ['cliente','progetto','numero','data','W','D','H','diam','family','markup','discount','vat','stairType','legShape']) $('#'+id).value = cfg[id];
   cliHint();
-  renderShape();
+  renderKind();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
   $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
@@ -2570,7 +2887,19 @@ function fillForm(){
   renderSkSeg(); renderTrolleys();
 }
 // forma del palco: rettangolare (larghezza × profondità) o rotonda (diametro, suddivisione Everdeck)
+function renderKind(){
+  const trib = cfg.kind==='tribuna';
+  $$('#kindSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.kind===cfg.kind ? 'true' : 'false'));
+  $$('.stageOnly').forEach(e => e.hidden = trib);
+  $$('.tribOnly').forEach(e => e.hidden = !trib);
+  $('#secStage').textContent = tr(trib ? 'Tribuna' : 'Palco');
+  $$('[data-trib]').forEach(e => { const v = cfg.trib[e.dataset.trib]; if(e.type==='checkbox') e.checked = !!v; else e.value = v; });
+  $$('[data-aisle]').forEach(e => e.checked = !!cfg.trib.aisles[e.dataset.aisle]);
+  if(trib){ $('#deckMix').hidden = $('#deckMixHint').hidden = true; $('#tele').closest('label').hidden = $('#legShape').closest('label').hidden = false; }
+  else renderShape();
+}
 function renderShape(){
+  if(cfg.kind==='tribuna') return;
   const round = cfg.shape==='round';
   $$('#shapeSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.shape===cfg.shape ? 'true' : 'false'));
   $$('.rectOnly').forEach(e => e.hidden = round);
@@ -2589,7 +2918,7 @@ function renderTrolleys(){
   $('#trolleyType').value = cfg.trolley.type; $('#trolleyQty').value = cfg.trolley.qty;
 }
 function renderFamilies(){
-  const spider = cfg.support==='spider';
+  const spider = cfg.support==='spider' && cfg.kind!=='tribuna';   // la tribuna è solo su gambe
   const opts = Object.entries(FAMILIES).filter(([k,f]) => spider === (f.support==='spider'));
   if(!opts.some(([k]) => k===cfg.family)) cfg.family = opts[0][0];
   $('#family').innerHTML = opts.map(([k,f]) => `<option value="${k}">${f.label}</option>`).join('');
@@ -2751,6 +3080,99 @@ function planSVG(p, H){
   return s + '</svg>';
 }
 
+/* --- tribuna: pianta (file colorate per altezza, corridoi, parapetti, bordi per le sedie, gambe, scale d'accesso)
+   e sezione laterale quotata (fila 1 a sinistra, davanti) --- */
+function tribPlanSVG(p){
+  const W = p.W*100, D = p.D*100, acc = p.access, sd = acc ? Math.max(30, acc.run) : 0;
+  // margini in proporzione alla scala del disegno: a sinistra servono le etichette delle file e la quota
+  const k0 = Math.max(W/440, (D+sd)/380);
+  const mT = 55*k0, mB = Math.max(45*k0, sd+40*k0), mL = 150*k0, mR = 30*k0;
+  const vbw = W+mL+mR, vbh = D+mT+mB, px = Math.max(vbw/640, vbh/640*0.8);
+  const fs = 11*px, sq = 7*px;
+  const seg = (x1,y1,x2,y2,col,w,extra='') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" vector-effect="non-scaling-stroke"${extra}/>`;
+  let s = `<svg class="plan" viewBox="${-mL} ${-mT} ${vbw} ${vbh}" role="img" aria-label="Pianta della tribuna ${nf(p.W)} per ${nf(p.D)} metri">`;
+  for(const d of p.decks){
+    const x = d.x*50, y = d.y*50, w = d.w*50, h = d.h*50, k = p.N>1 ? d.row/(p.N-1) : 0;
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--deck-side-r)" fill-opacity="${(0.15+0.6*k).toFixed(2)}" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    if(Math.min(w,h)/px >= 30 && !d.aisle) s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs*.9}" text-anchor="middle">${nf(d.w/2)}×${nf(d.h/2)}</text>`;
+  }
+  // corridoi
+  for(const [a,b] of p.aisles){
+    s += `<rect x="${a*100}" y="0" width="${(b-a)*100}" height="${D}" fill="var(--stair)" fill-opacity=".14" stroke="var(--stair)" stroke-width="1.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`;
+    s += `<text transform="translate(${(a+b)*50+fs*.35} ${D/2}) rotate(-90)" font-size="${fs}" text-anchor="middle" fill="var(--stair)">${tr('corridoio')}</text>`;
+  }
+  // file: numero e altezza a sinistra
+  for(const r of p.rows){
+    const y = r.y*50 + p.depth*50;
+    s += `<text x="${-8*px}" y="${y+fs*.35}" font-size="${fs}" text-anchor="end">${r.i+1}ª · ${r.h} cm</text>`;
+  }
+  // bordi anticaduta per le sedie
+  for(const st of p.stops) s += seg(st.x*50+3*px, st.y*50-2.5*px, (st.x+st.w)*50-3*px, st.y*50-2.5*px, 'var(--ink)', 2.5);
+  // parapetti
+  for(const r of p.runs){
+    let pos = r.start;
+    for(const L of r.pieces){
+      const a = pos*100, b = (pos+L)*100, rc = L===2 ? 'var(--rail)' : L===1 ? 'var(--rail1)' : 'var(--rail05)';
+      if(r.side==='back') s += seg(a+2*px, 0, b-2*px, 0, rc, 5);
+      else if(r.side==='front') s += seg(a+2*px, D, b-2*px, D, rc, 5);
+      else { const x = r.side==='left' ? 0 : W; s += seg(x, a+2*px, x, b-2*px, rc, 5); }
+      pos += L;
+    }
+  }
+  // gambe: 4 per pedana, appena dentro gli spigoli
+  const ins = sq*1.5;
+  for(const d of p.decks) for(const [cx,cy,sx,sy] of [[d.x,d.y,1,1],[d.x+d.w,d.y,-1,1],[d.x,d.y+d.h,1,-1],[d.x+d.w,d.y+d.h,-1,-1]]){
+    const x = cx*50 + sx*ins, y = cy*50 + sy*ins;
+    s += p.legRound ? `<circle cx="${x}" cy="${y}" r="${sq/2}" fill="var(--leg)"/>` : `<rect x="${x-sq/2}" y="${y-sq/2}" width="${sq}" height="${sq}" fill="var(--leg)"/>`;
+  }
+  // scale d'accesso davanti ai corridoi
+  if(acc) for(const [a,b] of p.aisles){
+    const x = a*100, w = (b-a)*100;
+    s += `<rect x="${x}" y="${D}" width="${w}" height="${sd}" fill="var(--stair)" fill-opacity=".08" stroke="var(--stair)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
+    const n = acc.steps;
+    for(let k=1;k<=n;k++){
+      const [ta, tb] = acc.kind==='modular' ? [(n-k)*STAIR_DEPTH, (n-k+1)*STAIR_DEPTH] : (() => { const c = sd*(1-k/(n+1)), tw = Math.min(30, sd/(n+1)*1.1); return [c-tw/2, c+tw/2]; })();
+      s += `<rect x="${x}" y="${D+ta}" width="${w}" height="${tb-ta}" fill="var(--stair)" fill-opacity=".22" stroke="var(--stair)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    }
+  }
+  s += `<text x="${W/2}" y="${-mT+fs*1.4}" font-size="${fs*1.15}" text-anchor="middle">${nf(p.W)} m</text>`;
+  s += `<text x="${W/2}" y="${-mT+fs*2.8}" font-size="${fs*.9}" text-anchor="middle" fill="var(--muted)">${tr('retro (ultima fila)')}</text>`;
+  s += `<text x="${W/2}" y="${D+mB-fs*.6}" font-size="${fs*.9}" text-anchor="middle" fill="var(--muted)">${tr('fronte (fila 1)')}</text>`;
+  s += `<text transform="translate(${-mL+fs*1.4} ${D/2}) rotate(-90)" font-size="${fs*1.15}" text-anchor="middle">${nf(p.D)} m</text>`;
+  return s + '</svg>';
+}
+function tribSectionSVG(p){
+  const dep = p.depth*100, D = p.D*100, Ht = p.hTop + 100, acc = p.access, sd = acc ? Math.max(30, acc.run) : 0;
+  const mL = sd + 40, mR = 70, mT = 40, mB = 50;
+  const vbw = D+mL+mR, vbh = Ht+mT+mB, px = Math.max(vbw/640, vbh/320);
+  const fs = 11*px;
+  const ln = (x1,y1,x2,y2,col,w,extra='') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" vector-effect="non-scaling-stroke"${extra}/>`;
+  let s = `<svg class="plan" viewBox="${-mL} ${-Ht-mT} ${vbw} ${vbh}" role="img" aria-label="Sezione laterale della tribuna" style="margin-top:10px">`;
+  s += ln(-mL+10*px, 0, D+mR-10*px, 0, 'var(--muted)', 1);
+  for(const r of p.rows){
+    const x0 = r.i*dep, x1 = x0+dep, h = r.h;
+    s += `<rect x="${x0}" y="${-h}" width="${dep}" height="9" fill="var(--deck-side-r)" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    for(const lx of [x0+4, x1-4]) s += ln(lx, -h+9, lx, 0, 'var(--leg)', 3);
+    s += `<text x="${x0+dep/2}" y="${-h-6*px}" font-size="${fs*.9}" text-anchor="middle">${h} cm</text>`;
+    if(p.stops.length) s += ln(x0+2, -h, x0+2, -h-5, 'var(--ink)', 3);
+  }
+  // parapetti: dietro l'ultima fila e davanti alla prima (alti 100 cm sul piano)
+  const back = p.runs.some(r => r.side==='back'), front = p.runs.some(r => r.side==='front'), side = p.runs.some(r => r.side==='left' || r.side==='right');
+  if(back) s += ln(D, -p.hTop, D, -p.hTop-100, 'var(--rail)', 3) + ln(D-6, -p.hTop-100, D, -p.hTop-100, 'var(--rail)', 3);
+  if(front) s += ln(0, -p.h1, 0, -p.h1-100, 'var(--rail)', 3);
+  if(side) for(const r of p.rows) s += ln(r.i*dep+4, -r.h-100, (r.i+1)*dep-4, -r.h-100, 'var(--rail1)', 2, ' stroke-dasharray="5 4"');
+  // scala d'accesso alla prima fila
+  if(acc){
+    if(acc.kind==='modular') for(let i=0;i<acc.steps;i++){ const h = 20*(i+1), x = -(acc.steps-i)*STAIR_DEPTH; s += `<rect x="${x}" y="${-h}" width="${STAIR_DEPTH}" height="${h}" fill="var(--stair)" fill-opacity=".15" stroke="var(--stair)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`; }
+    else s += ln(-sd, 0, 0, -p.h1, 'var(--stair)', 4);
+  }
+  // quote: profondità fila, alzata, altezza totale
+  s += `<text x="${D/2}" y="${fs*1.8}" font-size="${fs}" text-anchor="middle">${p.N} × ${dep} cm = ${nf(p.D)} m</text>`;
+  const qx = D + 30*px;
+  s += ln(qx, 0, qx, -p.hTop, 'var(--muted)', 1) + `<text transform="translate(${qx+fs*1.2} ${-p.hTop/2}) rotate(-90)" font-size="${fs}" text-anchor="middle">${p.hTop} cm</text>`;
+  s += `<text x="${-mL+6*px}" y="${-Ht-mT+fs*1.6}" font-size="${fs}">${tr('Sezione')} · ${tr('alzata')} ${p.rise} cm</text>`;
+  return s + '</svg>';
+}
 /* --- scala in offerta: vista laterale interattiva (palco a destra, scala a sinistra, misure in cm) --- */
 let stairSel = 0;
 function stairPieces(st, rails){
@@ -2887,7 +3309,9 @@ function palletSVG(p, Hmax){
   const vb0 = P(0, 100, 0)[0]-6, vb1 = P(200, 0, 0)[0]+70, vt = P(0, 0, BASE+Hmax)[1]-10, vbt = P(200, 100, 0)[1]+8;
   return `<svg class="pal" viewBox="${vb0} ${vt} ${vb1-vb0} ${vbt-vt}" role="img" aria-label="Bancale ${esc(p.name)} alto ${Math.round(top)} cm">${s}</svg>`;
 }
-const stageName = p => p.round ? `Palco rotondo Ø ${nf(p.round.D)} m` : `Palco ${nf(p.W)} × ${nf(p.D)} m`;
+const stageName = p => p.trib ? `Tribuna ${nf(p.W)} × ${nf(p.D)} m` : p.round ? `Palco rotondo Ø ${nf(p.round.D)} m` : `Palco ${nf(p.W)} × ${nf(p.D)} m`;
+// titolo con l'altezza: palco «…, altezza 60 cm», tribuna «…, 5 file da 20 a 100 cm»
+const stageTitle = (p, sep = ', ') => p.trib ? `${stageName(p)}${sep}${p.N} ${p.N===1 ? 'fila' : 'file'} da ${p.h1} a ${p.hTop} cm` : `${stageName(p)}${sep}altezza ${cfg.H} cm`;
 /* --- illustrazioni: img/<file> indicato nel catalogo (campo img), scritto da tools/importa_immagini.py --- */
 // pezzi speciali dei palchi rotondi: immagine generata dalla sagoma (piano nero, bordo in alluminio)
 const shapeSrc = it => {
@@ -3012,7 +3436,7 @@ function renderShip(){
     <ul class="techs">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>`;
 }
 function renderResult(){
-  res = compute(cfg, R, LOOK, KITS);
+  res = cfg.kind==='tribuna' ? computeTribune(cfg, R, LOOK) : compute(cfg, R, LOOK, KITS);
   const t = res.totals;
   const sumQ = g => (res.lines||[]).filter(l => l.group===g && /PLATFORM|DECK/i.test((LOOK.get(ncode(l.code))||{}).section||'')).reduce((a,l) => a+l.qty, 0);
   const nDecks = sumQ('Pedana'), nRampDecks = sumQ('Rampe');
@@ -3024,11 +3448,11 @@ function renderResult(){
   $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
   if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
-  const title = `${stageName(p)} · altezza ${cfg.H} cm`;
+  const title = stageTitle(p, ' · ');
   $('#planTitle').textContent = title;
   $('#offerTitle').textContent = 'Offerta · ' + res.info.famLabel;
-  $('#legHint').textContent = res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
-  $('#planBox').innerHTML = planSVG(p, cfg.H);
+  $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
+  $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
   draw3d();
   $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
   renderStair(p);
@@ -3073,7 +3497,7 @@ function printPart(part){
   const head = [cfg.numero ? tr('Offerta n.')+' '+cfg.numero : tr('Offerta'), c && part==='offerta' ? '' : cfg.cliente, cfg.progetto, d].filter(Boolean);
   // nell'offerta, con un cliente dell'anagrafica: nome, indirizzo e dati fiscali (niente telefoni, note e avvisi interni)
   const cli = c && part==='offerta' ? `<div class="ph-cli">${esc(tr('Spett.le'))}<br><b>${esc(cfg.cliente || cliName(c))}</b>${[...cliAddr(c), cliTax(c)].filter(Boolean).map(t => '<br>'+esc(t)).join('')}</div>` : '';
-  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(`${stageName(res.plan)}, altezza ${cfg.H} cm`))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
+  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(stageTitle(res.plan)))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
   document.title = [tr(part==='offerta' ? 'Offerta' : 'Disegni'), cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
@@ -3100,12 +3524,12 @@ function offerText(){
   return inLang(cfg.lingua, () => {
   const p = res.plan, t = res.totals, pad = (s,n) => String(s).padEnd(n), lpad = (s,n) => String(s).padStart(n);
   const d = fmtDate(cfg.data);
-  const out = [tr(`OFFERTA PALCO MODULARE${cfg.numero ? ' n. '+cfg.numero : ''}`)];
+  const out = [tr(`OFFERTA ${res.plan && res.plan.trib ? 'TRIBUNA' : 'PALCO'} MODULARE${cfg.numero ? ' n. '+cfg.numero : ''}`)];
   if(cfg.cliente) out.push(tr('Cliente:')+' '+cfg.cliente);
   if(cfg.cli) out.push(...[...cliAddr(cfg.cli), cliTax(cfg.cli)].filter(Boolean).map(t => '         '+t));
   if(cfg.progetto) out.push(tr('Progetto:')+' '+cfg.progetto);
   if(d) out.push(tr('Data:')+' '+d);
-  out.push(tr(`${stageName(p)}, altezza ${cfg.H} cm, ${res.info.famLabel}`), '');
+  out.push(tr(`${stageTitle(p)}, ${res.info.famLabel}`), '');
   out.push(pad(tr('Codice'),16)+pad(tr('Descrizione'),46)+lpad(tr('Q.tà'),5)+lpad(tr('Prezzo'),11)+lpad(tr('Totale'),12));
   for(const l of res.lines.filter(l => l.qty>0)){
     out.push(pad(l.code,16)+pad(tr(l.name).slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
@@ -3233,7 +3657,7 @@ async function saveHtml3d(){
   const buf = new Uint8Array(await v3.view.glb().arrayBuffer());
   let bin = ''; for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
   const p = res.plan, d = cfg.data ? cfg.data.split('-').reverse().join('/') : '';
-  const title = `${stageName(p)}, altezza ${cfg.H} cm`;
+  const title = stageTitle(p);
   const meta = [cfg.numero ? 'Offerta n. '+cfg.numero : '', cfg.cliente, cfg.progetto, d].filter(Boolean).map(esc).join(' · ');
   const html = `<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(title)}</title>
@@ -3371,6 +3795,7 @@ function bind(){
   }));
 
   $$('#shapeSeg button').forEach(b => b.addEventListener('click', () => { cfg.shape = b.dataset.shape; renderShape(); update(); }));
+  $$('#kindSeg button').forEach(b => b.addEventListener('click', () => { cfg.kind = b.dataset.kind; renderFamilies(); renderKind(); update(); }));
   $('#cfgForm').addEventListener('input', e => {
     const t = e.target;
     // battipiede e parapetto di sicurezza non vanno insieme (il VHX non ha battipiede)
@@ -3390,6 +3815,12 @@ function bind(){
       if(cfg.support==='spider' && ![20,40,60].includes(h)) cfg.H = 40;
       $('#H').value = cfg.H; renderFamilies(); renderTrolleys(); update();
     }
+    if(t.dataset.trib){
+      const k = t.dataset.trib;
+      cfg.trib[k] = t.type==='checkbox' ? t.checked : t.tagName==='SELECT' ? +t.value : (t.value==='' ? '' : +t.value);
+      update();
+    }
+    if(t.dataset.aisle){ cfg.trib.aisles[t.dataset.aisle] = t.checked; update(); }
     if(t.dataset.skside){ cfg.skirt.sides[t.dataset.skside] = t.checked; renderSkSeg(); update(); }
     if(t.id==='skFabric'){ cfg.skirt.fabric = t.value; update(); }
     if(t.id==='skHeight'){ cfg.skirt.height = t.value; update(); }
