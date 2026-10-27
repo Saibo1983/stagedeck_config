@@ -44,8 +44,10 @@ DE = {
     "Scarica tutte le offerte salvate in un file .json": "Alle gespeicherten Angebote als .json-Datei herunterladen",
     "Importa archivio": "Archiv importieren",
     "Aggiunge all'archivio le offerte di un file esportato": "Fügt die Angebote einer exportierten Datei zum Archiv hinzu",
-    "Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.":
-        "Die Standardbühne setzt die Maße und Teleskopbeine 40–60 cm (auf 60 eingestellt) und entfernt Geländer, Treppen und Zubehör. Das Archiv bleibt in diesem Browser: Um es auf ein anderes Gerät zu übertragen, exportieren und dort importieren.",
+    "Il palco standard mette le misure e le gambe telescopiche 40–60 cm (regolate a 60, nel riquadro «Gambe») e toglie parapetti, scale e accessori.":
+        "Die Standardbühne setzt die Maße und die Teleskopbeine 40–60 cm (auf 60 eingestellt, im Bereich «Beine») und entfernt Geländer, Treppen und Zubehör.",
+    "L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.":
+        "Das Archiv bleibt in diesem Browser: Um es auf ein anderes Gerät zu übertragen, exportieren und dort importieren.",
     "{} · h {} cm · n. {} — {}": "{0} · H {1} cm · Nr. {2} — {3}",
     "{} · h {} cm · n. {}": "{0} · H {1} cm · Nr. {2}",
     "Salvataggio non riuscito: memoria del browser piena o bloccata.": "Speichern nicht möglich: Browserspeicher voll oder gesperrt.",

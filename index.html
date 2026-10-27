@@ -370,12 +370,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   <form class="panel config" id="cfgForm" onsubmit="return false">
     <div class="sec">
       <h3>Dati offerta</h3>
-      <label class="field"><span>Palchi standard</span><select id="presetSel" aria-describedby="presetHint"></select></label>
       <div class="field"><span>Offerte salvate</span>
         <div class="archrow"><select id="archSel" aria-label="Offerte salvate"></select><button type="button" class="btn small" id="archOpen">Apri</button></div>
       </div>
       <div class="archrow"><button type="button" class="btn small" id="archSave" title="Salva l'offerta corrente nell'archivio: il titolo sono le misure con un numero progressivo">Salva offerta</button><button type="button" class="btn small" id="archDel">Elimina</button><button type="button" class="btn small" id="archExp" title="Scarica tutte le offerte salvate in un file .json">Esporta archivio</button><label class="btn small" for="archFile" style="cursor:pointer" title="Aggiunge all'archivio le offerte di un file esportato">Importa archivio</label><input type="file" id="archFile" accept=".json,application/json" hidden><span class="hint" id="archMsg" role="status" aria-live="polite"></span></div>
-      <p class="hint" id="presetHint">Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.</p>
+      <p class="hint">L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.</p>
       <div class="field"><span id="cliLbl">Cliente</span>
         <div class="clirow"><input type="text" id="cliente" autocomplete="off" list="cliNames" aria-labelledby="cliLbl"><button type="button" class="btn small" id="cliBtn" title="Anagrafica clienti: cerca, aggiungi, modifica, elimina e scegli il cliente dell'offerta">Anagrafica</button></div>
         <p class="hint" id="cliHint" style="margin:0"></p>
@@ -396,6 +395,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" data-kind="tribuna" aria-pressed="false">Tribuna</button>
         </div>
       </div>
+      <label class="field stageOnly"><span>Palchi standard</span><select id="presetSel" aria-describedby="presetHint"></select></label>
+      <p class="hint stageOnly" id="presetHint">Il palco standard mette le misure e le gambe telescopiche 40–60 cm (regolate a 60, nel riquadro «Gambe») e toglie parapetti, scale e accessori.</p>
       <div class="field stageOnly"><span>Forma</span>
         <div class="seg" id="shapeSeg" role="group" aria-label="Forma del palco">
           <button type="button" data-shape="rect" aria-pressed="true">Rettangolare</button>
@@ -805,7 +806,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Scarica tutte le offerte salvate in un file .json":"Alle gespeicherten Angebote als .json-Datei herunterladen",
 "Importa archivio":"Archiv importieren",
 "Aggiunge all'archivio le offerte di un file esportato":"Fügt die Angebote einer exportierten Datei zum Archiv hinzu",
-"Il palco standard mette le misure, gambe telescopiche 40–60 cm (regolate a 60) e toglie parapetti, scale e accessori. L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.":"Die Standardbühne setzt die Maße und Teleskopbeine 40–60 cm (auf 60 eingestellt) und entfernt Geländer, Treppen und Zubehör. Das Archiv bleibt in diesem Browser: Um es auf ein anderes Gerät zu übertragen, exportieren und dort importieren.",
+"Il palco standard mette le misure e le gambe telescopiche 40–60 cm (regolate a 60, nel riquadro «Gambe») e toglie parapetti, scale e accessori.":"Die Standardbühne setzt die Maße und die Teleskopbeine 40–60 cm (auf 60 eingestellt, im Bereich «Beine») und entfernt Geländer, Treppen und Zubehör.",
+"L'archivio resta in questo browser: per spostarlo su un altro dispositivo esportalo e importalo là.":"Das Archiv bleibt in diesem Browser: Um es auf ein anderes Gerät zu übertragen, exportieren und dort importieren.",
 "{} · h {} cm · n. {} — {}":"{0} · H {1} cm · Nr. {2} — {3}",
 "{} · h {} cm · n. {}":"{0} · H {1} cm · Nr. {2}",
 "Salvataggio non riuscito: memoria del browser piena o bloccata.":"Speichern nicht möglich: Browserspeicher voll oder gesperrt.",
