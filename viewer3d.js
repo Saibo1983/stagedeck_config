@@ -307,6 +307,29 @@ function create(canvas){
         railGroups.get(k).list.push(pc.T);
       }
     }
+    // connettori d'angolo (VHCC): dove due tratti di parapetto si incontrano a 90°, una squadretta tra i due montanti
+    // d'angolo (a 50 mm dall'angolo, 27 mm fuori dal bordo) alle altezze dei connettori dei parapetti (273 e 873 mm sul piede)
+    {
+      const spans = plan.runs.map(r => {
+        const limit = (r.side==='back'||r.side==='front') ? plan.W : plan.D, lens = r.pieces || [];
+        return {side:r.side, u0:r.start, u1:Math.min(limit, r.start + lens.reduce((a,b) => a+b, 0)), y:r.h!=null ? r.h*10 - 30 + 63.5 : ry0};
+      });
+      const at = (side, u) => spans.find(sp => sp.side===side && u >= sp.u0-1e-6 && u <= sp.u1+1e-6);
+      const CC = mk();
+      for(const [hs, vs] of [['back','left'],['back','right'],['front','left'],['front','right']]){
+        const uH = vs==='left' ? 0 : plan.W, uV = hs==='back' ? 0 : plan.D;
+        const h = at(hs, uH), v = at(vs, uV);
+        if(!h || !v) continue;
+        const cx = uH*1000, cz = uV*1000, ox = vs==='left' ? -1 : 1, oz = hs==='back' ? -1 : 1;   // verso fuori
+        const pA = [cx - ox*50, cz + oz*27], pC = [cx + ox*27, cz + oz*27], pB = [cx + ox*27, cz - oz*50];   // montanti: 27 mm fuori dal bordo
+        for(const dy of [273, 873]){
+          const y = h.y + dy;
+          for(const [p, q] of [[pA, pC], [pC, pB]]) push(CC, box([Math.min(p[0],q[0])-6, y-12, Math.min(p[1],q[1])-6], [Math.max(p[0],q[0])+6, y+12, Math.max(p[1],q[1])+6]), BOX_IDX);
+          push(CC, ...cyl([pC[0], y-30, pC[1]], [pC[0], y+30, pC[1]], 9, 8));   // bullone a farfalla
+        }
+      }
+      if(CC.P.length) addBatch([rawMat(CC.P, CC.I, [0.56,0.56,0.57], 0.35)], [IDT]);
+    }
     for(const g of railGroups.values()){
       let mats;
       if(spider) mats = spiderRail(g.Lm*1000);                       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
