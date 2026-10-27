@@ -282,40 +282,74 @@ function create(canvas){
     }
     if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
-    // --- scale
+    const mk = () => ({P:[], I:[]});
+    const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
+    // --- scale (disegni Everdeck). Modulare: elementi VSM larghi 910 mm e profondi 282, l'ultimo 20 cm sotto il palco
+    // (palco da 60 cm: VSM20 + VSM40), corrimano VHSM ogni 2 gradini partendo dall'alto. Regolabile (VAS): due cosciali
+    // lunghi st.len, larga 975 mm con i ganci, gradini sempre orizzontali, corrimano VASH lungo 2180 mm e alto 750.
     const OUT = {back:[0,0,-1], front:[0,0,1], left:[-1,0,0], right:[1,0,0]};
     const sideStart = {back:[0,0], front:[0,Dmm], left:[0,0], right:[Wmm,0]};
     const stepBy = {}, sRail = [];
     const byside = {back:[],front:[],left:[],right:[]};
     (cfg.stairs||[]).forEach(s => { if(byside[s.side]) byside[s.side].push(s); });
     const opening = (plan.opening||1)*1000;
+    const st = plan.stair || {}, adjStair = st.kind==='adjustable' && st.len;
+    const nMod = st.kind==='modular' ? st.steps : Math.max(1, Math.round(H/20) - 1);
+    const SD = 282, SW = 910;                                   // profondità e larghezza di un elemento modulare
+    const AS = mk(), AA = mk();                                 // scala regolabile: gradini neri, alluminio
+    let stairOut = 0;                                           // quanto escono le scale dal palco (per la sala)
     for(const side of Object.keys(byside)){
-      byside[side].forEach((st,i) => {
+      byside[side].forEach((stc,i) => {
         const o = OUT[side], horiz = side==='back'||side==='front';
         // centro della scala lungo il lato (palco rotondo: scale centrate, il bordo tocca il lato solo al centro)
         const along = (i+0.5)*opening + (plan.round ? ((horiz ? Wmm : Dmm) - byside[side].length*opening)/2 : 0);
         const base = sideStart[side];
         const cx = base[0] + (horiz ? along : 0), cz = base[1] + (horiz ? 0 : along);
-        const n = Math.max(1, Math.max(1, Math.round(H/20)));       // gradini da 20 cm
+        const sides = stc.rails===0 ? 0 : stc.rails===1 ? 1 : 2;
+        if(adjStair){
+          const yTop = ty + 90, run = Math.max(300, st.run*10), w2 = 975/2 - 20, n = st.steps;
+          stairOut = Math.max(stairOut, run + 100);
+          const px = horiz ? [1,0,0] : [0,0,1];
+          const W = ([x,y,z]) => [cx + px[0]*x + o[0]*z, y, cz + px[2]*x + o[2]*z];
+          const sbox = (m, x0, x1, z0, z1, yt0, yt1, t) => push(m, [[x0,yt0-t,z0],[x1,yt0-t,z0],[x1,yt0,z0],[x0,yt0,z0],[x0,yt1-t,z1],[x1,yt1-t,z1],[x1,yt1,z1],[x0,yt1,z1]].map(W).flat(), BOX_IDX);
+          const yAtS = z => yTop - (yTop - 110)*z/run;           // filo superiore dei cosciali (al piede 11 cm da terra)
+          for(const sx of [-1,1]) sbox(AA, sx<0 ? -w2 : w2-45, sx<0 ? -w2+45 : w2, 0, run, yAtS(0), yAtS(run), 110);
+          sbox(AA, -w2, w2, -70, 0, yTop+6, yTop+6, 6);          // ganci sul bordo del palco
+          const tw = Math.min(260, run/(n+1)*1.05);
+          for(let k=1;k<=n;k++){
+            const t = k/(n+1), z = run*(1-t), y = yTop*t;
+            sbox(AS, -w2+45, w2-45, z-tw/2, z+tw/2, y, y, 28);
+            sbox(AA, -w2+45, w2-45, z+tw/2-30, z+tw/2, y-28, y-28, 40);   // profilo sotto il gradino
+          }
+          // corrimano VASH: tubo parallelo ai cosciali, 750 mm sopra, con due montanti
+          const Lr = Math.min(2180, Math.hypot(run, yTop)), zr = run*Lr/Math.hypot(run, yTop);
+          for(let sd=0; sd<sides; sd++){
+            const x = (sd===0 ? -1 : 1)*(w2+25), z0 = Math.max(0, (run-zr)/2), z1 = z0 + zr;
+            push(AA, ...cyl(W([x, yAtS(z0)+750, z0]), W([x, yAtS(z1)+750, z1]), 20, 12));
+            for(const zp of [z0 + zr*0.1, z0 + zr*0.9]) push(AA, ...cyl(W([x, yAtS(zp)-60, zp]), W([x, yAtS(zp)+750, zp]), 17, 10));
+          }
+          return;
+        }
+        const n = nMod;
+        stairOut = Math.max(stairOut, n*SD + 100);
         const lz = [0,1,0], ly = [-o[0],-o[1],-o[2]];
         // lx = ly x lz
         const lx = [ly[1]*lz[2]-ly[2]*lz[1], ly[2]*lz[0]-ly[0]*lz[2], ly[0]*lz[1]-ly[1]*lz[0]];
         const R = [lx[0],ly[0],lz[0], lx[1],ly[1],lz[1], lx[2],ly[2],lz[2]];
         for(let k=0;k<n;k++){
-          const h = (n-k)*200, dist = 120 + k*240;
+          const h = (n-k)*200, dist = SD/2 + k*SD;
           const key = h<=600 ? 'step'+(h/10) : 'tall'+h;
           if(!stepBy[key]) stepBy[key] = [];
           stepBy[key].push({r:R, t:[cx+o[0]*dist, 5, cz+o[2]*dist]});
         }
-        // corrimano: uno ogni 2 gradini, su 1 o 2 lati
-        const sides = st.rails===0 ? 0 : st.rails===1 ? 1 : 2;
+        // corrimano: uno ogni 2 gradini, partendo dall'alto (con 3 gradini sta sul 2° e 3°), su 1 o 2 lati
         if(sides && n>=2){
           const rz = [0,1,0], rx = o, ryv = [rz[1]*rx[2]-rz[2]*rx[1], rz[2]*rx[0]-rz[0]*rx[2], rz[0]*rx[1]-rz[1]*rx[0]];
           const RR = [rx[0],ryv[0],rz[0], rx[1],ryv[1],rz[1], rx[2],ryv[2],rz[2]];
-          for(let k=0;k<Math.floor(n/2);k++){
-            const dist = 240 + k*480, top = (n-2*k)*200, by = top - 372;
+          for(let j=0; j+1<n; j+=2){
+            const dist = (j+1)*SD, top = (n-j)*200, by = top - 372;
             for(let sd=0;sd<sides;sd++){
-              const off = (sd===0 ? -1 : 1)*337;                   // a destra e a sinistra della scala
+              const off = (sd===0 ? -1 : 1)*(SW/2 + 16);           // a destra e a sinistra della scala
               const px = cx + (horiz ? off : 0) + o[0]*dist, pz = cz + (horiz ? 0 : off) + o[2]*dist;
               sRail.push({r:RR, t:[px, by, pz]});
             }
@@ -323,11 +357,15 @@ function create(canvas){
         }
       });
     }
+    // elementi modulari: i modelli CAD sono larghi 642 mm e profondi 242, si allargano alle misure dei disegni
+    const widen = (x,y) => [x + Math.sign(x)*(SW-642)/2, y + Math.sign(y)*(SD-242)/2];
     for(const [key,list] of Object.entries(stepBy)){
-      if(key.startsWith('step')) addBatch(plain(key), list);
-      else { const h = +key.slice(4); addBatch(stretched('step60', (x,y,z) => [x,y,z > 300 ? z + (h-600) : z]), list); }
+      const src = key.startsWith('step') ? key : 'step60', h = key.startsWith('step') ? 0 : +key.slice(4) - 600;
+      addBatch(stretched(src, (x,y,z) => [...widen(x,y), z > 300 && h ? z + h : z]), list);
     }
-    if(sRail.length) addBatch(plain('stairrail'), sRail);
+    if(sRail.length) addBatch(stretched('stairrail', (x,y,z) => [x + Math.sign(x)*(2*SD-474)/2, y, z]), sRail);
+    if(AS.P.length) addBatch([rawMat(AS.P, AS.I, [0.06,0.06,0.07], 0.15)], [IDT]);
+    if(AA.P.length) addBatch([rawMat(AA.P, AA.I, [0.80,0.82,0.86], 0.5)], [IDT]);
 
     // --- rampe (disegni Everdeck dei kit): pedane in salita larghe 1 m, telaio in alluminio, lamiera mandorlata
     // a terra (ER-SE) e sul palco (ER-EE), piedini tondi (20 e 40 cm) o gambe telescopiche tonde con traverso
@@ -337,9 +375,7 @@ function create(canvas){
     const decksR = (plan.rampDecks && plan.rampDecks.length ? plan.rampDecks : [plan.rampLen||2]).map(x => x*1000);
     const rl = decksR.reduce((a,b) => a+b, 0), g0 = 25;                 // g0: quota del piano sopra l'elemento di partenza
     const yAt = z => top - (top-g0)*z/rl;                                // z: distanza dal bordo del palco, verso fuori
-    const mk = () => ({P:[], I:[]});
     const RB = mk(), RA = mk(), RG = mk();                               // piano nero, alluminio, lamiera
-    const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
     for(const side of Object.keys(rbySide)){
       for(let j=0;j<rbySide[side];j++){
         const o = OUT[side], horiz = side==='back'||side==='front';
@@ -401,8 +437,7 @@ function create(canvas){
     const rm = cfg.room || {};
     roomClear = !!rm.clear;
     if(rm.back || rm.left || rm.right || rm.floor){
-      const nSt = Math.max(1, Math.round(H/20));
-      const out = s => Math.max(rbySide[s] ? rl + 300 : 0, byside[s].length ? nSt*240 + 100 : 0);
+      const out = s => Math.max(rbySide[s] ? rl + 300 : 0, byside[s].length ? stairOut : 0);
       const GAP = 30, M = 500, WH = Math.max(3000, ty + 2500), WALL = [0.93,0.93,0.94];
       const x0 = -out('left') - (rm.left ? GAP : M), x1 = Wmm + out('right') + (rm.right ? GAP : M);
       const z0 = -out('back') - (rm.back ? GAP : M), z1 = Dmm + out('front') + M;

@@ -1597,7 +1597,9 @@ function pickLeg(h, tele){
 // Scala modulare: elementi da 20 cm (VSM20 = 1° gradino, VSM40 = 2°, ...). L'ultimo gradino è 20 cm sotto il palco,
 // quindi per un palco da H servono VSM20 ... VSM(H-20). Solo per altezze multiple di 20, da 40 a 100 cm.
 // Scala regolabile: il modello va abbinato alla gamba telescopica con la stessa escursione (VTL40↔VAS-2, VTL60↔VAS-4, ...).
-const STAIR_DEPTH = 29;   // cm, profondità di un elemento modulare (imballo VSM: 915 × 290 mm)
+const STAIR_DEPTH = 28.2;   // cm, profondità di un elemento modulare (disegno Everdeck: 910 × 282 mm; imballo 915 × 290)
+// lunghezza dei cosciali delle scale regolabili (cm, disegni Everdeck); larghe 97,5 cm con i ganci
+const ADJ_STAIR_LEN = {'VAS-2':91.2, 'VAS-4':155.2, 'VAS-5':187.1, 'VAS-7':251.1};
 function pickStair(h, type, leg){
   const mod = (h>=40 && h<=100 && h%20===0)
     ? {kind:'modular', steps:h/20-1, parts:Array.from({length:h/20-1},(_,i) => ({code:'VSM'+20*(i+1), qty:1}))} : null;
@@ -1609,7 +1611,7 @@ function pickStair(h, type, leg){
   if(type==='adjustable') return adj;
   return mod || adj;
 }
-// Ingombro della scala a terra (cm). Regolabile: indicativo, dalla lunghezza dell'imballo come lunghezza del cosciale.
+// Ingombro della scala a terra (cm). Regolabile: dalla lunghezza del cosciale (disegni Everdeck) e dall'altezza del palco.
 // Spedizione su bancali (stima).
 // Pedane impilate su bancali 2×1 m: uno strato = la superficie del bancale (1 pedana 2×1, 2 da 1×1, ...),
 // al massimo P.decks strati e P.h cm di carico (bancale escluso).
@@ -1701,7 +1703,7 @@ function shipSummary(sh){
 }
 function stairGeom(st, h, look){
   if(st.kind==='modular') return {run:st.steps*STAIR_DEPTH, len:null, angle:Math.atan2(20, STAIR_DEPTH)*180/Math.PI};
-  const it = look.get(ncode(st.model)), L = it && it.pack ? it.pack[0]/10 : (st.steps+1)*30;
+  const it = look.get(ncode(st.model)), L = ADJ_STAIR_LEN[st.model] || (it && it.pack ? it.pack[0]/10 : (st.steps+1)*30);
   const run = Math.sqrt(Math.max(L*L - h*h, (L*0.3)**2));
   return {run, len:L, angle:Math.atan2(h, run)*180/Math.PI};
 }
@@ -2749,7 +2751,7 @@ function stairSVG(st, rails){
       const lo = up-1, xa = -(n-lo+1)*d + 2, ya = -20*lo-RH, xb = -(n-up)*d - 2, yb = -20*up-RH;
       s += piece(hr.code, hit(xa,ya,xb,yb)+ln(xa,ya,xb,yb,'l',3)+ln(xa,ya,xa,-20*lo)+ln(xb,yb,xb,-20*up), `${hr.code}, corrimano gradini ${lo}° e ${up}°`);
     }
-    s += `<text x="${-n*d/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">${n*d} cm</text>`;
+    s += `<text x="${-n*d/2}" y="${fs*1.6}" font-size="${fs}" text-anchor="middle">${dec(n*d, (n*d)%1 ? 1 : 0)} cm</text>`;
     s += `<text x="${-d*n-6*px}" y="${-H+20+fs*.35}" font-size="${fs}" text-anchor="end">ultimo gradino ${H-20} cm</text>`;
     s += ln(-d*n, -H+20, 0, -H+20, '', 1, ' stroke="var(--muted)" stroke-dasharray="3 3"');
   }else{
