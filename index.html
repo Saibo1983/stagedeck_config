@@ -984,6 +984,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Tonde Ø 48 con piedino regolabile (VRLA)":"Rund Ø 48 mit verstellbarem Fuß (VRLA)",
 "Con altezza {} cm non ci sono gambe tonde fisse (20–120 cm a passi di 10). Se il cliente le richiede, spunta «Gambe telescopiche» (VRLT, 45–220 cm).":"Bei {0} cm Höhe gibt es keine festen Rundbeine (20–120 cm in 10er-Schritten). Wenn der Kunde es wünscht, «Teleskopbeine» ankreuzen (VRLT, 45–220 cm).",
 "Gambe tonde Ø 48 (scelta «Gambe»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.":"Rundbeine Ø 48 (Auswahl «Beine»): fest VRL oder VRLA (mit verstellbarem Fuß) von 20 bis 120 cm in 10er-Schritten, im 4er-Set; Teleskop VRLT einzeln, von 45 bis 220 cm. Mit Rundbeinen sind die Beinverbinder VLC-48MM und V4LC-48MM.",
+"Lato {}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.":"Seite {0}: Das Spider-Geländer gibt es nicht mit 0,5 m, ein Abschnitt von 0,5 m bleibt separat zu schließen.",
 "Gambe tonde a {} cm: verificare la portata con Everdeck.":"Rundbeine bei {0} cm: Tragfähigkeit mit Everdeck prüfen.",
 "Scala regolabile {} ({}–{} cm).":"Verstellbare Treppe {0} ({1}–{2} cm).",
 "gamba tonda fissa":"festes Rundbein",
@@ -1974,9 +1975,10 @@ function compute(cfg, R, look, kits){
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
 
   // --- parapetti
-  // parapetto di sicurezza VHX (1 kN/m): elementi da 2 m e 1 m, non esiste da 0,5 m; senza battipiede
-  const safe = !!cfg.safety;
-  const c2 = safe ? 'VHX2.0' : cfg.kick ? 'VHK2.0' : 'VH2.0', c1 = safe ? 'VHX1.0' : cfg.kick ? 'VHK1.0' : 'VH1.0', c05 = cfg.kick ? 'VHK0.5' : 'VH0.5';
+  // parapetto di sicurezza VHX (1 kN/m): elementi da 2 m e 1 m, non esiste da 0,5 m; senza battipiede.
+  // Spider: parapetti suoi VH-2 e VH-1 (senza battipiede né versione di sicurezza, niente elemento da 0,5 m)
+  const spiderRails = support==='spider', safe = !!cfg.safety && !spiderRails, kick = !!cfg.kick && !spiderRails;
+  const c2 = spiderRails ? 'VH-2' : safe ? 'VHX2.0' : kick ? 'VHK2.0' : 'VH2.0', c1 = spiderRails ? 'VH-1' : safe ? 'VHX1.0' : kick ? 'VHK1.0' : 'VH1.0', c05 = kick ? 'VHK0.5' : 'VH0.5';
   const halfEdges = s => decks.filter(d => s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc)
     .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
   const runs = []; let rails = 0, railLinks = 0;
@@ -1987,6 +1989,7 @@ function compute(cfg, R, look, kits){
     if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
     const pc = railPieces(L);
     if(safe && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto di sicurezza non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
+    if(spiderRails && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
     const n = pc.n2+pc.n1+pc.n05;
     runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
     rails += n; railLinks += n-1;
@@ -2588,6 +2591,7 @@ function renderFamilies(){
   $('#family').value = cfg.family;
   $('#tele').closest('label').hidden = cfg.support!=='legs';
   $('#legShape').closest('label').hidden = cfg.support!=='legs';
+  $('#kick').closest('label').hidden = $('#safety').closest('label').hidden = spider;   // lo Spider ha i suoi parapetti VH-2 e VH-1
 }
 function renderRailSeg(){
   const n = Object.values(cfg.rails).filter(Boolean).length;

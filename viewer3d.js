@@ -282,7 +282,10 @@ function create(canvas){
         pos += Lm;
       }
     }
-    if(cfg.safety){   // parapetto di sicurezza VHX: modello disegnato qui (non c'è un modello 3D del produttore)
+    if(spider){       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
+      if(r2.length) addBatch(spiderRail(2000), r2);
+      if(r1.length) addBatch(spiderRail(1000), r1);
+    } else if(cfg.safety){   // parapetto di sicurezza VHX: modello disegnato qui (non c'è un modello 3D del produttore)
       if(r2.length) addBatch(vhxMats(2000), r2);
       if(r1.length) addBatch(vhxMats(1000), r1);
     } else {
@@ -731,6 +734,21 @@ function create(canvas){
     addBatch([rawMat(fr.P, fr.I, black ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5)], [IDT]);
     addBatch([Object.assign(rawMat(tp.P, tp.I, topCol, 0.15), {top:true})], [IDT]);
     addBatch([rawMat(rs.P, rs.I, rcol, black ? 0.15 : 0.45)], [IDT]);
+  }
+  // parapetto Spider VH-2 / VH-1 (disegni Everdeck 81-82): telaio in tubo con gli angoli in alto curvati, traverso
+  // a metà, morsetti in basso; alto 1026 mm, lungo 1980 o 980. Coordinate come i modelli dei parapetti (y=26,5: piano)
+  function spiderRail(L){
+    const x = -22, z0 = -40, z1 = L - 60, yd = 26.5, top = yd + 1000, R = 90, P = [], I = [];
+    const add = g => { const o = P.length/3; P.push(...g[0]); I.push(...g[1].map(i => i+o)); };
+    const a = z0 + 15, b = z1 - 15;
+    add(cyl([x,-80,a],[x,top-R,a], 19, 12)); add(cyl([x,-80,b],[x,top-R,b], 19, 12));
+    add(cyl([x,top,a+R],[x,top,b-R], 19, 12)); add(cyl([x,yd+480,a],[x,yd+480,b], 16, 10));
+    for(const [zc, dir] of [[a+R, -1], [b-R, 1]]){            // curve in alto
+      const pts = []; for(let k=0;k<=4;k++){ const t = k/4*Math.PI/2; pts.push([x, top-R + R*Math.sin(t), zc + dir*R*Math.cos(t)]); }
+      for(let k=0;k<4;k++) add(cyl(pts[k], pts[k+1], 19, 12));
+    }
+    for(const zp of [a, b]) add([box([x-38,-60,zp-30],[x+20,0,zp+30]), BOX_IDX]);   // morsetti sul bordo
+    return [rawMat(P, I, [0.80,0.82,0.86], 0.5)];
   }
   // parapetto di sicurezza VHX (dalle immagini Everdeck/GlobalTruss): corrimano tondo in alto, due montanti quadri,
   // traverso basso e montanti tondi ogni ~11 cm, tubo quadro di base sotto il bordo; alto 115 cm sul piano; misure in mm
