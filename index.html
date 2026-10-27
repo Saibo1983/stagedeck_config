@@ -552,6 +552,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
         <div class="bar">
           <div class="actions"><span class="lbl">Impostazioni</span><button type="button" class="tgl" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button></div>
+          <div class="actions"><span class="lbl">Sala</span><button type="button" class="tgl" data-room="back" aria-pressed="false" title="Parete dietro il palco, a filo del palco (dietro scale e rampe)">Parete di fondo</button><button type="button" class="tgl" data-room="left" aria-pressed="false" title="Parete sul lato sinistro del palco, a filo del palco (dietro scale e rampe)">Parete sinistra</button><button type="button" class="tgl" data-room="right" aria-pressed="false" title="Parete sul lato destro del palco, a filo del palco (dietro scale e rampe)">Parete destra</button><button type="button" class="tgl" data-room="floor" aria-pressed="false" title="Pavimento della sala sotto il palco">Pavimento</button><button type="button" class="tgl" data-room="clear" aria-pressed="false" title="Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo">Sala trasparente</button></div>
           <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         </div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: Spider Deck e Rollrisers sono mostrati con gambe e pedane StageDeck.</p>
@@ -957,6 +958,17 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Impostazioni":"Einstellungen",
 "Comandi":"Befehle",
 "Pianali trasparenti":"Transparente Deckplatten",
+"Sala":"Raum",
+"Parete di fondo":"Rückwand",
+"Parete sinistra":"Linke Wand",
+"Parete destra":"Rechte Wand",
+"Pavimento":"Boden",
+"Sala trasparente":"Raum transparent",
+"Parete dietro il palco, a filo del palco (dietro scale e rampe)":"Wand hinter der Bühne, bündig mit der Bühne (hinter Treppen und Rampen)",
+"Parete sul lato sinistro del palco, a filo del palco (dietro scale e rampe)":"Wand an der linken Bühnenseite, bündig mit der Bühne (hinter Treppen und Rampen)",
+"Parete sul lato destro del palco, a filo del palco (dietro scale e rampe)":"Wand an der rechten Bühnenseite, bündig mit der Bühne (hinter Treppen und Rampen)",
+"Pavimento della sala sotto il palco":"Raumboden unter der Bühne",
+"Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo":"Wände und Boden transparent. Die Wand zwischen Blickpunkt und Bühne wird immer ausgeblendet, damit sie die Bühne nicht verdeckt",
 "Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista":"Macht die Deckplatten durchsichtig: Beine, Klammern und Verbinder unter der Bühne sind sichtbar, ohne die Ansicht zu drehen",
 "Ripristina vista":"Ansicht zurücksetzen",
 "Salva immagine PNG":"PNG-Bild speichern",
@@ -2247,6 +2259,7 @@ const DEFAULT_CFG = {
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
+  room:{back:false, left:false, right:false, floor:false, clear:false},
   support:'legs', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{},
   markup:37, discount:0, vat:22, pdfCost:false, descShow:false, descPdf:false, lingua:'it'
 };
@@ -2260,6 +2273,7 @@ function normCfg(src){
   const c = Object.assign(clone(DEFAULT_CFG), clone(src));
   c.skirt = Object.assign(clone(DEFAULT_CFG.skirt), c.skirt||{}); c.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), c.skirt.sides||{});
   c.trolley = Object.assign(clone(DEFAULT_CFG.trolley), c.trolley||{});
+  c.room = Object.assign(clone(DEFAULT_CFG.room), c.room||{});
   c.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), c.trasporto||{});
   c.adj = (c.adj && typeof c.adj==='object') ? c.adj : {};
   c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
@@ -2511,6 +2525,7 @@ function fillForm(){
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
   $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
+  $$('[data-room]').forEach(b => b.setAttribute('aria-pressed', cfg.room[b.dataset.room] ? 'true' : 'false'));
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
   $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
   $('#skFabric').value = cfg.skirt.fabric; $('#skHeight').value = cfg.skirt.height;
@@ -3500,6 +3515,12 @@ function bind(){
     if(v3.view) v3.view.setXray(on);
   });
   $('#v3Html').addEventListener('click', saveHtml3d);
+  // sala nella vista 3D (pareti, pavimento, trasparenza): salvata con l'offerta
+  $$('[data-room]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.room; cfg.room[k] = !cfg.room[k];
+    b.setAttribute('aria-pressed', cfg.room[k] ? 'true' : 'false');
+    save(); draw3d();
+  }));
 
   // regole
   const ruleFromEvent = e => { const row = e.target.closest('[data-rule]'); return row ? +row.dataset.rule : -1; };
