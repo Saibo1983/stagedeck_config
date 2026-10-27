@@ -428,9 +428,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <label class="check"><input type="checkbox" data-trib="chairStop"> Bordi anticaduta per le sedie (SKBP sul bordo davanti di ogni fila)</label>
         <p class="hint">La fila 1 è davanti, la più bassa. Ogni fila ha le sue gambe per la sua altezza. Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
       </div>
-      <label class="field stageOnly"><span>Struttura</span><select id="support"></select></label>
       <label class="field"><span>Pedana</span><select id="family"></select></label>
-      <label class="field"><span>Gambe</span><select id="legShape"><option value="square">Quadre 60×60 (VFL, telescopiche VTL)</option><option value="round">Tonde Ø 48 (VRL, telescopiche VRLT)</option><option value="roundAdj">Tonde Ø 48 con piedino regolabile (VRLA)</option></select></label>
+    </div>
+
+    <div class="sec">
+      <h3>Gambe</h3>
+      <label class="field stageOnly"><span>Struttura</span><select id="support"></select></label>
+      <label class="field"><span>Tipo di gamba</span><select id="legShape"><option value="square">Quadre 60×60 (VFL, telescopiche VTL)</option><option value="round">Tonde Ø 48 (VRL, telescopiche VRLT)</option><option value="roundAdj">Tonde Ø 48 con piedino regolabile (VRLA)</option></select></label>
       <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
       <p class="hint" id="legHint"></p>
     </div>
@@ -738,7 +742,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
       <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.</li>
-      <li>Gambe tonde Ø 48 (scelta «Gambe»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.</li>
+      <li>Gambe tonde Ø 48 (riquadro «Gambe», «Tipo di gamba»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
     </ul>
   </div>
@@ -1015,7 +1019,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Tonde Ø 48 (VRL, telescopiche VRLT)":"Rund Ø 48 (VRL, Teleskop VRLT)",
 "Tonde Ø 48 con piedino regolabile (VRLA)":"Rund Ø 48 mit verstellbarem Fuß (VRLA)",
 "Con altezza {} cm non ci sono gambe tonde fisse (20–120 cm a passi di 10). Se il cliente le richiede, spunta «Gambe telescopiche» (VRLT, 45–220 cm).":"Bei {0} cm Höhe gibt es keine festen Rundbeine (20–120 cm in 10er-Schritten). Wenn der Kunde es wünscht, «Teleskopbeine» ankreuzen (VRLT, 45–220 cm).",
-"Gambe tonde Ø 48 (scelta «Gambe»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.":"Rundbeine Ø 48 (Auswahl «Beine»): fest VRL oder VRLA (mit verstellbarem Fuß) von 20 bis 120 cm in 10er-Schritten, im 4er-Set; Teleskop VRLT einzeln, von 45 bis 220 cm. Mit Rundbeinen sind die Beinverbinder VLC-48MM und V4LC-48MM.",
+"Gambe tonde Ø 48 (riquadro «Gambe», «Tipo di gamba»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.":"Rundbeine Ø 48 (Bereich «Beine», «Beintyp»): fest VRL oder VRLA (mit verstellbarem Fuß) von 20 bis 120 cm in 10er-Schritten, im 4er-Set; Teleskop VRLT einzeln, von 45 bis 220 cm. Mit Rundbeinen sind die Beinverbinder VLC-48MM und V4LC-48MM.",
 "Lato {}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.":"Seite {0}: Das Spider-Geländer gibt es nicht mit 0,5 m, ein Abschnitt von 0,5 m bleibt separat zu schließen.",
 "Tipo":"Typ",
 "Tribuna":"Tribüne",
@@ -1076,6 +1080,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Bordo anticaduta: lato di pedana da {} m senza profilo a listino.":"Stuhlanschlag: Podestseite {0} m ohne Profil in der Preisliste.",
 "Nessuna scala d'accesso per la prima fila a {} cm.":"Keine Zugangstreppe für die erste Reihe auf {0} cm.",
 "Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder, wo die Tribüne höher als 80 cm ist, Podestverbinder nur zwischen Podesten derselben Reihe. Gänge 1 m breit; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe. Stuhlanschläge SKBP an der Vorderkante jeder Reihe, außerhalb der Gänge.",
+"Tipo di gamba":"Beintyp",
 "Gambe tonde a {} cm: verificare la portata con Everdeck.":"Rundbeine bei {0} cm: Tragfähigkeit mit Everdeck prüfen.",
 "Scala regolabile {} ({}–{} cm).":"Verstellbare Treppe {0} ({1}–{2} cm).",
 "gamba tonda fissa":"festes Rundbein",
@@ -3338,11 +3343,14 @@ function rampSrc(h, palco){
 }
 const thumbSrc = (src, title, name) => src ? `<button type="button" class="thumb" data-src="${esc(src)}" data-title="${esc(title)}" data-name="${esc(name||'')}" aria-label="Immagine: ${esc(title)}"><img src="${esc(src)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></button>` : '';
 // sotto ogni sezione della configurazione: le immagini dei pezzi che quella scelta mette in offerta
-const SEC_GROUPS = {'Palco':['Pedana','Gambe','Collegamenti'], 'Scale':['Scale'], 'Parapetti':['Parapetti'], 'Mascheratura':['Mascheratura'], 'Carrelli':['Trasporto'], 'Rampe':['Rampe'], 'Voci aggiuntive':['Varie']};
+// «Collegamenti» si divide: connettori tra le gambe (VLC, V4LC...) in «Gambe», tra le pedane (VD2D, VDL, D2DC) in «Palco»
+const SEC_GROUPS = {'Palco':['Pedana','Collegamenti:pedane'], 'Gambe':['Gambe','Collegamenti:gambe'], 'Scale':['Scale'], 'Parapetti':['Parapetti'], 'Mascheratura':['Mascheratura'], 'Carrelli':['Trasporto'], 'Rampe':['Rampe'], 'Voci aggiuntive':['Varie']};
 function renderSecImgs(){
   $$('.secimgs').forEach(box => {
     const gs = box.dataset.groups.split(',');
-    const ls = (res && res.lines || []).filter(l => gs.includes(l.group) && l.qty>0);
+    const legClamp = code => /^V4?LCO?(-|$)/i.test(code);
+    const ls = (res && res.lines || []).filter(l => l.qty>0 && (gs.includes(l.group)
+      || (l.group==='Collegamenti' && gs.includes(legClamp(l.code) ? 'Collegamenti:gambe' : 'Collegamenti:pedane'))));
     let h = ls.map(l => { const t = thumb(l.code); return t ? `<figure>${t}<figcaption>${esc(l.code)}</figcaption></figure>` : ''; }).join('');
     if(gs.includes('Rampe') && ls.length){   // rampa in offerta: immagine della rampa da sola e montata al palco
       const H = +cfg.H, t = `Rampa ${H} cm`;
