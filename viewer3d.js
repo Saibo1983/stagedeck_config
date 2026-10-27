@@ -148,7 +148,7 @@ function create(canvas){
   // mesh generico (pelle, rampa, ...): posizioni float + indici
   function rawMat(pos, idx, color, spec){ const big = pos.length/3 > 65535; return {pos:new Float32Array(pos), idx: big ? null : new Uint16Array(idx), idx32: big ? new Uint32Array(idx) : null, color, spec:spec||0}; }
   const IDT = {r:I3, t:[0,0,0]};
-  const CORNER_GAP = 20;   // mm: i parapetti si fermano 20 mm prima dell'angolo
+  const RAIL_GAP = 20;     // mm: ogni parapetto è più corto della pedana, 20 mm per parte (dal giunto tra le pedane o dall'angolo)
   // mesh composti: posizioni e indici accumulati, poi un solo lotto
   const mk = () => ({P:[], I:[]});
   const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
@@ -284,8 +284,7 @@ function create(canvas){
     // nel vuoto). Con il battipiede (VHK) una lamiera alta 15 cm sul piano.
     const ry0 = ty + 63.5, railGroups = new Map();
     const kickAll = (!!cfg.kick || !!cfg.chairStop) && !cfg.safety && !spider;   // con i bordi per le sedie: battipiede
-    // angoli dove due tratti si incontrano a 90° (punti in mm): come nel montaggio vero, i parapetti si fermano 20 mm
-    // prima dell'angolo (CORNER_GAP), così i piedi dei due parapetti non si toccano
+    // angoli dove due tratti si incontrano a 90° (punti in mm): servono per i connettori d'angolo
     const runSpan = r => { const limit = (r.side==='back'||r.side==='front') ? plan.W : plan.D;
       return [r.start, Math.min(limit, r.start + (r.pieces || []).reduce((a,b) => a+b, 0))]; };
     const covers = (side, u) => plan.runs.some(r => r.side===side && (([a,b]) => u >= a-1e-6 && u <= b+1e-6)(runSpan(r)));
@@ -310,11 +309,9 @@ function create(canvas){
         else                    T = {r:[0,0,1, 0,1,0, -1,0,0], t:[s+50, ry, Dmm]};
         // posizione dei connettori lungo il tratto (u, mm): z del modello 1950 (rail2) o -50 (rail1, 0,5 m)
         const zc = Lm===2 ? 1950 : -50, up = side==='left' || side==='front';
-        // all'angolo l'elemento si sposta di 20 mm lungo il tratto, via dall'angolo
+        // estremità del modello (z basso, z alto) che stanno in un angolo: lì la piastra del piede si accorcia al montante
         const cs = atCorner(side, s), ce = atCorner(side, s+L);
-        const du = (cs ? CORNER_GAP : 0) - (ce ? CORNER_GAP : 0);
-        if(side==='left' || side==='right') T.t[2] += du; else T.t[0] += du;
-        pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc, lo: up ? cs : ce, hi: up ? ce : cs});   // lo/hi: estremità del modello all'angolo
+        pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc, lo: up ? cs : ce, hi: up ? ce : cs});
         pos += Lm;
       }
       for(const pc of pcs){
@@ -342,7 +339,7 @@ function create(canvas){
         // (istruzioni Larcher, «Handrails corner connection»): la piastra a Z sta dentro l'angolo con una flangia contro
         // ciascun montante (Ø 48, centro a 50 + 20 mm dall'angolo e 27 mm fuori dal bordo); ogni bullone attraversa il suo
         // montante: testa esagonale sulla piastra, rondella e dado a farfalla dall'altra parte
-        const g = -50 - CORNER_GAP;                                    // centro dei montanti lungo il bordo
+        const g = -50 - RAIL_GAP;                                      // centro dei montanti lungo il bordo
         const path = [P(g+26.5, 42), P(g+26.5, 12), P(6, 12), P(6, g+26.5), P(42, g+26.5)];
         for(const dy of [273, 873]){
           const y = h.y + dy;
@@ -936,21 +933,26 @@ function create(canvas){
     });
     railCache.set(k, out); return out;
   }
-  function railMats(Lm, kick, conn, clipLo, clipHi){
+  function railMats(Lm, kick, conn, cornerLo, cornerHi){
     const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5, idxs = railIdx(name, conn);
-    const zHi = (Lm===2 ? 1900 : Lm===1 ? 900 : 400) + 24;   // faccia del montante all'estremità alta
+    // l'elemento va da z -50 a L-50 nel modello: si accorcia di 20 mm per parte (montanti, piedi e connettori verso
+    // l'interno), così tra due parapetti vicini restano 40 mm e all'angolo 20 mm
+    const mid = Lm*500 - 50;
     const mats = PARTS[name].map((m, mi) => {
       const c = colorOf(m);
       let pos = m.pos;
-      if(short || clipLo || clipHi) pos = new Float32Array(m.pos);
+      pos = new Float32Array(m.pos);
       if(short) for(let i=2;i<pos.length;i+=3) if(pos[i] > 450) pos[i] -= 500;   // 0,5 m: quello da 1 m accorciato
-      if(clipLo || clipHi) for(let i=0;i<pos.length;i+=3) if(pos[i+1] < 200){     // piede accorciato all'angolo
-        if(clipLo && pos[i+2] < -24) pos[i+2] = -24;
-        if(clipHi && pos[i+2] > zHi) pos[i+2] = zHi;
+      for(let i=2;i<pos.length;i+=3) pos[i] += pos[i] < mid ? RAIL_GAP : -RAIL_GAP;
+      // all'angolo la piastra angolata del piede (sotto y 200) si ferma alla faccia del montante (Ø 48): non tocca l'altra
+      const pLo = RAIL_GAP - 24, pHi = (Lm===2 ? 1900 : Lm===1 ? 900 : 400) - RAIL_GAP + 24;
+      if(cornerLo || cornerHi) for(let i=0;i<pos.length;i+=3) if(pos[i+1] < 200){
+        if(cornerLo && pos[i+2] < pLo) pos[i+2] = pLo;
+        if(cornerHi && pos[i+2] > pHi) pos[i+2] = pHi;
       }
       return {pos, idx:idxs[mi], color:c.color, spec:c.spec};
     }).filter(m => m.idx.length);
-    if(kick) mats.push(rawMat(box([-24,26.5,-40],[-20,176.5, Lm===2 ? 1940 : Lm===1 ? 940 : 440]), BOX_IDX, [0.80,0.82,0.86], 0.4));
+    if(kick) mats.push(rawMat(box([-24,26.5,-40+RAIL_GAP],[-20,176.5, (Lm===2 ? 1940 : Lm===1 ? 940 : 440) - RAIL_GAP]), BOX_IDX, [0.80,0.82,0.86], 0.4));
     return mats;
   }
   // parapetto Spider VH-2 / VH-1 (disegni Everdeck 81-82): telaio in tubo con gli angoli in alto curvati, traverso

@@ -342,6 +342,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   /* pianta, titolo, intestazione e legenda devono stare su una pagina A4 (anche con intestazione e piè di pagina
      del browser): con palchi più profondi che larghi il disegno altrimenti supera la pagina e lascia pagine vuote */
   body[data-print="disegni"] .plan{max-height:185mm}
+  /* tribuna: pianta e sezione sulla stessa pagina (se no il riquadro passa tutto alla pagina dopo e la prima resta bianca) */
+  body[data-print="disegni"] #planBox:has(.trsec) .plan:not(.trsec){max-height:100mm}
+  body[data-print="disegni"] #planBox .trsec{max-height:62mm}
   #planPanel .legend{break-before:avoid}
   body[data-print="offerta"] #v3Panel,#v3Off,#v3Note{display:none!important}
   #v3Panel:has(#v3On[hidden]){display:none!important}
@@ -563,6 +566,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="planbar">
         <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
+        <button type="button" class="btn primary" id="pdfDraw" style="margin-left:auto">PDF disegni</button>
       </div>
       <div id="planBox"></div>
       <p class="tribnotice" hidden></p>
@@ -616,7 +620,6 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         </div>
         <div class="actions cmds"><span class="lbl">Comandi</span>
           <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
-          <button type="button" class="btn primary" id="pdfDraw">PDF disegni</button>
           <span class="sep" aria-hidden="true"></span>
           <button type="button" class="btn" id="copyText">Copia offerta</button>
           <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
@@ -3230,7 +3233,7 @@ function tribSectionSVG(p){
   const vbw = D+mL+mR, vbh = Ht+mT+mB, px = Math.max(vbw/640, vbh/320);
   const fs = 11*px;
   const ln = (x1,y1,x2,y2,col,w,extra='') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${w}" vector-effect="non-scaling-stroke"${extra}/>`;
-  let s = `<svg class="plan" viewBox="${-mL} ${-Ht-mT} ${vbw} ${vbh}" role="img" aria-label="Sezione laterale della tribuna" style="margin-top:10px">`;
+  let s = `<svg class="plan trsec" viewBox="${-mL} ${-Ht-mT} ${vbw} ${vbh}" role="img" aria-label="Sezione laterale della tribuna" style="margin-top:10px">`;
   s += ln(-mL+10*px, 0, D+mR-10*px, 0, 'var(--muted)', 1);
   for(const r of p.rows){
     const x0 = r.i*dep, x1 = x0+dep, h = r.h;
