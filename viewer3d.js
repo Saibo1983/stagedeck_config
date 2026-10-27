@@ -54,7 +54,7 @@ layout(location=0) in vec3 a_pos; uniform mat4 u_vp; out vec3 v_pos;
 void main(){ v_pos = a_pos; gl_Position = u_vp*vec4(a_pos,1.0); }`;
 const GFS = `#version 300 es
 precision highp float; in vec3 v_pos; out vec4 o;
-uniform vec4 u_rect; uniform vec3 u_ground; uniform vec3 u_center; uniform float u_round;
+uniform vec4 u_rect; uniform vec3 u_ground; uniform vec3 u_center; uniform float u_round; uniform float u_galpha;
 void main(){
   vec2 p = v_pos.xz;
   vec2 dd = max(max(u_rect.xy - p, p - u_rect.zw), vec2(0.0));
@@ -63,7 +63,7 @@ void main(){
   float sh = 1.0 - 0.55*exp(-dist/420.0);          // ombra morbida attorno al palco
   float fade = smoothstep(0.0, 1.0, 1.0 - length(p-u_center.xz)/ (u_center.y));  // sfuma verso l'orizzonte
   vec3 c = u_ground*sh;
-  o = vec4(c, fade);
+  o = vec4(c, fade*u_galpha);
 }`;
 function sh(gl,type,src){ const s = gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s); if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
 function prog(gl,v,f){ const p = gl.createProgram(); gl.attachShader(p,sh(gl,gl.VERTEX_SHADER,v)); gl.attachShader(p,sh(gl,gl.FRAGMENT_SHADER,f)); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; }
@@ -96,12 +96,14 @@ function create(canvas){
   if(!gl) return null;
   const P = prog(gl,VS,FS), G = prog(gl,GVS,GFS);
   const U = {vp:gl.getUniformLocation(P,'u_vp'), color:gl.getUniformLocation(P,'u_color'), spec:gl.getUniformLocation(P,'u_spec'), eye:gl.getUniformLocation(P,'u_eye'), alpha:gl.getUniformLocation(P,'u_alpha')};
-  const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center'), round:gl.getUniformLocation(G,'u_round')};
+  const GU = {vp:gl.getUniformLocation(G,'u_vp'), rect:gl.getUniformLocation(G,'u_rect'), ground:gl.getUniformLocation(G,'u_ground'), center:gl.getUniformLocation(G,'u_center'), round:gl.getUniformLocation(G,'u_round'), galpha:gl.getUniformLocation(G,'u_galpha')};
   let batches = [];      // {meshes:[{vao,n,type,color,spec}], inst, count, src:{mats, mats4}}
   let groundMesh = null, rect = [0,0,1,1], roundR = 0, bg = [1,1,1], groundCol = [0.82,0.84,0.86];
   const cam = {az:0.62, el:0.46, dist:9000, target:[0,300,0], fit:9000};
   let dirty = true, W = 1, Hh = 1, stageR = 4000;
   let xray = false;      // pianali delle pedane trasparenti: si vede sotto il palco senza girare la vista
+  let sceneBox = [0,0,0,1000,1000,1000];   // ingombro della scena (mm): [x0,y0,z0,x1,y1,z1], per le viste in proiezione ortogonale
+  let view = null;       // vista fissa (immagine a 4 viste): {vm, proj, eye}
   let roomClear = false; // pareti e pavimento della sala trasparenti
 
   function makeVAO(pos, idx, instBuf){
@@ -281,7 +283,7 @@ function create(canvas){
     // 0,5 m all'inizio): dove da quella parte non c'è un altro elemento dello stesso tratto non si disegnano (spunterebbero
     // nel vuoto). Con il battipiede (VHK) una lamiera alta 15 cm sul piano.
     const ry0 = ty + 63.5, railGroups = new Map();
-    const kickAll = !!cfg.kick && !cfg.safety && !spider;
+    const kickAll = (!!cfg.kick || !!cfg.chairStop) && !cfg.safety && !spider;   // con i bordi per le sedie: battipiede
     // angoli dove due tratti si incontrano a 90° (punti in mm): come nel montaggio vero, i parapetti si fermano 20 mm
     // prima dell'angolo (CORNER_GAP), così i piedi dei due parapetti non si toccano
     const runSpan = r => { const limit = (r.side==='back'||r.side==='front') ? plan.W : plan.D;
@@ -465,6 +467,17 @@ function create(canvas){
         addBatch([rawMat(C.P, C.I, [0.12,0.12,0.13], 0.2)], [IDT]);
       }
     }
+    // palco: bordi anticaduta per le sedie (SKBP) sui lati senza parapetto, sul piano appena dentro il bordo
+    if(!plan.trib && plan.stops && plan.stops.length){
+      const C = mk(), top = ty + 90;
+      for(const st of plan.stops){
+        const a = st.a*1000 + 10, b = (st.a + st.L)*1000 - 10;
+        const bx = st.side==='back' ? [[a, 8], [b, 22]] : st.side==='front' ? [[a, Dmm-22], [b, Dmm-8]]
+                 : st.side==='left' ? [[8, a], [22, b]] : [[Wmm-22, a], [Wmm-8, b]];
+        push(C, box([bx[0][0], top, bx[0][1]], [bx[1][0], top + 45, bx[1][1]]), BOX_IDX);
+      }
+      addBatch([rawMat(C.P, C.I, [0.12,0.12,0.13], 0.2)], [IDT]);
+    }
     // elementi modulari: i modelli CAD sono larghi 642 mm e profondi 242, si allargano alle misure dei disegni
     const widen = (x,y) => [x + Math.sign(x)*(SW-642)/2, y + Math.sign(y)*(SD-242)/2];
     for(const [key,list] of Object.entries(stepBy)){
@@ -541,18 +554,19 @@ function create(canvas){
     }
 
     // --- sala (pareti di fondo, sinistra e destra, pavimento): superfici piane grigio chiaro, appena più grandi del palco.
-    // Le pareti stanno a filo del palco (30 mm), dietro scale e rampe; senza parete il pavimento sporge di 50 cm.
+    // Le pareti stanno a 30 mm dal palco più la distanza scelta (cfg.room.gap, cm, uguale per le 3), dietro scale e rampe;
+    // si fermano dove si incontrano. Senza parete il pavimento sporge di 50 cm. Il pavimento si disegna con l'ombra del palco.
     const rm = cfg.room || {};
     roomClear = !!rm.clear;
     if(rm.back || rm.left || rm.right || rm.floor){
       const out = s => Math.max(rbySide[s] ? rl + 300 : 0, byside[s].length ? stairOut : 0);
-      const GAP = 30, M = 500, WH = Math.max(3000, ty + 2500), WALL = [0.93,0.93,0.94];
+      const GAP = 30 + Math.max(0, +rm.gap || 0)*10, M = 500, WH = Math.max(3000, ty + 2500), WALL = [0.93,0.93,0.94];
       const x0 = -out('left') - (rm.left ? GAP : M), x1 = Wmm + out('right') + (rm.right ? GAP : M);
       const z0 = -out('back') - (rm.back ? GAP : M), z1 = Dmm + out('front') + M;
       // wall: normale verso l'interno e un punto della parete (se la vista è dietro la parete, la parete si vede in trasparenza)
       const surf = (P, color, wall) => Object.assign(rawMat(P, [0,1,2, 0,2,3], color, 0.05), {room:{wall}});
       const rs = [];
-      if(rm.floor) rs.push(surf([x0,2,z0, x1,2,z0, x1,2,z1, x0,2,z1], [0.86,0.86,0.87], null));
+      if(rm.floor) rs.push(Object.assign(surf([x0,2,z0, x1,2,z0, x1,2,z1, x0,2,z1], [0.86,0.86,0.87], null), {room:{floor:true}}));
       if(rm.back)  rs.push(surf([x0,0,z0, x1,0,z0, x1,WH,z0, x0,WH,z0], WALL, {n:[0,0,1], p:[0,0,z0]}));
       if(rm.left)  rs.push(surf([x0,0,z0, x0,0,z1, x0,WH,z1, x0,WH,z0], WALL, {n:[1,0,0], p:[x0,0,0]}));
       if(rm.right) rs.push(surf([x1,0,z0, x1,0,z1, x1,WH,z1, x1,WH,z0], WALL, {n:[-1,0,0], p:[x1,0,0]}));
@@ -563,6 +577,10 @@ function create(canvas){
     // anche le rampe devono stare nell'inquadratura (l'ombra a terra resta quella del palco)
     const ext = s => rbySide[s] ? rl + 300 : 0, fr = [-ext('left'), -ext('back'), Wmm + ext('right'), Dmm + ext('front')];
     rect = [0,0,Wmm,Dmm]; roundR = plan.round ? Wmm/2 : 0;
+    { // ingombro per le viste ortogonali: palco, rampe, scale (anche quelle d'accesso della tribuna), parapetti
+      const so = sd => byside[sd].length ? stairOut : 0, acc = plan.trib && plan.access ? (plan.access.run||0)*10 + 100 : 0;
+      sceneBox = [fr[0] - so('left'), 0, fr[1] - so('back'), fr[2] + so('right'), ty + 90 + (plan.runs && plan.runs.length ? 1200 : 300), fr[3] + Math.max(so('front'), acc)];
+    }
     cam.target = [(fr[0]+fr[2])/2, (ty+90)/2, (fr[1]+fr[3])/2];
     stageR = Math.hypot(fr[2]-fr[0], fr[3]-fr[1])/2 + 600;
     cam.fit = Math.max(stageR*2.1, 3500);
@@ -592,15 +610,23 @@ function create(canvas){
     gl.viewport(0,0,canvas.width,canvas.height);
     gl.clearColor(bg[0],bg[1],bg[2],1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
-    const e = eye(), asp = canvas.width/Math.max(1,canvas.height);
-    const vp = mul4(persp(0.62, asp, Math.max(50,cam.dist/200), cam.dist*12+80000), lookAt(e, cam.target, [0,1,0]));
+    const e = view ? view.eye : eye(), asp = canvas.width/Math.max(1,canvas.height);
+    const vp = view ? mul4(view.proj, view.vm) : mul4(persp(0.62, asp, Math.max(50,cam.dist/200), cam.dist*12+80000), lookAt(e, cam.target, [0,1,0]));
     // terreno
     if(groundMesh){
       gl.useProgram(G); gl.uniformMatrix4fv(GU.vp,false,vp);
       gl.uniform4f(GU.rect, rect[0],rect[1],rect[2],rect[3]); gl.uniform3f(GU.ground, groundCol[0],groundCol[1],groundCol[2]); gl.uniform1f(GU.round, roundR);
-      gl.uniform3f(GU.center, cam.target[0], stageR*5, cam.target[2]);
+      gl.uniform3f(GU.center, cam.target[0], stageR*5, cam.target[2]); gl.uniform1f(GU.galpha, 1);
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.bindVertexArray(groundMesh.vao); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0); gl.disable(gl.BLEND);
+      gl.bindVertexArray(groundMesh.vao); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0);
+      // pavimento della sala: stesso disegno del terreno (con l'ombra morbida del palco), senza sfumare, nel suo colore
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      for(const b of batches) for(const m of b.meshes) if(m.room && m.room.floor){
+        gl.uniform3f(GU.ground, m.color[0], m.color[1], m.color[2]); gl.uniform3f(GU.center, cam.target[0], 1e9, cam.target[2]);
+        gl.uniform1f(GU.galpha, roomClear ? 0.45 : 1);
+        gl.bindVertexArray(m.vao); gl.drawElements(gl.TRIANGLES, m.n, m.type, 0);
+      }
+      gl.disable(gl.BLEND);
     }
     gl.useProgram(P); gl.uniformMatrix4fv(U.vp,false,vp); gl.uniform3f(U.eye,e[0],e[1],e[2]);
     // prima i pezzi opachi, poi quelli semitrasparenti senza scrivere la profondità: i pianali (modalità trasparente)
@@ -610,7 +636,7 @@ function create(canvas){
     gl.uniform1f(U.alpha, 1);
     let glass = false;
     for(const b of batches) for(const m of b.meshes){
-      if(hidden(m)) continue;
+      if(hidden(m) || (m.room && m.room.floor)) continue;   // il pavimento è già disegnato con il terreno
       if(see(m)){ glass = true; continue; }
       gl.uniform3f(U.color,m.color[0],m.color[1],m.color[2]); gl.uniform1f(U.spec,m.spec);
       gl.bindVertexArray(m.vao); gl.drawElementsInstanced(gl.TRIANGLES, m.n, m.type, 0, b.count);
@@ -619,7 +645,7 @@ function create(canvas){
       // l'alfa del canvas resta 1: se no la pagina sotto schiarisce i pezzi trasparenti
       gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
       for(const b of batches) for(const m of b.meshes){
-        if(!see(m) || hidden(m)) continue;
+        if(!see(m) || hidden(m) || (m.room && m.room.floor)) continue;
         const k = m.room ? 0.7 : 1;   // sala trasparente un po' più scura, se no sul fondo chiaro non si vede
         gl.uniform1f(U.alpha, m.room ? 0.3 : 0.16);
         gl.uniform3f(U.color,m.color[0]*k,m.color[1]*k,m.color[2]*k); gl.uniform1f(U.spec,0);
@@ -689,6 +715,43 @@ function create(canvas){
   }
   function reset(){ cam.userMoved = false; cam.az = 0.62; cam.el = 0.46; cam.dist = cam.fit; request(); }
   function png(){ draw(); return new Promise(res => canvas.toBlob(res, 'image/png')); }
+  // immagine a 4 viste in proiezione ortogonale: assonometria, fronte, lato (da destra), pianta. labels: 4 titoli + titolo
+  function ortho(l,r,b,t,n,f){ return [2/(r-l),0,0,0, 0,2/(t-b),0,0, 0,0,-2/(f-n),0, -(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1]; }
+  async function png4(labels, title){
+    const QW = 1200, QH = 820, HEAD = 90, out = document.createElement('canvas');
+    out.width = QW*2; out.height = QH*2 + HEAD;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out.width, out.height);
+    const [x0,y0,z0,x1,y1,z1] = sceneBox, c = [(x0+x1)/2, (y0+y1)/2, (z0+z1)/2], R = Math.hypot(x1-x0, y1-y0, z1-z0);
+    const corners = []; for(const x of [x0,x1]) for(const y of [y0,y1]) for(const z of [z0,z1]) corners.push([x,y,z]);
+    const views = [
+      {dir:[Math.SQRT1_2*Math.cos(0.6155), Math.sin(0.6155), Math.SQRT1_2*Math.cos(0.6155)], up:[0,1,0]},   // assonometria isometrica
+      {dir:[0,0,1], up:[0,1,0]},                                                                           // fronte
+      {dir:[1,0,0], up:[0,1,0]},                                                                           // lato destro
+      {dir:[0,1,0], up:[0,0,-1]}                                                                           // pianta (retro in alto)
+    ];
+    const keep = {w:canvas.width, h:canvas.height, bg};
+    canvas.width = QW; canvas.height = QH; bg = [1,1,1];
+    views.forEach((v, i) => {
+      const eyeP = [c[0]+v.dir[0]*R*2, c[1]+v.dir[1]*R*2, c[2]+v.dir[2]*R*2], vm = lookAt(eyeP, c, v.up);
+      let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity;
+      for(const p of corners){ const x = vm[0]*p[0]+vm[4]*p[1]+vm[8]*p[2]+vm[12], y = vm[1]*p[0]+vm[5]*p[1]+vm[9]*p[2]+vm[13];
+        mnx = Math.min(mnx,x); mxx = Math.max(mxx,x); mny = Math.min(mny,y); mxy = Math.max(mxy,y); }
+      let w = (mxx-mnx)*1.12, h = (mxy-mny)*1.12; const cx = (mnx+mxx)/2, cy = (mny+mxy)/2, a = QW/(QH-60);
+      if(w/h > a) h = w/a; else w = h*a;
+      const top = cy + h/2 + h*60/(QH-60);                  // spazio in alto per il titolo della vista
+      view = {vm, eye:eyeP, proj:ortho(cx-w/2, cx+w/2, top-h-h*60/(QH-60), top, 10, R*4)};
+      dirty = true; draw();
+      const qx = (i%2)*QW, qy = HEAD + Math.floor(i/2)*QH;
+      ctx.drawImage(canvas, qx, qy);
+      ctx.strokeStyle = '#c9d2d9'; ctx.lineWidth = 2; ctx.strokeRect(qx+1, qy+1, QW-2, QH-2);
+      ctx.fillStyle = '#12202b'; ctx.font = '600 30px system-ui, sans-serif'; ctx.fillText(labels[i] || '', qx+24, qy+44);
+    });
+    ctx.fillStyle = '#12202b'; ctx.font = '700 38px system-ui, sans-serif'; ctx.fillText(title || '', 24, 58);
+    ctx.fillStyle = '#e3450d'; ctx.fillRect(0, HEAD-6, out.width, 6);
+    view = null; canvas.width = keep.w; canvas.height = keep.h; bg = keep.bg; dirty = true; draw();
+    return new Promise(res => out.toBlob(res, 'image/png'));
+  }
 
   /* ---------- esportazione glTF binario (.glb): una mesh per geometria+colore, un nodo per ogni istanza ---------- */
   function glb(){
@@ -940,7 +1003,7 @@ function create(canvas){
     return [P, I];
   }
   const BOX_IDX = [0,1,2,0,2,3, 4,6,5,4,7,6, 0,4,5,0,5,1, 3,2,6,3,6,7, 1,5,6,1,6,2, 0,3,7,0,7,4];
-  return {build, resize, theme, reset, png, glb, request, cam, setXray, item};
+  return {build, resize, theme, reset, png, png4, glb, request, cam, setXray, item};
 }
 window.StageView = {create};
 })();

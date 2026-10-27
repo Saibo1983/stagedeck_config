@@ -109,6 +109,7 @@ input:disabled{opacity:.5}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
 .sides.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.roomgap{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}.roomgap input{width:5.5em;min-height:32px;padding:4px 8px}
 .tribnotice{margin:12px 0 4px;padding:9px 12px;border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:6px;font-size:13px;line-height:1.45}
 .row3.bottom{align-items:end}   /* campi allineati in basso anche se un'etichetta va a capo */
 /* due famiglie di pulsanti: i comandi (fanno un'operazione: PDF, copia, salva) sono rettangolari con un po' di spessore,
@@ -422,14 +423,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <label class="field"><span>1ª fila (cm)</span><input type="number" data-trib="h1" min="10" max="200" step="1" inputmode="numeric" title="Altezza della prima fila, la più bassa (davanti). Sotto i 20 cm la gamba da 20 cm si taglia a misura"></label>
           <label class="field"><span>Alzata (cm)</span><input type="number" data-trib="rise" min="5" max="40" step="1" inputmode="numeric" title="Quanto ogni fila è più alta di quella davanti: standard 20 cm. Le altezze intermedie usano le gambe telescopiche"></label>
         </div>
-        <div class="field"><span>Corridoi (larghi 1 m)</span>
+        <div class="field"><span>Corridoi: posizione delle scale (larghe 1 m)</span>
           <div class="sides c3">
             <label class="check"><input type="checkbox" data-aisle="left"> Lato sinistro</label>
             <label class="check"><input type="checkbox" data-aisle="center"> Centrale</label>
             <label class="check"><input type="checkbox" data-aisle="right"> Lato destro</label>
           </div>
         </div>
-        <label class="check"><input type="checkbox" data-trib="chairStop"> Bordi anticaduta per le sedie (SKBP sul bordo dietro di ogni fila)</label>
         <p class="hint">Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
       </div>
       <label class="field"><span>Pedana</span><select id="family"></select></label>
@@ -475,6 +475,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
       <label class="check"><input type="checkbox" id="kick"> Con battipiede</label>
       <label class="check"><input type="checkbox" id="safety"> Parapetto di sicurezza 1 kN/m (VHX, alto 115 cm)</label>
+      <label class="check"><input type="checkbox" id="chairStop"> Bordi anticaduta per le sedie (SKBP; dove c'è il parapetto, parapetto con battipiede)</label>
+      <label class="check tribOnly" hidden><input type="checkbox" data-trib="sideFirst"> Parapetti laterali anche sulla 1ª fila</label>
     </div>
 
     <div class="sec stageOnly">
@@ -593,8 +595,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
         <div class="bar">
           <div class="actions"><span class="lbl">Impostazioni</span><button type="button" class="tgl" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button></div>
-          <div class="actions"><span class="lbl">Sala</span><button type="button" class="tgl" data-room="back" aria-pressed="false" title="Parete dietro il palco, a filo del palco (dietro scale e rampe)">Parete di fondo</button><button type="button" class="tgl" data-room="left" aria-pressed="false" title="Parete sul lato sinistro del palco, a filo del palco (dietro scale e rampe)">Parete sinistra</button><button type="button" class="tgl" data-room="right" aria-pressed="false" title="Parete sul lato destro del palco, a filo del palco (dietro scale e rampe)">Parete destra</button><button type="button" class="tgl" data-room="floor" aria-pressed="false" title="Pavimento della sala sotto il palco">Pavimento</button><button type="button" class="tgl" data-room="clear" aria-pressed="false" title="Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo">Sala trasparente</button></div>
-          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+          <div class="actions"><span class="lbl">Sala</span><button type="button" class="tgl" data-room="back" aria-pressed="false" title="Parete dietro il palco, alla distanza scelta (dietro scale e rampe)">Parete di fondo</button><button type="button" class="tgl" data-room="left" aria-pressed="false" title="Parete sul lato sinistro del palco, alla distanza scelta (dietro scale e rampe)">Parete sinistra</button><button type="button" class="tgl" data-room="right" aria-pressed="false" title="Parete sul lato destro del palco, alla distanza scelta (dietro scale e rampe)">Parete destra</button><button type="button" class="tgl" data-room="floor" aria-pressed="false" title="Pavimento della sala sotto il palco">Pavimento</button><button type="button" class="tgl" data-room="clear" aria-pressed="false" title="Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo">Sala trasparente</button><label class="roomgap" title="Distanza delle pareti dal palco o dalla tribuna: le 3 pareti si allontanano tutte della stessa misura e si fermano dove si incontrano">Distanza pareti <input type="number" id="roomGap" min="0" max="1000" step="10" inputmode="numeric"> cm</label></div>
+          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Png4" title="Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta">4 viste (PNG)</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         </div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: i Rollrisers sono mostrati con gambe StageDeck.</p>
       </div>
@@ -747,7 +749,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m; se avanza mezzo metro (2,5, 3,5 m...) un elemento da 0,5 m, sulla pedana da mezzo metro del bordo.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
-      <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe sempre tra una fila e l'altra, a qualunque altezza, e dentro la fila dagli 80 cm in su; connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo dietro di ogni fila, fuori dai corridoi; con il parapetto sul retro, dietro l'ultima fila il parapetto con parapiede al posto del bordo.</li>
+      <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe sempre tra una fila e l'altra, a qualunque altezza, e dentro la fila dagli 80 cm in su; connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). I corridoi (larghi 1 m) sono solo la posizione delle scale: le file restano intere; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila (la prima fila si può lasciare senza). Bordi anticaduta per le sedie (riquadro «Parapetti») SKBP sul bordo dietro di ogni fila; con il parapetto sul retro, dietro l'ultima fila il parapetto con parapiede al posto del bordo.</li>
       <li>Gambe tonde Ø 48 (riquadro «Gambe», «Tipo di gamba»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
     </ul>
@@ -1009,9 +1011,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Parete destra":"Rechte Wand",
 "Pavimento":"Boden",
 "Sala trasparente":"Raum transparent",
-"Parete dietro il palco, a filo del palco (dietro scale e rampe)":"Wand hinter der Bühne, bündig mit der Bühne (hinter Treppen und Rampen)",
-"Parete sul lato sinistro del palco, a filo del palco (dietro scale e rampe)":"Wand an der linken Bühnenseite, bündig mit der Bühne (hinter Treppen und Rampen)",
-"Parete sul lato destro del palco, a filo del palco (dietro scale e rampe)":"Wand an der rechten Bühnenseite, bündig mit der Bühne (hinter Treppen und Rampen)",
+"Parete dietro il palco, alla distanza scelta (dietro scale e rampe)":"Wand hinter der Bühne, im gewählten Abstand (hinter Treppen und Rampen)",
+"Parete sul lato sinistro del palco, alla distanza scelta (dietro scale e rampe)":"Wand an der linken Bühnenseite, im gewählten Abstand (hinter Treppen und Rampen)",
+"Parete sul lato destro del palco, alla distanza scelta (dietro scale e rampe)":"Wand an der rechten Bühnenseite, im gewählten Abstand (hinter Treppen und Rampen)",
 "Pavimento della sala sotto il palco":"Raumboden unter der Bühne",
 "Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo":"Wände und Boden transparent. Die Wand zwischen Blickpunkt und Bühne wird immer ausgeblendet, damit sie die Bühne nicht verdeckt",
 "Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista":"Macht die Deckplatten durchsichtig: Beine, Klammern und Verbinder unter der Bühne sind sichtbar, ohne die Ansicht zu drehen",
@@ -1087,11 +1089,29 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Il parapetto di sicurezza non esiste da 0,5 m: un tratto di 0,5 m resta da chiudere a parte.":"Das Sicherheitsgeländer gibt es nicht mit 0,5 m: ein Abschnitt von 0,5 m bleibt separat zu schließen.",
 "Bordo anticaduta: lato di pedana da {} m senza profilo a listino.":"Stuhlanschlag: Podestseite {0} m ohne Profil in der Preisliste.",
 "Nessuna scala d'accesso per la prima fila a {} cm.":"Keine Zugangstreppe für die erste Reihe auf {0} cm.",
-"Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe sempre tra una fila e l'altra, a qualunque altezza, e dentro la fila dagli 80 cm in su; connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo dietro di ogni fila, fuori dai corridoi; con il parapetto sul retro, dietro l'ultima fila il parapetto con parapiede al posto del bordo.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder immer zwischen den Reihen, in jeder Höhe, und innerhalb der Reihe ab 80 cm; Podestverbinder nur zwischen Podesten derselben Reihe (VD2D ab 20 cm, D2DC in niedrigeren Reihen). Gänge 1 m breit; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe. Stuhlanschläge SKBP an der Hinterkante jeder Reihe, außerhalb der Gänge; mit Geländer hinten statt des Anschlags hinter der letzten Reihe das Geländer mit Fußleiste.",
+"Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe sempre tra una fila e l'altra, a qualunque altezza, e dentro la fila dagli 80 cm in su; connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). I corridoi (larghi 1 m) sono solo la posizione delle scale: le file restano intere; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila (la prima fila si può lasciare senza). Bordi anticaduta per le sedie (riquadro «Parapetti») SKBP sul bordo dietro di ogni fila; con il parapetto sul retro, dietro l'ultima fila il parapetto con parapiede al posto del bordo.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder immer zwischen den Reihen, in jeder Höhe, und innerhalb der Reihe ab 80 cm; Podestverbinder nur zwischen Podesten derselben Reihe (VD2D ab 20 cm, D2DC in niedrigeren Reihen). Die Gänge (1 m breit) sind nur die Position der Treppen: die Reihen bleiben ganz; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe (die erste Reihe kann ohne bleiben). Stuhlanschläge (Bereich «Geländer») SKBP an der Hinterkante jeder Reihe; mit Geländer hinten statt des Anschlags hinter der letzten Reihe das Geländer mit Fußleiste.",
 "Tipo di gamba":"Beintyp",
 "Avviso: la tribuna è composta da pedane modulari StageDeck con portata 750 kg/m² (7,5 kN/m²), superiore al carico di 5 kN/m² previsto per le tribune (NTC 2018, categoria C5; EN 1991-1-1). I parapetti sono solo anticaduta e non antisfondamento: non raggiungono la spinta orizzontale di 3 kN/m prevista per le tribune. Si consiglia la verifica e l'approvazione da parte di un tecnico del cliente, anche per i corridoi e le dimensioni.":"Hinweis: Die Tribüne besteht aus modularen StageDeck-Podesten mit einer Tragfähigkeit von 750 kg/m² (7,5 kN/m²), höher als die für Tribünen vorgesehene Last von 5 kN/m² (NTC 2018, Kategorie C5; EN 1991-1-1). Die Geländer dienen nur als Absturzsicherung und sind nicht durchbruchsicher: Sie erreichen die für Tribünen vorgesehene Horizontallast von 3 kN/m nicht. Wir empfehlen die Prüfung und Freigabe durch einen Techniker des Kunden, auch für Gänge und Abmessungen.",
 "Il parapetto di sicurezza VHX non ha parapiede: dietro l'ultima fila le sedie non hanno il bordo anticaduta.":"Das Sicherheitsgeländer VHX hat keine Fußleiste: hinter der letzten Reihe haben die Stühle keinen Stuhlanschlag.",
 "Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila, fuori dai corridoi; dietro l'ultima fila il parapetto con parapiede.":"Stuhlanschläge (SKBP) an der Hinterkante jeder Reihe, außerhalb der Gänge; hinter der letzten Reihe das Geländer mit Fußleiste.",
+"4 viste (PNG)":"4 Ansichten (PNG)",
+"Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta":"Ein Blatt in 4 geteilt: axonometrische Ansicht, Vorderansicht, Seitenansicht und Draufsicht",
+"Vista assonometrica":"Axonometrische Ansicht",
+"Vista frontale":"Vorderansicht",
+"Vista laterale":"Seitenansicht",
+"Vista in pianta":"Draufsicht",
+"Immagine a 4 viste":"Bild mit 4 Ansichten",
+"Distanza pareti":"Wandabstand",
+"Distanza delle pareti dal palco o dalla tribuna: le 3 pareti si allontanano tutte della stessa misura e si fermano dove si incontrano":"Abstand der Wände von Bühne oder Tribüne: alle 3 Wände rücken gleich weit ab und enden dort, wo sie sich treffen",
+"Bordi anticaduta per le sedie (SKBP; dove c'è il parapetto, parapetto con battipiede)":"Stuhlanschläge (SKBP; wo ein Geländer ist, Geländer mit Fußleiste)",
+"Parapetti laterali anche sulla 1ª fila":"Seitengeländer auch an der 1. Reihe",
+"Corridoi: posizione delle scale (larghe 1 m)":"Gänge: Position der Treppen (1 m breit)",
+"Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila; dietro l'ultima fila il parapetto con parapiede.":"Stuhlanschläge (SKBP) an der Hinterkante jeder Reihe; hinter der letzten Reihe das Geländer mit Fußleiste.",
+"Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila.":"Stuhlanschläge (SKBP) an der Hinterkante jeder Reihe.",
+"Bordi anticaduta per le sedie (SKBP) sui lati senza parapetto, fuori da scale e rampe; dove c'è il parapetto, parapetto con battipiede.":"Stuhlanschläge (SKBP) an den Seiten ohne Geländer, außerhalb von Treppen und Rampen; wo ein Geländer ist, Geländer mit Fußleiste.",
+"Palco rotondo: non ci sono profili curvi, i bordi anticaduta per le sedie non sono in offerta.":"Runde Bühne: es gibt keine gebogenen Profile, die Stuhlanschläge sind nicht im Angebot.",
+"Spider: i bordi anticaduta SKBP sono per le pedane StageDeck, non sono in offerta.":"Spider: die Stuhlanschläge SKBP sind für StageDeck-Podeste und nicht im Angebot.",
+"Il parapetto di sicurezza VHX non ha parapiede: sui lati con parapetto le sedie non hanno il bordo anticaduta.":"Das Sicherheitsgeländer VHX hat keine Fußleiste: an den Seiten mit Geländer haben die Stühle keinen Stuhlanschlag.",
 "Gambe tonde a {} cm: verificare la portata con Everdeck.":"Rundbeine bei {0} cm: Tragfähigkeit mit Everdeck prüfen.",
 "Scala regolabile {} ({}–{} cm).":"Verstellbare Treppe {0} ({1}–{2} cm).",
 "gamba tonda fissa":"festes Rundbein",
@@ -2146,7 +2166,8 @@ function compute(cfg, R, look, kits){
   // --- parapetti
   // parapetto di sicurezza VHX (1 kN/m): elementi da 2 m e 1 m, non esiste da 0,5 m; senza battipiede.
   // Spider: parapetti suoi VH-2 e VH-1 (senza battipiede né versione di sicurezza, niente elemento da 0,5 m)
-  const spiderRails = support==='spider', safe = !!cfg.safety && !spiderRails, kick = !!cfg.kick && !spiderRails;
+  // con i bordi anticaduta per le sedie, dove c'è il parapetto si usa quello con battipiede (VHK)
+  const spiderRails = support==='spider', safe = !!cfg.safety && !spiderRails, kick = (!!cfg.kick || !!cfg.chairStop) && !spiderRails;
   const c2 = spiderRails ? 'VH-2' : safe ? 'VHX2.0' : kick ? 'VHK2.0' : 'VH2.0', c1 = spiderRails ? 'VH-1' : safe ? 'VHX1.0' : kick ? 'VHK1.0' : 'VH1.0', c05 = kick ? 'VHK0.5' : 'VH0.5';
   const halfEdges = s => decks.filter(d => s==='back' ? d.y===0 : s==='front' ? d.y+d.h===Dc : s==='left' ? d.x===0 : d.x+d.w===Wc)
     .filter(d => (s==='back'||s==='front' ? d.w : d.h)===1).map(d => (s==='back'||s==='front' ? d.x : d.y)/2).sort((a,b) => a-b);
@@ -2171,6 +2192,32 @@ function compute(cfg, R, look, kits){
   M.rail = rails; M.rail_link = railLinks;
   M.rail_corner = round ? 0 : [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
   if(round && Object.values(cfg.rails).some(Boolean)) warn('warn','Palco rotondo: non ci sono parapetti curvi, i parapetti non sono in offerta.');
+  // bordi anticaduta per le sedie (SKBP) sui lati senza parapetto, fuori da scale e rampe: un profilo per lato di pedana
+  const stops = [];
+  if(cfg.chairStop){
+    if(round) warn('warn','Palco rotondo: non ci sono profili curvi, i bordi anticaduta per le sedie non sono in offerta.');
+    else if(spiderRails) warn('warn','Spider: i bordi anticaduta SKBP sono per le pedane StageDeck, non sono in offerta.');
+    else{
+      if(safe && Object.values(cfg.rails).some(Boolean)) warn('warn','Il parapetto di sicurezza VHX non ha parapiede: sui lati con parapetto le sedie non hanno il bordo anticaduta.');
+      for(const sd of ['back','front','left','right']){
+        if(cfg.rails[sd]) continue;
+        const horiz = sd==='back' || sd==='front', t0 = taken(sd);
+        for(const d of decks){
+          const on = sd==='back' ? d.y===0 : sd==='front' ? d.y+d.h===Dc : sd==='left' ? d.x===0 : d.x+d.w===Wc;
+          if(!on) continue;
+          // davanti a scale e rampe niente bordo: della pedana resta il tratto libero, coperto con i profili da 2, 1 e 0,5 m
+          const e = (horiz ? d.x+d.w : d.y+d.h)/2;
+          let a = Math.max((horiz ? d.x : d.y)/2, t0);
+          while(e - a >= 0.5 - 1e-9){
+            const L = [2, 1, 0.5].find(x => x <= e - a + 1e-9);
+            out.lines.push({group:'Parapetti', code:CHAIR_STOP[L], qty:1});
+            stops.push({side:sd, a, L}); a += L;
+          }
+        }
+      }
+      out.notes.push('Bordi anticaduta per le sedie (SKBP) sui lati senza parapetto, fuori da scale e rampe; dove c\'è il parapetto, parapetto con battipiede.');
+    }
+  }
   if(rails) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti standard per uso senza accesso del pubblico (30 kg/m).');
 
   // --- regole accessori
@@ -2253,7 +2300,7 @@ function compute(cfg, R, look, kits){
   out.plan = {W, D, decks, legs:support==='legs', legRound:!!(leg && leg.round), conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     vd2d: lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
     round: round ? {D:Dm, pieces:rp} : null,
-    skirt:skSides, skirtH, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
+    skirt:skSides, skirtH, stops, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
   out.info.famLabel = fam.label;
@@ -2269,7 +2316,7 @@ function compute(cfg, R, look, kits){
    fissa più corta tagliata a misura (es. prima fila da 15–17 cm con la gamba da 20 cm). */
 // avviso nei documenti in uscita delle tribune (PDF dell'offerta e dei disegni, copie)
 const TRIB_NOTICE = 'Avviso: la tribuna è composta da pedane modulari StageDeck con portata 750 kg/m² (7,5 kN/m²), superiore al carico di 5 kN/m² previsto per le tribune (NTC 2018, categoria C5; EN 1991-1-1). I parapetti sono solo anticaduta e non antisfondamento: non raggiungono la spinta orizzontale di 3 kN/m prevista per le tribune. Si consiglia la verifica e l\'approvazione da parte di un tecnico del cliente, anche per i corridoi e le dimensioni.';
-const TRIB_DEF = {W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, chairStop:true};
+const TRIB_DEF = {W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, sideFirst:true};
 const AISLE_W = 1;   // m, larghezza di un corridoio
 const CHAIR_STOP = {2:'SKBP1970', 1:'SKBP970', 0.5:'SKBP470'};
 function tribLeg(h, cfg, look){
@@ -2326,7 +2373,8 @@ function computeTribune(cfg, R, look){
   aisles.sort((p,q) => p[0]-q[0]);
   for(let i=1;i<aisles.length;i++) if(aisles[i][0] < aisles[i-1][1]+0.5-1e-9){ warn('bad','Tribuna troppo stretta per i corridoi scelti: servono almeno 50 cm di posti tra un corridoio e l\'altro.'); return out; }
   if(!aisles.length) warn('warn','Nessun corridoio: l\'accesso alle file va previsto a parte.');
-  // tratti da coprire: corridoi e blocchi di posti tra i corridoi
+  // i corridoi sono solo la posizione delle scale (d'accesso e gradini intermedi): le file si coprono a tutta larghezza;
+  // servono per aprire il parapetto davanti alla prima fila
   const segs = []; let x = 0;
   for(const [a,b] of aisles){ if(a>x+1e-9) segs.push({a:x, b:a, aisle:false}); segs.push({a, b, aisle:true}); x = b; }
   if(W>x+1e-9) segs.push({a:x, b:W, aisle:false});
@@ -2346,12 +2394,8 @@ function computeTribune(cfg, R, look){
     }
     return best && best.t;
   };
-  const pattern = [];
-  for(const sg of segs){
-    const t = tileSeg(Math.round((sg.b-sg.a)*2));
-    if(!t){ warn('bad','Non riesco a coprire le file con le pedane del piano scelto.'); return out; }
-    for(const d of t) pattern.push({...d, x:d.x + Math.round(sg.a*2), aisle:sg.aisle});
-  }
+  const pattern = tileSeg(Math.round(W*2));
+  if(!pattern){ warn('bad','Non riesco a coprire le file con le pedane del piano scelto.'); return out; }
   const rows = [], decks = [];
   for(let i=0;i<N;i++){
     const h = h1 + i*rise, y = (N-1-i)*Dc;      // pianta: retro in alto (fila più alta), fila 1 davanti in basso
@@ -2401,8 +2445,8 @@ function computeTribune(cfg, R, look){
   const safe = !!cfg.safety, kick = !!cfg.kick && !safe;
   const c2 = safe ? 'VHX2.0' : kick ? 'VHK2.0' : 'VH2.0', c1 = safe ? 'VHX1.0' : kick ? 'VHK1.0' : 'VH1.0', c05 = kick ? 'VHK0.5' : 'VH0.5';
   // con i bordi per le sedie, dietro l'ultima fila il bordo non si monta sotto il parapetto: si usa il parapetto con parapiede
-  const backKick = !!T.chairStop && cfg.rails.back && !safe;
-  if(T.chairStop && cfg.rails.back && safe) warn('warn','Il parapetto di sicurezza VHX non ha parapiede: dietro l\'ultima fila le sedie non hanno il bordo anticaduta.');
+  const backKick = !!cfg.chairStop && cfg.rails.back && !safe;
+  if(cfg.chairStop && cfg.rails.back && safe) warn('warn','Il parapetto di sicurezza VHX non ha parapiede: dietro l\'ultima fila le sedie non hanno il bordo anticaduta.');
   const runs = [], railQ = new Map(); let links = 0;
   const addRun = (side, start, L, h, kickRun) => {
     const pc = railPieces(L);
@@ -2414,19 +2458,20 @@ function computeTribune(cfg, R, look){
   };
   if(cfg.rails.back) addRun('back', 0, W, hTop, backKick);
   if(cfg.rails.front){ for(const sg of segs) if(!sg.aisle) addRun('front', sg.a, sg.b-sg.a, h1); }
-  for(const side of ['left','right']) if(cfg.rails[side]) for(const r of rows) addRun(side, (N-1-r.i)*depth, depth, r.h);
+  // lati a gradini: un elemento per fila; la prima fila si può lasciare senza (T.sideFirst)
+  const sideFirst = T.sideFirst!==false;
+  for(const side of ['left','right']) if(cfg.rails[side]) for(const r of rows) if(r.i>0 || sideFirst) addRun(side, (N-1-r.i)*depth, depth, r.h);
   for(const [code, qty] of railQ) out.lines.push({group:'Parapetti', code, qty});
   M.rail = [...railQ.values()].reduce((a,b) => a+b, 0); M.rail_link = links;
-  const frontAtEdge = s => cfg.rails.front && !aisles.some(([a,b]) => s==='left' ? a<=1e-9 : b>=W-1e-9);
+  const frontAtEdge = s => cfg.rails.front && sideFirst && !aisles.some(([a,b]) => s==='left' ? a<=1e-9 : b>=W-1e-9);
   M.rail_corner = (cfg.rails.back && cfg.rails.left ? 1 : 0) + (cfg.rails.back && cfg.rails.right ? 1 : 0) + (frontAtEdge('left') && cfg.rails.left ? 1 : 0) + (frontAtEdge('right') && cfg.rails.right ? 1 : 0);
   if(M.rail) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti laterali a gradini: un elemento per fila, alla sua altezza.');
 
   // --- bordi anticaduta per le sedie: sul bordo dietro di ogni fila (trattiene le gambe posteriori delle sedie),
-  // fuori dai corridoi, un profilo per pedana
+  // un profilo per pedana
   const stops = [];
-  if(T.chairStop){
+  if(cfg.chairStop){
     for(const d of decks){
-      if(d.aisle) continue;
       if(d.row===N-1 && cfg.rails.back) continue;   // dietro l'ultima fila c'è il parapetto (con parapiede)
       const L = d.w/2, code = CHAIR_STOP[L];
       if(!code){ warn('warn',`Bordo anticaduta: lato di pedana da ${nf(L)} m senza profilo a listino.`); continue; }
@@ -2434,8 +2479,8 @@ function computeTribune(cfg, R, look){
       stops.push({x:d.x, y:d.y, w:d.w, h:d.h, row:d.row});   // y: bordo dietro (in pianta il retro è in alto)
     }
     out.notes.push(cfg.rails.back
-      ? 'Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila, fuori dai corridoi; dietro l\'ultima fila il parapetto con parapiede.'
-      : 'Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila, fuori dai corridoi.');
+      ? 'Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila; dietro l\'ultima fila il parapetto con parapiede.'
+      : 'Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila.');
   }
 
   // --- scale: d'accesso alla prima fila davanti a ogni corridoio; gradini intermedi nei corridoi con alzate oltre 20 cm
@@ -2639,8 +2684,8 @@ const DEFAULT_CFG = {
   W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
-  room:{back:false, left:false, right:false, floor:false, clear:false},
-  kind:'palco', trib:{W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, chairStop:true},
+  room:{back:false, left:false, right:false, floor:false, clear:false, gap:0},
+  kind:'palco', trib:{W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, sideFirst:true}, chairStop:false,
   support:'legs', legShape:'square', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{},
   markup:37, discount:0, vat:22, pdfCost:false, descShow:false, descPdf:false, lingua:'it'
 };
@@ -2655,7 +2700,10 @@ function normCfg(src){
   c.skirt = Object.assign(clone(DEFAULT_CFG.skirt), c.skirt||{}); c.skirt.sides = Object.assign(clone(DEFAULT_CFG.skirt.sides), c.skirt.sides||{});
   c.trolley = Object.assign(clone(DEFAULT_CFG.trolley), c.trolley||{});
   c.room = Object.assign(clone(DEFAULT_CFG.room), c.room||{});
+  // i bordi per le sedie stavano nei dati della tribuna: ora valgono per palco e tribuna (riquadro «Parapetti»)
+  if(src && src.chairStop==null && src.trib && src.trib.chairStop!=null) c.chairStop = !!src.trib.chairStop;
   c.trib = Object.assign(clone(DEFAULT_CFG.trib), c.trib||{}); c.trib.aisles = Object.assign(clone(DEFAULT_CFG.trib.aisles), c.trib.aisles||{});
+  delete c.trib.chairStop;
   c.trasporto = Object.assign(clone(DEFAULT_CFG.trasporto), c.trasporto||{});
   c.adj = (c.adj && typeof c.adj==='object') ? c.adj : {};
   c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
@@ -2905,9 +2953,10 @@ function fillForm(){
   renderKind();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
-  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
+  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#chairStop').checked = !!cfg.chairStop; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   $$('[data-room]').forEach(b => b.setAttribute('aria-pressed', cfg.room[b.dataset.room] ? 'true' : 'false'));
+  $('#roomGap').value = +cfg.room.gap || 0;
   renderRailSeg(); renderStairs(); renderRamps(); renderExtras();
   $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
   $('#skFabric').value = cfg.skirt.fabric; $('#skHeight').value = cfg.skirt.height;
@@ -3042,6 +3091,12 @@ function planSVG(p, H){
     const o = 4*px;
     const l = sd2==='back' ? [0,-o,W,-o] : sd2==='front' ? [0,D+o,W,D+o] : sd2==='left' ? [-o,0,-o,D] : [W+o,0,W+o,D];
     s += `<line x1="${l[0]}" y1="${l[1]}" x2="${l[2]}" y2="${l[3]}" stroke="var(--ink)" stroke-opacity=".55" stroke-width="3" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`;
+  }
+  // bordi anticaduta per le sedie (SKBP): linea scura appena dentro il bordo
+  for(const st of (p.stops||[])){
+    const o = 2.5*px, a = st.a*100 + 3*px, b = (st.a + st.L)*100 - 3*px;
+    const l = st.side==='back' ? [a,o,b,o] : st.side==='front' ? [a,D-o,b,D-o] : st.side==='left' ? [o,a,o,b] : [W-o,a,W-o,b];
+    s += seg(l[0],l[1],l[2],l[3],'var(--ink)',2.5);
   }
   // scale e rampe: prima le scale, poi le rampe, a partire dall'inizio del lato
   const slot = (side, off, len, depth) => {
@@ -3188,7 +3243,7 @@ function tribSectionSVG(p){
   const back = p.runs.some(r => r.side==='back'), front = p.runs.some(r => r.side==='front'), side = p.runs.some(r => r.side==='left' || r.side==='right');
   if(back) s += ln(D, -p.hTop, D, -p.hTop-100, 'var(--rail)', 3) + ln(D-6, -p.hTop-100, D, -p.hTop-100, 'var(--rail)', 3);
   if(front) s += ln(0, -p.h1, 0, -p.h1-100, 'var(--rail)', 3);
-  if(side) for(const r of p.rows) s += ln(r.i*dep+4, -r.h-100, (r.i+1)*dep-4, -r.h-100, 'var(--rail1)', 2, ' stroke-dasharray="5 4"');
+  if(side) for(const r of p.rows) if(p.runs.some(x => (x.side==='left' || x.side==='right') && x.h===r.h)) s += ln(r.i*dep+4, -r.h-100, (r.i+1)*dep-4, -r.h-100, 'var(--rail1)', 2, ' stroke-dasharray="5 4"');
   // scala d'accesso alla prima fila
   if(acc){
     if(acc.kind==='modular') for(let i=0;i<acc.steps;i++){ const h = 20*(i+1), x = -(acc.steps-i)*STAIR_DEPTH; s += `<rect x="${x}" y="${-h}" width="${STAIR_DEPTH}" height="${h}" fill="var(--stair)" fill-opacity=".15" stroke="var(--stair)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`; }
@@ -3676,6 +3731,14 @@ async function save3d(){
   if(!blob) return;
   await saveBlob(blob, `vista3d_${ref3d()}.png`, 'Immagine');
 }
+// immagine a 4 viste (assonometria, fronte, lato, pianta) con il titolo del palco o della tribuna
+async function save3d4(){
+  if(!v3.view || !res || !res.plan) return;
+  draw3dNow();
+  const blob = await v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)));
+  if(!blob) return;
+  await saveBlob(blob, `viste_${ref3d()}.png`, 'Immagine a 4 viste');
+}
 const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
 // modello 3D per altri programmi (Visualizzatore 3D di Windows, Anteprima del Mac, Blender, ...)
 async function saveGlb(){
@@ -4012,6 +4075,7 @@ function bind(){
   $('#v3Show').addEventListener('click', show3d);
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
   $('#v3Png').addEventListener('click', save3d);
+  $('#v3Png4').addEventListener('click', save3d4);
   $('#v3Glb').addEventListener('click', saveGlb);
   $('#v3Xray').addEventListener('click', e => {
     const on = e.currentTarget.getAttribute('aria-pressed')!=='true';
@@ -4019,7 +4083,8 @@ function bind(){
     if(v3.view) v3.view.setXray(on);
   });
   $('#v3Html').addEventListener('click', saveHtml3d);
-  // sala nella vista 3D (pareti, pavimento, trasparenza): salvata con l'offerta
+  // sala nella vista 3D (pareti, pavimento, trasparenza, distanza delle pareti): salvata con l'offerta
+  $('#roomGap').addEventListener('input', e => { cfg.room.gap = Math.max(0, Math.min(1000, Math.round(+e.target.value || 0))); save(); draw3d(); });
   $$('[data-room]').forEach(b => b.addEventListener('click', () => {
     const k = b.dataset.room; cfg.room[k] = !cfg.room[k];
     b.setAttribute('aria-pressed', cfg.room[k] ? 'true' : 'false');
