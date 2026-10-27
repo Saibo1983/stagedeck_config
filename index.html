@@ -208,6 +208,8 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .fold::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:9px solid currentColor;transition:transform .15s}
 .fold:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 .panel.shut .fold::before{transform:rotate(-90deg)}
+.drawcmds{margin-top:14px}
+.planinfo{margin:-4px 0 10px;color:var(--muted);font-weight:600}
 @media screen{.panel.shut > :not(h2){display:none!important}.panel.shut > h2{margin-bottom:0}}
 .shiprow{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;align-items:start;margin-top:14px}
 .shiprow .palgrid{margin-top:0}
@@ -333,6 +335,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   body{padding:0;background:#fff;color:#000}
   .panel{border:0;padding:0}
   .fold::before{display:none}
+  .drawcmds{display:none}
+  .planinfo{display:none}
   #v3Panel.shut{display:none!important}
   #planPanel,#stairPanel{break-inside:avoid}
   .stack{gap:10mm}
@@ -571,10 +575,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="notes" id="notes"></div>
     <div class="panel" id="planPanel">
       <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Vista schematica</button></h2>
+      <p class="planinfo" id="planInfo"></p>
       <div class="planbar">
         <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
-        <button type="button" class="btn primary" id="pdfDraw" style="margin-left:auto">PDF disegni</button>
       </div>
       <div id="planBox"></div>
       <p class="tribnotice" hidden></p>
@@ -591,6 +595,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <span><i style="background:var(--ramp);opacity:.5"></i>Rampa</span>
         <span>Retro in alto, fronte in basso</span>
       </div>
+      <div class="drawcmds"><button type="button" class="btn primary" id="pdfDraw">PDF disegni</button></div>
     </div>
     <div class="panel" id="stairPanel" hidden>
       <h2>Scala in offerta</h2>
@@ -608,7 +613,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <div class="bar">
           <div class="actions"><span class="lbl">Impostazioni</span><button type="button" class="tgl" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button></div>
           <div class="actions"><span class="lbl">Sala</span><button type="button" class="tgl" data-room="back" aria-pressed="false" title="Parete dietro il palco, alla distanza scelta (dietro scale e rampe)">Parete di fondo</button><button type="button" class="tgl" data-room="left" aria-pressed="false" title="Parete sul lato sinistro del palco, alla distanza scelta (dietro scale e rampe)">Parete sinistra</button><button type="button" class="tgl" data-room="right" aria-pressed="false" title="Parete sul lato destro del palco, alla distanza scelta (dietro scale e rampe)">Parete destra</button><button type="button" class="tgl" data-room="floor" aria-pressed="false" title="Pavimento della sala sotto il palco">Pavimento</button><button type="button" class="tgl" data-room="clear" aria-pressed="false" title="Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo">Sala trasparente</button><label class="roomgap" title="Distanza delle pareti dal palco o dalla tribuna: le 3 pareti si allontanano tutte della stessa misura e si fermano dove si incontrano">Distanza pareti <input type="number" id="roomGap" min="0" max="1000" step="10" inputmode="numeric"> cm</label></div>
-          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn primary" id="v3Png">Salva immagine PNG</button><button type="button" class="btn" id="v3Png4" title="Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta">4 viste (PNG)</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn" id="v3Png">Immagine (PNG)</button><button type="button" class="btn" id="v3Png4" title="Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta">4 viste (PNG)</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         </div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: i Rollrisers sono mostrati con gambe StageDeck.</p>
       </div>
@@ -623,15 +628,15 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <div class="actions"><span class="lbl">Impostazioni</span>
           <label class="tgl pdfopt"><input type="checkbox" id="pdfCost"> Prezzi di acquisto nel PDF</label>
           <label class="tgl pdfopt" title="Mostra sotto ogni riga la descrizione dell'articolo (dove c'è)"><input type="checkbox" id="descShow"> Descrizioni</label>
-          <label class="tgl pdfopt" title="Descrizioni nel PDF dell'offerta, in «Copia offerta» e in «Copia per Excel»"><input type="checkbox" id="descPdf"> Descrizioni in PDF e copie</label>
-          <span class="langpick pdfopt"><span class="lbl">Lingua di stampa</span><span class="seg langseg" id="outLang" role="group" aria-label="Lingua del PDF e delle copie" title="Lingua del PDF dell'offerta e dei disegni, di «Copia offerta» e di «Copia per Excel»"><button type="button" data-lang="it" aria-pressed="true">IT</button><button type="button" data-lang="de" aria-pressed="false">DE</button></span></span>
+          <label class="tgl pdfopt" title="Descrizioni nel PDF dell'offerta, in «Copia offerta» e in «Esporta Excel offerta»"><input type="checkbox" id="descPdf"> Descrizioni in PDF e copie</label>
+          <span class="langpick pdfopt"><span class="lbl">Lingua di stampa</span><span class="seg langseg" id="outLang" role="group" aria-label="Lingua del PDF e delle copie" title="Lingua del PDF dell'offerta e dei disegni, di «Copia offerta» e di «Esporta Excel offerta»"><button type="button" data-lang="it" aria-pressed="true">IT</button><button type="button" data-lang="de" aria-pressed="false">DE</button></span></span>
         </div>
         <div class="actions cmds"><span class="lbl">Comandi</span>
           <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
           <span class="sep" aria-hidden="true"></span>
           <button type="button" class="btn" id="copyText">Copia offerta</button>
-          <button type="button" class="btn" id="copyTsv">Copia per Excel</button>
-          <button type="button" class="btn" id="dlOrder">Ordine fornitore (Excel)</button>
+          <button type="button" class="btn" id="dlOffer" title="L'offerta per il cliente in un file .xlsx: righe, prezzi di vendita, totali e note">Esporta Excel offerta</button>
+          <button type="button" class="btn" id="dlOrder">Ordine fornitore Excel</button>
           <button type="button" class="btn" id="dlXml" title="Righe dell'offerta in un file .xml da importare nel programma gestionale">Esporta XML</button>
           <button type="button" class="btn" id="adjReset" hidden>Ripristina quantità e maggiorazioni</button>
           <span class="status" id="status" role="status" aria-live="polite"></span>
@@ -807,7 +812,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Lingua dell'interfaccia":"Sprache der Oberfläche",
 "Lingua di stampa":"Drucksprache",
 "Lingua del PDF e delle copie":"Sprache von PDF und Kopien",
-"Lingua del PDF dell'offerta e dei disegni, di «Copia offerta» e di «Copia per Excel»":"Sprache des Angebots- und Zeichnungs-PDF, von «Angebot kopieren» und «Für Excel kopieren»",
+"Lingua del PDF dell'offerta e dei disegni, di «Copia offerta» e di «Esporta Excel offerta»":"Sprache des Angebots- und Zeichnungs-PDF, von «Angebot kopieren» und «Angebot als Excel exportieren»",
 "Trascina per allargare la pagina":"Ziehen, um die Seite zu verbreitern",
 "Trascina per allargare la pagina (doppio clic: larghezza normale)":"Ziehen, um die Seite zu verbreitern (Doppelklick: normale Breite)",
 "Dati offerta":"Angebotsdaten",
@@ -1031,7 +1036,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo":"Wände und Boden transparent. Die Wand zwischen Blickpunkt und Bühne wird immer ausgeblendet, damit sie die Bühne nicht verdeckt",
 "Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista":"Macht die Deckplatten durchsichtig: Beine, Klammern und Verbinder unter der Bühne sind sichtbar, ohne die Ansicht zu drehen",
 "Ripristina vista":"Ansicht zurücksetzen",
-"Salva immagine PNG":"PNG-Bild speichern",
+"Immagine (PNG)":"Bild (PNG)",
 "3D interattivo (.html)":"Interaktives 3D (.html)",
 "Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.":"Seite zum Öffnen im Browser (auch auf dem Handy) oder zum Senden an den Kunden: Die Bühne lässt sich mit Finger oder Maus drehen. Internetverbindung nötig.",
 "Modello 3D (.glb)":"3D-Modell (.glb)",
@@ -1177,12 +1182,15 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Descrizioni":"Beschreibungen",
 "Mostra sotto ogni riga la descrizione dell'articolo (dove c'è)":"Zeigt unter jeder Zeile die Artikelbeschreibung (wo vorhanden)",
 "Descrizioni in PDF e copie":"Beschreibungen in PDF und Kopien",
-"Descrizioni nel PDF dell'offerta, in «Copia offerta» e in «Copia per Excel»":"Beschreibungen im Angebots-PDF, in «Angebot kopieren» und in «Für Excel kopieren»",
+"Descrizioni nel PDF dell'offerta, in «Copia offerta» e in «Esporta Excel offerta»":"Beschreibungen im Angebots-PDF, in «Angebot kopieren» und in «Angebot als Excel exportieren»",
 "PDF offerta":"Angebot als PDF",
 "PDF disegni":"Zeichnungen als PDF",
 "Copia offerta":"Angebot kopieren",
-"Copia per Excel":"Für Excel kopieren",
-"Ordine fornitore (Excel)":"Lieferantenbestellung (Excel)",
+"Esporta Excel offerta":"Angebot als Excel exportieren",
+"L'offerta per il cliente in un file .xlsx: righe, prezzi di vendita, totali e note":"Das Angebot für den Kunden als .xlsx-Datei: Positionen, Verkaufspreise, Summen und Hinweise",
+"Offerta Excel":"Angebot Excel",
+"Subtotale":"Zwischensumme",
+"Ordine fornitore Excel":"Lieferantenbestellung Excel",
 "Ripristina quantità e maggiorazioni":"Mengen und Aufschläge zurücksetzen",
 "Copiato":"Kopiert",
 "Copia non riuscita":"Kopieren fehlgeschlagen",
@@ -3545,9 +3553,10 @@ function renderResult(){
     <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
   renderShip();
   $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
-  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#planInfo').textContent = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
+  $('#planInfo').textContent = stageTitle(p, ' · ');
   $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
   draw3d();
   $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
@@ -3594,7 +3603,7 @@ function printPart(part){
   const head = [cfg.numero ? tr('Offerta n.')+' '+cfg.numero : tr('Offerta'), c && part==='offerta' ? '' : cfg.cliente, cfg.progetto, d].filter(Boolean);
   // nell'offerta, con un cliente dell'anagrafica: nome, indirizzo e dati fiscali (niente telefoni, note e avvisi interni)
   const cli = c && part==='offerta' ? `<div class="ph-cli">${esc(tr('Spett.le'))}<br><b>${esc(cfg.cliente || cliName(c))}</b>${[...cliAddr(c), cliTax(c)].filter(Boolean).map(t => '<br>'+esc(t)).join('')}</div>` : '';
-  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(part==='offerta' ? `${stageTitle(res.plan)}, ${res.info.famLabel}` : stageTitle(res.plan)))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
+  $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(stageTitle(res.plan)) + (part==='offerta' ? ', ' + tr(res.info.famLabel) : ''))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
   document.title = [tr(part==='offerta' ? 'Offerta' : 'Disegni'), cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
@@ -3626,7 +3635,7 @@ function offerText(){
   if(cfg.cli) out.push(...[...cliAddr(cfg.cli), cliTax(cfg.cli)].filter(Boolean).map(t => '         '+t));
   if(cfg.progetto) out.push(tr('Progetto:')+' '+cfg.progetto);
   if(d) out.push(tr('Data:')+' '+d);
-  out.push(tr(`${stageTitle(p)}, ${res.info.famLabel}`), '');
+  out.push(tr(stageTitle(p)) + ', ' + tr(res.info.famLabel), '');
   out.push(pad(tr('Codice'),16)+pad(tr('Descrizione'),46)+lpad(tr('Q.tà'),5)+lpad(tr('Prezzo'),11)+lpad(tr('Totale'),12));
   for(const l of res.lines.filter(l => l.qty>0)){
     out.push(pad(l.code,16)+pad(tr(l.name).slice(0,44),46)+lpad(l.qty,5)+lpad(money(l.unit),11)+lpad(money(l.total),12));
@@ -3670,23 +3679,28 @@ function zipStore(files){
   const end = new Uint8Array([0x50,0x4b,5,6,0,0,0,0, ...u16(files.length),...u16(files.length), ...u32(cenLen),...u32(off), 0,0]);
   return new Blob([...parts, ...cen, end], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 }
-function orderXlsx(rows){
+/* foglio .xlsx minimo. Celle: testo, numero o {v, s} con lo stile: 1 grassetto, 2 importo (#.##0,00),
+   3 importo in grassetto, 4 testo a capo; widths = larghezza delle colonne in caratteri */
+function xlsxBlob(rows, sheet, widths){
   const x = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const col = i => String.fromCharCode(65+i);
-  const sheetRows = rows.map((r,ri) => `<row r="${ri+1}">` + r.map((v,ci) => {
-    const ref = col(ci)+(ri+1), st = ri===0 ? ' s="1"' : '';
-    return typeof v==='number' ? `<c r="${ref}"${st} t="n"><v>${v}</v></c>` : `<c r="${ref}"${st} t="inlineStr"><is><t>${x(v)}</t></is></c>`;
+  const sheetRows = rows.map((r,ri) => `<row r="${ri+1}">` + r.map((c,ci) => {
+    if(c==null || c==='') return '';
+    const o = typeof c==='object' ? c : {v:c}, ref = col(ci)+(ri+1), st = o.s ? ` s="${o.s}"` : '';
+    return typeof o.v==='number' ? `<c r="${ref}"${st} t="n"><v>${o.v}</v></c>` : `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${x(o.v)}</t></is></c>`;
   }).join('') + '</row>').join('');
+  const cols = widths.map((w,i) => `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
   const hdr = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
   return zipStore([
     ['[Content_Types].xml', hdr+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'],
     ['_rels/.rels', hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'],
-    ['xl/workbook.xml', hdr+'<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Order" sheetId="1" r:id="rId1"/></sheets></workbook>'],
+    ['xl/workbook.xml', hdr+`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${x(sheet)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
     ['xl/_rels/workbook.xml.rels', hdr+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'],
-    ['xl/styles.xml', hdr+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
-    ['xl/worksheets/sheet1.xml', hdr+`<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="20" customWidth="1"/><col min="2" max="2" width="62" customWidth="1"/><col min="3" max="3" width="10" customWidth="1"/><col min="4" max="4" width="10" customWidth="1"/></cols><sheetData>${sheetRows}</sheetData></worksheet>`]
+    ['xl/styles.xml', hdr+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'],
+    ['xl/worksheets/sheet1.xml', hdr+`<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${cols}</cols><sheetData>${sheetRows}</sheetData></worksheet>`]
   ]);
 }
+const orderXlsx = rows => xlsxBlob(rows.map((r,i) => i ? r : r.map(v => ({v, s:1}))), 'Order', [20,62,10,10]);
 async function downloadOrder(){
   const rows = orderRows();
   if(rows.length<2){ say('Niente da ordinare'); return; }
@@ -3790,17 +3804,32 @@ async function saveBlob(blob, filename, what){
     say('Scaricato: '+what);
   }catch(e){ if(!(e && e.code==='declined')) say('Salvataggio non riuscito'); }
 }
-function offerTsv(){
-  if(!res || !res.plan) return '';
+/* offerta in Excel per il cliente: intestazione, righe con prezzi di vendita, totali e note (nella lingua di stampa) */
+function offerXlsx(){
   return inLang(cfg.lingua, () => {
-  const rows = [['Codice','Descrizione','Quantità','Prezzo unitario','Totale', ...(cfg.descPdf ? ['Descrizione estesa'] : [])].map(x => tr(x))];
-  const c = n => n==null ? '' : String(Math.round(n*1000)/1000).replace('.',',');
-  // cella su più righe: tra virgolette, come la legge Excel quando si incolla
-  const q = t => t ? '"' + t.replace(/"/g,'""') + '"' : '';
-  for(const l of res.lines.filter(l => l.qty>0)) rows.push([l.code,tr(l.name),l.qty,c(l.unit),c(l.total), ...(cfg.descPdf ? [q(descLines(l.code).join('\n'))] : [])]);
-  if(res.plan.trib) rows.push([], ['', tr(TRIB_NOTICE)]);
-  return rows.map(r => r.join('\t')).join('\n');
+  const p = res.plan, t = res.totals, d = fmtDate(cfg.data), B = v => ({v, s:1}), E = v => ({v: r2(v), s:2}), EB = v => ({v: r2(v), s:3});
+  const rows = [[B(tr(`OFFERTA ${p.trib ? 'TRIBUNA' : 'PALCO'} MODULARE${cfg.numero ? ' n. '+cfg.numero : ''}`))]];
+  if(cfg.cliente) rows.push([tr('Cliente:'), cfg.cliente]);
+  if(cfg.cli) rows.push(...[...cliAddr(cfg.cli), cliTax(cfg.cli)].filter(Boolean).map(v => ['', v]));
+  if(cfg.progetto) rows.push([tr('Progetto:'), cfg.progetto]);
+  if(d) rows.push([tr('Data:'), d]);
+  rows.push([tr(stageTitle(p)) + ', ' + tr(res.info.famLabel)], []);
+  rows.push(['Codice','Descrizione','Quantità','Prezzo unitario','Totale', ...(cfg.descPdf ? ['Descrizione estesa'] : [])].map(x => B(tr(x))));
+  for(const l of res.lines.filter(l => l.qty>0))
+    rows.push([l.code, tr(l.name), l.qty, E(l.unit), E(l.total), ...(cfg.descPdf ? [{v: descLines(l.code).join('\n'), s:4}] : [])]);
+  rows.push([], ['', '', '', tr('Subtotale'), E(t.gross)]);
+  if(t.disc) rows.push(['', '', '', tr(`Sconto ${dec(+cfg.discount,1)}%`), E(-t.disc)]);
+  rows.push(['', '', '', B(tr('Imponibile')), EB(t.net)], ['', '', '', tr(`IVA ${dec(+cfg.vat||0,0)}%`), E(t.vat)], ['', '', '', B(tr('Totale')), EB(t.grand)], []);
+  rows.push([tr(`Peso totale: ${dec(t.kg,0)} kg · Volume imballi: ${dec(t.m3,2)} m³`)]);
+  if(res.notes.length) rows.push([], ...res.notes.map(n => ['- '+tr(n)]));
+  if(p.trib) rows.push([], [tr(TRIB_NOTICE)]);
+  return xlsxBlob(rows, tr('Offerta'), [16,60,10,16,14, ...(cfg.descPdf ? [70] : [])]);
   });
+}
+async function downloadOffer(){
+  if(!res || !res.plan){ say('Niente da esportare'); return; }
+  const ref = (cfg.numero || cfg.progetto || cfg.data || 'offerta').toString().replace(/[^\w\-]+/g,'_');
+  await saveBlob(offerXlsx(), `offerta_${ref}.xlsx`, 'Offerta Excel');
 }
 /* --- righe dell'offerta per il programma gestionale (VkAngebotPositionen.xml) ---
    Valgono i dati del configuratore: codici, nomi e descrizioni (nella lingua di stampa), quantità, acquisto, maggiorazione, IVA.
@@ -4024,7 +4053,7 @@ function bind(){
     cfg.extras.splice(+b.dataset.rmextra,1); renderExtras(); update();
   });
   $('#copyText').addEventListener('click', () => copy(offerText()));
-  $('#copyTsv').addEventListener('click', () => copy(offerTsv()));
+  $('#dlOffer').addEventListener('click', downloadOffer);
   $('#offerTable').addEventListener('click', e => {
     const m = e.target.closest('button[data-mkrow]');
     if(m){   // maggiorazione della singola voce: passi dell'1%, non sotto 0; tornata a quella generale, la voce non è più modificata
