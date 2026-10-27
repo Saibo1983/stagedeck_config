@@ -250,6 +250,10 @@ DE = {
     "ultimo gradino {} cm": "letzte Stufe {0} cm",
     "{} gradini · cosciale {} cm": "{0} Stufen · Wange {1} cm",
 
+    # --- riquadri richiudibili ---
+    "Vista schematica": "Schematische Ansicht",
+    "Chiudi o apri il riquadro": "Bereich schließen oder öffnen",
+
     # --- vista 3D ---
     "Vista 3D": "3D-Ansicht",
     "Il palco montato con i pezzi reali (pedane, gambe, morsetti, parapetti, scale, mascheratura). Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom (la rotellina da sola scorre la pagina).":
