@@ -149,6 +149,7 @@ function create(canvas){
   function rawMat(pos, idx, color, spec){ const big = pos.length/3 > 65535; return {pos:new Float32Array(pos), idx: big ? null : new Uint16Array(idx), idx32: big ? new Uint32Array(idx) : null, color, spec:spec||0}; }
   const IDT = {r:I3, t:[0,0,0]};
   const CORNER_GAP = 20;   // mm: i parapetti si fermano 20 mm prima dell'angolo
+  const PLATE_GAP = 20;    // mm: la piastra del piede di ogni parapetto si ferma 20 mm prima dello spigolo della pedana
   // mesh composti: posizioni e indici accumulati, poi un solo lotto
   const mk = () => ({P:[], I:[]});
   const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
@@ -314,13 +315,13 @@ function create(canvas){
         const cs = atCorner(side, s), ce = atCorner(side, s+L);
         const du = (cs ? CORNER_GAP : 0) - (ce ? CORNER_GAP : 0);
         if(side==='left' || side==='right') T.t[2] += du; else T.t[0] += du;
-        pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc, lo: up ? cs : ce, hi: up ? ce : cs});   // lo/hi: estremità del modello all'angolo
+        pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc});
         pos += Lm;
       }
       for(const pc of pcs){
         const conn = pcs.some(q => q!==pc && pc.uc >= q.a-1 && pc.uc <= q.b+1);
-        const k = pc.Lm+'|'+(kick?1:0)+'|'+(conn?1:0)+'|'+(pc.lo?1:0)+'|'+(pc.hi?1:0);
-        if(!railGroups.has(k)) railGroups.set(k, {Lm:pc.Lm, kick, conn, lo:pc.lo, hi:pc.hi, list:[]});
+        const k = pc.Lm+'|'+(kick?1:0)+'|'+(conn?1:0);
+        if(!railGroups.has(k)) railGroups.set(k, {Lm:pc.Lm, kick, conn, list:[]});
         railGroups.get(k).list.push(pc.T);
       }
     }
@@ -368,7 +369,7 @@ function create(canvas){
       let mats;
       if(spider) mats = spiderRail(g.Lm*1000);                       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
       else if(cfg.safety && g.Lm!==0.5) mats = vhxMats(g.Lm*1000);   // parapetto di sicurezza VHX (disegnato qui)
-      else mats = railMats(g.Lm, g.kick, g.conn, g.lo, g.hi);
+      else mats = railMats(g.Lm, g.kick, g.conn);
       addBatch(mats, g.list);
     }
 
@@ -936,17 +937,19 @@ function create(canvas){
     });
     railCache.set(k, out); return out;
   }
-  function railMats(Lm, kick, conn, clipLo, clipHi){
+  function railMats(Lm, kick, conn){
     const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5, idxs = railIdx(name, conn);
-    const zHi = (Lm===2 ? 1900 : Lm===1 ? 900 : 400) + 24;   // faccia del montante all'estremità alta
+    // piastra del piede: a ogni estremità si ferma 20 mm prima della fine dell'elemento (lo spigolo della pedana),
+    // così due parapetti in linea non si toccano; l'elemento va da z -50 a L-50 nel modello
+    const zLo = -50 + PLATE_GAP, zHi = Lm*1000 - 50 - PLATE_GAP;
     const mats = PARTS[name].map((m, mi) => {
       const c = colorOf(m);
       let pos = m.pos;
-      if(short || clipLo || clipHi) pos = new Float32Array(m.pos);
+      pos = new Float32Array(m.pos);
       if(short) for(let i=2;i<pos.length;i+=3) if(pos[i] > 450) pos[i] -= 500;   // 0,5 m: quello da 1 m accorciato
-      if(clipLo || clipHi) for(let i=0;i<pos.length;i+=3) if(pos[i+1] < 200){     // piede accorciato all'angolo
-        if(clipLo && pos[i+2] < -24) pos[i+2] = -24;
-        if(clipHi && pos[i+2] > zHi) pos[i+2] = zHi;
+      for(let i=0;i<pos.length;i+=3) if(pos[i+1] < 200){                          // piede accorciato alle estremità
+        if(pos[i+2] < zLo) pos[i+2] = zLo;
+        if(pos[i+2] > zHi) pos[i+2] = zHi;
       }
       return {pos, idx:idxs[mi], color:c.color, spec:c.spec};
     }).filter(m => m.idx.length);
