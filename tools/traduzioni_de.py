@@ -331,8 +331,6 @@ DE = {
     "Righe dell'offerta in un file .xml da importare nel programma gestionale": "Angebotspositionen als .xml-Datei für den Import ins Warenwirtschaftsprogramm",
     "Niente da esportare": "Nichts zu exportieren",
     "File XML": "XML-Datei",
-    "Articolo jolly XML": "Sammelartikel XML",
-    "Codice dell'articolo generico del programma gestionale: nell'esportazione XML lo hanno le righe azzurre (articoli da fatture e pezzi speciali) e gli articoli che non sono nella lista del gestionale. Vuoto: queste righe vanno senza codice articolo": "Code des Sammelartikels im Warenwirtschaftsprogramm: im XML-Export erhalten ihn die blauen Zeilen (Artikel aus Rechnungen und Sonderteile) und die Artikel, die nicht in der Artikelliste des Programms stehen. Leer: diese Zeilen ohne Artikelcode",
     "Disegni": "Zeichnungen",
     "Spett.le": "An",
     "Chiudi": "Schließen",
