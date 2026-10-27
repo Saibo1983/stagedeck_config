@@ -391,12 +391,12 @@ function create(canvas){
           for(let k=0;k<plan.inter;k++) putStep((plan.inter-k)*200, cx, top, zb + SD/2 + k*SD);
         }
       }
-      // bordi anticaduta per le sedie (SKBP): profilo sul bordo davanti di ogni fila
+      // bordi anticaduta per le sedie (SKBP): profilo sul bordo dietro di ogni fila (trattiene le gambe posteriori)
       if(plan.stops && plan.stops.length){
         const C = mk();
         for(const st of plan.stops){
           const top = plan.rows[st.row].h*10 + 60, z = st.y*500;
-          push(C, box([st.x*500 + 10, top, z - 22], [(st.x+st.w)*500 - 10, top + 45, z - 8]), BOX_IDX);
+          push(C, box([st.x*500 + 10, top, z + 8], [(st.x+st.w)*500 - 10, top + 45, z + 22]), BOX_IDX);
         }
         addBatch([rawMat(C.P, C.I, [0.12,0.12,0.13], 0.2)], [IDT]);
       }

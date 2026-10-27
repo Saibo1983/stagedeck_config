@@ -108,6 +108,8 @@ input:disabled{opacity:.5}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}
+.sides.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.row3.bottom{align-items:end}   /* campi allineati in basso anche se un'etichetta va a capo */
 /* due famiglie di pulsanti: i comandi (fanno un'operazione: PDF, copia, salva) sono rettangolari con un po' di spessore,
    il principale pieno in rosso; le impostazioni (accese/spente) sono pillole grigie con un interruttore. */
 .btn{background:linear-gradient(var(--surface),var(--surface-2));border:1px solid var(--line);border-bottom-color:var(--deck-line);border-radius:6px;padding:7px 12px;cursor:pointer;min-height:36px;font-weight:500;
@@ -414,20 +416,20 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <label class="field"><span>Larghezza (m)</span><input type="number" data-trib="W" min="1" max="60" step="0.5" inputmode="decimal"></label>
           <label class="field"><span>Numero di file</span><input type="number" data-trib="rows" min="1" max="30" step="1" inputmode="numeric"></label>
         </div>
-        <div class="row3">
+        <div class="row3 bottom">
           <label class="field"><span>Profondità fila</span><select data-trib="depth"><option value="1">1 m</option><option value="0.5">50 cm</option></select></label>
           <label class="field"><span>1ª fila (cm)</span><input type="number" data-trib="h1" min="10" max="200" step="1" inputmode="numeric" title="Altezza della prima fila, la più bassa (davanti). Sotto i 20 cm la gamba da 20 cm si taglia a misura"></label>
           <label class="field"><span>Alzata (cm)</span><input type="number" data-trib="rise" min="5" max="40" step="1" inputmode="numeric" title="Quanto ogni fila è più alta di quella davanti: standard 20 cm. Le altezze intermedie usano le gambe telescopiche"></label>
         </div>
         <div class="field"><span>Corridoi (larghi 1 m)</span>
-          <div class="sides">
-            <label class="check"><input type="checkbox" data-aisle="left"> Al bordo sinistro</label>
+          <div class="sides c3">
+            <label class="check"><input type="checkbox" data-aisle="left"> Lato sinistro</label>
             <label class="check"><input type="checkbox" data-aisle="center"> Centrale</label>
-            <label class="check"><input type="checkbox" data-aisle="right"> Al bordo destro</label>
+            <label class="check"><input type="checkbox" data-aisle="right"> Lato destro</label>
           </div>
         </div>
-        <label class="check"><input type="checkbox" data-trib="chairStop"> Bordi anticaduta per le sedie (SKBP sul bordo davanti di ogni fila)</label>
-        <p class="hint">La fila 1 è davanti, la più bassa. Ogni fila ha le sue gambe per la sua altezza. Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
+        <label class="check"><input type="checkbox" data-trib="chairStop"> Bordi anticaduta per le sedie (SKBP sul bordo dietro di ogni fila)</label>
+        <p class="hint">Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
       </div>
       <label class="field"><span>Pedana</span><select id="family"></select></label>
     </div>
@@ -742,7 +744,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <li>I parapetti coprono i lati scelti con elementi da 2 m; se la lunghezza è dispari (3, 5, 7 m...) si aggiunge un solo elemento da 1 m; se avanza mezzo metro (2,5, 3,5 m...) un elemento da 0,5 m, sulla pedana da mezzo metro del bordo.</li>
       <li>Scale e rampe occupano un'apertura sul loro lato, a partire dall'inizio del lato (sinistra per fronte e retro, alto per sinistra e destra). Il parapetto continua dopo.</li>
       <li>Le gambe fisse esistono da 20 a 100 cm, a passi di 20. Le altre altezze usano la gamba telescopica che le contiene.</li>
-      <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.</li>
+      <li>Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo dietro di ogni fila, fuori dai corridoi.</li>
       <li>Gambe tonde Ø 48 (riquadro «Gambe», «Tipo di gamba»): fisse VRL o VRLA (con piedino regolabile) da 20 a 120 cm a passi di 10, in set da 4; telescopiche VRLT a pezzi, da 45 a 220 cm. Con le gambe tonde i connettori tra le gambe sono VLC-48MM e V4LC-48MM.</li>
       <li>Le rampe seguono i kit del listino rampe per altezza (20, 40, 60, 80–100, 120–140 cm). Rollrisers: 30 o 40 cm. Spider: 20, 40 o 60 cm.</li>
     </ul>
@@ -1033,11 +1035,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Altezza della prima fila, la più bassa (davanti). Sotto i 20 cm la gamba da 20 cm si taglia a misura":"Höhe der ersten, niedrigsten Reihe (vorne). Unter 20 cm wird das 20-cm-Bein auf Maß gekürzt",
 "Quanto ogni fila è più alta di quella davanti: standard 20 cm. Le altezze intermedie usano le gambe telescopiche":"Um wie viel jede Reihe höher ist als die davor: Standard 20 cm. Zwischenhöhen verwenden Teleskopbeine",
 "Corridoi (larghi 1 m)":"Gänge (1 m breit)",
-"Al bordo sinistro":"Am linken Rand",
+"Lato sinistro":"Linke Seite",
 "Centrale":"Mittig",
-"Al bordo destro":"Am rechten Rand",
-"Bordi anticaduta per le sedie (SKBP sul bordo davanti di ogni fila)":"Stuhlanschläge (SKBP an der Vorderkante jeder Reihe)",
-"La fila 1 è davanti, la più bassa. Ogni fila ha le sue gambe per la sua altezza. Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.":"Reihe 1 ist vorne und am niedrigsten. Jede Reihe hat Beine für ihre Höhe. Vor jedem Gang gibt es eine Zugangstreppe, wenn die erste Reihe höher als 20 cm ist; bei Stufenhöhen über 20 cm haben die Gänge Zwischenstufen. Geländer im Bereich «Geländer»: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft.",
+"Lato destro":"Rechte Seite",
+"Bordi anticaduta per le sedie (SKBP sul bordo dietro di ogni fila)":"Stuhlanschläge (SKBP an der Hinterkante jeder Reihe)",
+"Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.":"Vor jedem Gang gibt es eine Zugangstreppe, wenn die erste Reihe höher als 20 cm ist; bei Stufenhöhen über 20 cm haben die Gänge Zwischenstufen. Geländer im Bereich «Geländer»: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft.",
 "Tribuna {} × {} m":"Tribüne {0} × {1} m",
 "{} · {} file da {} a {} cm":"{0} · {1} Reihen von {2} bis {3} cm",
 "{}, {} file da {} a {} cm":"{0}, {1} Reihen von {2} bis {3} cm",
@@ -1061,7 +1063,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Portata ridotta a 500 kg/m² con gambe 60×60 oltre 120 cm (tabella Larcher).":"Tragfähigkeit reduziert auf 500 kg/m² mit Beinen 60×60 über 120 cm (Larcher-Tabelle).",
 "File da 80 cm in su: connettori tra le gambe, al massimo 20 cm sotto il deck.":"Reihen ab 80 cm: Beinverbinder, höchstens 20 cm unter dem Deck.",
 "Parapetti laterali a gradini: un elemento per fila, alla sua altezza.":"Gestufte Seitengeländer: ein Element pro Reihe, auf ihrer Höhe.",
-"Bordi anticaduta per le sedie (SKBP) sul bordo davanti di ogni fila, fuori dai corridoi.":"Stuhlanschläge (SKBP) an der Vorderkante jeder Reihe, außerhalb der Gänge.",
+"Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila, fuori dai corridoi.":"Stuhlanschläge (SKBP) an der Hinterkante jeder Reihe, außerhalb der Gänge.",
 "Scala d'accesso alla prima fila ({} cm) davanti a ogni corridoio: {}.":"Zugangstreppe zur ersten Reihe ({0} cm) vor jedem Gang: {1}.",
 "Corridoi: alzata di {} cm, in ogni corridoio {} (VSM) tra una fila e l'altra.":"Gänge: Stufenhöhe {0} cm, in jedem Gang {1} (VSM) zwischen den Reihen.",
 "un gradino intermedio":"eine Zwischenstufe",
@@ -1081,7 +1083,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Il parapetto di sicurezza non esiste da 0,5 m: un tratto di 0,5 m resta da chiudere a parte.":"Das Sicherheitsgeländer gibt es nicht mit 0,5 m: ein Abschnitt von 0,5 m bleibt separat zu schließen.",
 "Bordo anticaduta: lato di pedana da {} m senza profilo a listino.":"Stuhlanschlag: Podestseite {0} m ohne Profil in der Preisliste.",
 "Nessuna scala d'accesso per la prima fila a {} cm.":"Keine Zugangstreppe für die erste Reihe auf {0} cm.",
-"Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila. Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo davanti di ogni fila, fuori dai corridoi.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder, wo die Tribüne höher als 80 cm ist, Podestverbinder nur zwischen Podesten derselben Reihe. Gänge 1 m breit; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe. Stuhlanschläge SKBP an der Vorderkante jeder Reihe, außerhalb der Gänge.",
+"Tribuna (Tipo «Tribuna»): file di pedane profonde 1 m o 50 cm, la prima davanti e la più bassa, ognuna più alta della precedente dell'alzata. Ogni fila ha 4 gambe per pedana per la sua altezza: fisse se ci sono, altrimenti telescopiche; sotto i 20 cm la gamba da 20 cm tagliata a misura. Connettori tra le gambe dove la tribuna supera gli 80 cm, connettori deck-deck solo tra pedane della stessa fila (VD2D da 20 cm in su, D2DC nelle file più basse). Corridoi larghi 1 m; davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm, gradini intermedi VSM con alzate oltre 20 cm. Parapetti: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini con un elemento per fila. Bordi anticaduta per le sedie SKBP sul bordo dietro di ogni fila, fuori dai corridoi.":"Tribüne (Typ «Tribüne»): Reihen aus 1 m oder 50 cm tiefen Podesten, die erste vorne und am niedrigsten, jede um die Stufenhöhe höher als die vorherige. Jede Reihe hat 4 Beine pro Podest für ihre Höhe: fest, wenn vorhanden, sonst Teleskop; unter 20 cm das 20-cm-Bein auf Maß gekürzt. Beinverbinder, wo die Tribüne höher als 80 cm ist, Podestverbinder nur zwischen Podesten derselben Reihe (VD2D ab 20 cm, D2DC in niedrigeren Reihen). Gänge 1 m breit; vor jedem Gang die Zugangstreppe, wenn die erste Reihe höher als 20 cm ist, VSM-Zwischenstufen bei Stufenhöhen über 20 cm. Geländer: hinten hinter der letzten Reihe, vorne vor der ersten (bei den Gängen offen), seitlich gestuft mit einem Element pro Reihe. Stuhlanschläge SKBP an der Hinterkante jeder Reihe, außerhalb der Gänge.",
 "Tipo di gamba":"Beintyp",
 "Gambe tonde a {} cm: verificare la portata con Everdeck.":"Rundbeine bei {0} cm: Tragfähigkeit mit Everdeck prüfen.",
 "Scala regolabile {} ({}–{} cm).":"Verstellbare Treppe {0} ({1}–{2} cm).",
@@ -2376,10 +2378,11 @@ function computeTribune(cfg, R, look){
   const M = {deck:decks.length, deck_corner:decks.length*4, m2:Math.ceil(area-1e-9), fixed:1, vertex:vmap.size, vertex1:0, junction2:0, junction34:0};
   for(const v of vmap.values()){ if(v.h < 80) continue; if(v.n===2) M.junction2++; else if(v.n>2) M.junction34++; }
   // giunti tra pedane della stessa fila (alla stessa altezza): VD2D e VDL; le file vicine sono a quote diverse
+  // VD2D nelle file da 20 cm in su, D2DC in quelle più basse (es. prima fila da 15–17 cm)
   const joints = [], joints20 = [], jointsHigh = [];
   for(let i=0;i<decks.length;i++) for(let j=i+1;j<decks.length;j++){
     const a = decks[i], b = decks[j]; if(a.row!==b.row) continue;
-    if(a.x+a.w===b.x || b.x+b.w===a.x){ const o = Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y); if(o>0){ joints.push(o/2); (a.hc===20 ? joints20 : jointsHigh).push(o/2); } }
+    if(a.x+a.w===b.x || b.x+b.w===a.x){ const o = Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y); if(o>0){ joints.push(o/2); (a.hc<20 ? joints20 : jointsHigh).push(o/2); } }
   }
 
   // --- parapetti: dietro l'ultima fila, davanti alla prima (aperto ai corridoi), sui lati a gradini (un pezzo per fila)
@@ -2403,7 +2406,8 @@ function computeTribune(cfg, R, look){
   M.rail_corner = (cfg.rails.back && cfg.rails.left ? 1 : 0) + (cfg.rails.back && cfg.rails.right ? 1 : 0) + (frontAtEdge('left') && cfg.rails.left ? 1 : 0) + (frontAtEdge('right') && cfg.rails.right ? 1 : 0);
   if(M.rail) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti laterali a gradini: un elemento per fila, alla sua altezza.');
 
-  // --- bordi anticaduta per le sedie: sul bordo davanti di ogni fila, fuori dai corridoi, un profilo per pedana
+  // --- bordi anticaduta per le sedie: sul bordo dietro di ogni fila (trattiene le gambe posteriori delle sedie),
+  // fuori dai corridoi, un profilo per pedana
   const stops = [];
   if(T.chairStop){
     for(const d of decks){
@@ -2411,9 +2415,9 @@ function computeTribune(cfg, R, look){
       const L = d.w/2, code = CHAIR_STOP[L];
       if(!code){ warn('warn',`Bordo anticaduta: lato di pedana da ${nf(L)} m senza profilo a listino.`); continue; }
       out.lines.push({group:'Parapetti', code, qty:1});
-      stops.push({x:d.x, y:d.y+d.h, w:d.w, h:d.h, row:d.row});
+      stops.push({x:d.x, y:d.y, w:d.w, h:d.h, row:d.row});   // y: bordo dietro (in pianta il retro è in alto)
     }
-    out.notes.push('Bordi anticaduta per le sedie (SKBP) sul bordo davanti di ogni fila, fuori dai corridoi.');
+    out.notes.push('Bordi anticaduta per le sedie (SKBP) sul bordo dietro di ogni fila, fuori dai corridoi.');
   }
 
   // --- scale: d'accesso alla prima fila davanti a ogni corridoio; gradini intermedi nei corridoi con alzate oltre 20 cm
@@ -3114,7 +3118,7 @@ function tribPlanSVG(p){
     s += `<text x="${-8*px}" y="${y+fs*.35}" font-size="${fs}" text-anchor="end">${r.i+1}ª · ${r.h} cm</text>`;
   }
   // bordi anticaduta per le sedie
-  for(const st of p.stops) s += seg(st.x*50+3*px, st.y*50-2.5*px, (st.x+st.w)*50-3*px, st.y*50-2.5*px, 'var(--ink)', 2.5);
+  for(const st of p.stops) s += seg(st.x*50+3*px, st.y*50+2.5*px, (st.x+st.w)*50-3*px, st.y*50+2.5*px, 'var(--ink)', 2.5);
   // parapetti
   for(const r of p.runs){
     let pos = r.start;
@@ -3161,7 +3165,7 @@ function tribSectionSVG(p){
     s += `<rect x="${x0}" y="${-h}" width="${dep}" height="9" fill="var(--deck-side-r)" stroke="var(--deck-line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
     for(const lx of [x0+4, x1-4]) s += ln(lx, -h+9, lx, 0, 'var(--leg)', 3);
     s += `<text x="${x0+dep/2}" y="${-h-6*px}" font-size="${fs*.9}" text-anchor="middle">${h} cm</text>`;
-    if(p.stops.length) s += ln(x0+2, -h, x0+2, -h-5, 'var(--ink)', 3);
+    if(p.stops.length) s += ln(x1-2, -h, x1-2, -h-5, 'var(--ink)', 3);
   }
   // parapetti: dietro l'ultima fila e davanti alla prima (alti 100 cm sul piano)
   const back = p.runs.some(r => r.side==='back'), front = p.runs.some(r => r.side==='front'), side = p.runs.some(r => r.side==='left' || r.side==='right');

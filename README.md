@@ -131,11 +131,11 @@ Le descrizioni degli articoli in italiano e in tedesco (denominazione e descrizi
 
 ## Tribune
 Nel riquadro «Palco», «Tipo» passa da palco a tribuna. La tribuna è fatta di file di pedane StageDeck su gambe (non con lo Spider):
-- dati: larghezza, numero di file, profondità della fila (1 m o 50 cm), altezza della prima fila (la più bassa, davanti) e alzata tra una fila e l'altra (standard 20 cm, da 5 a 40 cm), corridoi larghi 1 m (al bordo sinistro, centrale, al bordo destro), bordi anticaduta per le sedie;
+- dati: larghezza, numero di file, profondità della fila (1 m o 50 cm), altezza della prima fila (la più bassa, davanti) e alzata tra una fila e l'altra (standard 20 cm, da 5 a 40 cm), corridoi larghi 1 m (lato sinistro, centrale, lato destro), bordi anticaduta per le sedie;
 - ogni fila è coperta da sola con le pedane nello stesso verso; 4 gambe per pedana per l'altezza della fila: fisse se ci sono, altrimenti telescopiche, sotto la gamba più corta la gamba fissa tagliata a misura (nota in offerta);
-- connettori tra le gambe dove la tribuna supera gli 80 cm, VD2D e VDL solo tra pedane della stessa fila (le file vicine sono a quote diverse);
+- connettori tra le gambe dove la tribuna supera gli 80 cm, VD2D (file da 20 cm in su) o D2DC (file più basse) e VDL solo tra pedane della stessa fila (le file vicine sono a quote diverse);
 - parapetti dal riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini (un elemento da 1 m o 0,5 m per fila);
-- bordi anticaduta per le sedie SKBP470/970/1970 sul bordo davanti di ogni fila, fuori dai corridoi;
+- bordi anticaduta per le sedie SKBP470/970/1970 sul bordo dietro di ogni fila (trattengono le gambe posteriori delle sedie), fuori dai corridoi;
 - davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm; con alzate oltre 20 cm gradini intermedi VSM nei corridoi;
 - pianta con le file colorate per altezza e sezione laterale quotata; vista 3D a gradoni. Prezzi, PDF, copie ed esportazione XML come per il palco.
 
