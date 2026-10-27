@@ -276,13 +276,18 @@ function create(canvas){
     if(v4.length) addBatch(plain('v4lc'), v4);
     if(v2.length) addBatch(plain('vlc'), v2);
 
-    // --- ringhiere
-    const r2 = [], r1 = [], r05 = [], ry0 = ty + 63.5;
+    // --- ringhiere. Ogni elemento ha 2 connettori a un'estremità, verso il parapetto vicino (rail2 alla fine, rail1 e
+    // 0,5 m all'inizio): dove da quella parte non c'è un altro elemento dello stesso tratto non si disegnano (spunterebbero
+    // nel vuoto). Con il battipiede (VHK) una lamiera alta 15 cm sul piano.
+    const ry0 = ty + 63.5, railGroups = new Map();
+    const kickAll = !!cfg.kick && !cfg.safety && !spider;
     for(const run of plan.runs){
       let pos = run.start;
       const ry = run.h!=null ? run.h*10 - 30 + 63.5 : ry0;   // tribuna: ogni tratto alla quota della sua fila
       const lens = run.pieces || [...Array(run.n2).fill(2), ...Array(run.n1).fill(1), ...Array(run.n05||0).fill(0.5)];
       const side = run.side, limit = (side==='back'||side==='front') ? plan.W : plan.D;
+      const kick = run.kick!=null ? !!run.kick && !spider : kickAll;
+      const pcs = [];
       for(const Lm of lens){
         const s = pos*1000, L = Math.min(Lm, limit-pos)*1000;
         let T;
@@ -290,21 +295,25 @@ function create(canvas){
         else if(side==='back')  T = {r:[0,0,-1, 0,1,0, 1,0,0], t:[s+L-50, ry, 0]};
         else if(side==='right') T = {r:RY(Math.PI), t:[Wmm, ry, s+L-50]};
         else                    T = {r:[0,0,1, 0,1,0, -1,0,0], t:[s+50, ry, Dmm]};
-        (Lm===2 ? r2 : Lm===1 ? r1 : r05).push(T);
+        // posizione dei connettori lungo il tratto (u, mm): z del modello 1950 (rail2) o -50 (rail1, 0,5 m)
+        const zc = Lm===2 ? 1950 : -50, up = side==='left' || side==='front';
+        pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc});
         pos += Lm;
       }
+      for(const pc of pcs){
+        const conn = pcs.some(q => q!==pc && pc.uc >= q.a-1 && pc.uc <= q.b+1);
+        const k = pc.Lm+'|'+(kick?1:0)+'|'+(conn?1:0);
+        if(!railGroups.has(k)) railGroups.set(k, {Lm:pc.Lm, kick, conn, list:[]});
+        railGroups.get(k).list.push(pc.T);
+      }
     }
-    if(spider){       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
-      if(r2.length) addBatch(spiderRail(2000), r2);
-      if(r1.length) addBatch(spiderRail(1000), r1);
-    } else if(cfg.safety){   // parapetto di sicurezza VHX: modello disegnato qui (non c'è un modello 3D del produttore)
-      if(r2.length) addBatch(vhxMats(2000), r2);
-      if(r1.length) addBatch(vhxMats(1000), r1);
-    } else {
-      if(r2.length) addBatch(plain('rail2'), r2);
-      if(r1.length) addBatch(plain('rail1'), r1);
+    for(const g of railGroups.values()){
+      let mats;
+      if(spider) mats = spiderRail(g.Lm*1000);                       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
+      else if(cfg.safety && g.Lm!==0.5) mats = vhxMats(g.Lm*1000);   // parapetto di sicurezza VHX (disegnato qui)
+      else mats = railMats(g.Lm, g.kick, g.conn);
+      addBatch(mats, g.list);
     }
-    if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
     // --- scale (disegni Everdeck). Modulare: elementi VSM larghi 910 mm e profondi 282, l'ultimo 20 cm sotto il palco
     // (palco da 60 cm: VSM20 + VSM40), corrimano VHSM ogni 2 gradini partendo dall'alto. Regolabile (VAS): due cosciali
@@ -769,6 +778,37 @@ function create(canvas){
     addBatch([rawMat(fr.P, fr.I, black ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5)], [IDT]);
     addBatch([Object.assign(rawMat(tp.P, tp.I, topCol, 0.15), {top:true})], [IDT]);
     addBatch([rawMat(rs.P, rs.I, rcol, black ? 0.15 : 0.45)], [IDT]);
+  }
+  // parapetti StageDeck dai modelli CAD: rail2 (2 m), rail1 (1 m), 0,5 m = rail1 accorciato. Senza connettori: tolti i
+  // pezzi piccoli tra 240 e 905 mm di altezza (farfalle, bulloni e pomelli dei 2 connettori). Battipiede: lamiera sul lato
+  // interno, dal piano (y 26,5) a 15 cm.
+  const noConnCache = new Map();
+  function noConn(name){
+    if(noConnCache.has(name)) return noConnCache.get(name);
+    const out = PARTS[name].map(m => {
+      const n = m.pos.length/3, par = Int32Array.from({length:n}, (_,i) => i), f = x => { while(par[x]!==x){ par[x] = par[par[x]]; x = par[x]; } return x; };
+      const seen = new Map();
+      for(let i=0;i<n;i++){ const k = m.pos[i*3].toFixed(1)+','+m.pos[i*3+1].toFixed(1)+','+m.pos[i*3+2].toFixed(1); if(seen.has(k)) par[f(i)] = f(seen.get(k)); else seen.set(k, i); }
+      for(let t=0;t<m.idx.length;t+=3){ const a = f(m.idx[t]); par[f(m.idx[t+1])] = a; par[f(m.idx[t+2])] = a; }
+      const bb = new Map();
+      for(let i=0;i<n;i++){ const r = f(i), y = m.pos[i*3+1], z = m.pos[i*3+2], b = bb.get(r) || [Infinity,-Infinity,Infinity,-Infinity];
+        b[0] = Math.min(b[0],y); b[1] = Math.max(b[1],y); b[2] = Math.min(b[2],z); b[3] = Math.max(b[3],z); bb.set(r, b); }
+      const drop = r => { const b = bb.get(r); return b[0] >= 240 && b[1] <= 905 && b[1]-b[0] <= 60 && b[3]-b[2] <= 220; };
+      const idx = []; for(let t=0;t<m.idx.length;t+=3) if(!drop(f(m.idx[t]))) idx.push(m.idx[t], m.idx[t+1], m.idx[t+2]);
+      return {...m, idx:new Uint16Array(idx)};
+    });
+    noConnCache.set(name, out); return out;
+  }
+  function railMats(Lm, kick, conn){
+    const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5;
+    const mats = (conn ? PARTS[name] : noConn(name)).filter(m => m.idx.length).map(m => {
+      const c = colorOf(m);
+      let pos = m.pos;
+      if(short){ pos = new Float32Array(m.pos); for(let i=2;i<pos.length;i+=3) if(pos[i] > 450) pos[i] -= 500; }   // 0,5 m: quello da 1 m accorciato
+      return {pos, idx:m.idx, color:c.color, spec:c.spec};
+    });
+    if(kick) mats.push(rawMat(box([-24,26.5,-40],[-20,176.5, Lm===2 ? 1940 : Lm===1 ? 940 : 440]), BOX_IDX, [0.80,0.82,0.86], 0.4));
+    return mats;
   }
   // parapetto Spider VH-2 / VH-1 (disegni Everdeck 81-82): telaio in tubo con gli angoli in alto curvati, traverso
   // a metà, morsetti in basso; alto 1026 mm, lungo 1980 o 980. Coordinate come i modelli dei parapetti (y=26,5: piano)
