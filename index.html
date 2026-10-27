@@ -568,6 +568,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <label class="tgl pdfopt" title="Mostra sotto ogni riga la descrizione dell'articolo (dove c'è)"><input type="checkbox" id="descShow"> Descrizioni</label>
           <label class="tgl pdfopt" title="Descrizioni nel PDF dell'offerta, in «Copia offerta» e in «Copia per Excel»"><input type="checkbox" id="descPdf"> Descrizioni in PDF e copie</label>
           <span class="langpick pdfopt"><span class="lbl">Lingua di stampa</span><span class="seg langseg" id="outLang" role="group" aria-label="Lingua del PDF e delle copie" title="Lingua del PDF dell'offerta e dei disegni, di «Copia offerta» e di «Copia per Excel»"><button type="button" data-lang="it" aria-pressed="true">IT</button><button type="button" data-lang="de" aria-pressed="false">DE</button></span></span>
+          <label class="langpick pdfopt" title="Codice dell'articolo generico del programma gestionale: nell'esportazione XML lo hanno le righe azzurre (articoli da fatture e pezzi speciali), che hanno codici che il gestionale non conosce. Vuoto: codici del listino"><span class="lbl">Articolo jolly XML</span><input type="text" id="xmlJolly" autocomplete="off" spellcheck="false" style="width:9em"></label>
         </div>
         <div class="actions cmds"><span class="lbl">Comandi</span>
           <button type="button" class="btn primary" id="pdfOffer">PDF offerta</button>
@@ -1028,6 +1029,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Righe dell'offerta in un file .xml da importare nel programma gestionale":"Angebotspositionen als .xml-Datei für den Import ins Warenwirtschaftsprogramm",
 "Niente da esportare":"Nichts zu exportieren",
 "File XML":"XML-Datei",
+"Articolo jolly XML":"Sammelartikel XML",
+"Codice dell'articolo generico del programma gestionale: nell'esportazione XML lo hanno le righe azzurre (articoli da fatture e pezzi speciali), che hanno codici che il gestionale non conosce. Vuoto: codici del listino":"Code des Sammelartikels im Warenwirtschaftsprogramm: im XML-Export erhalten ihn die blauen Zeilen (Artikel aus Rechnungen und Sonderteile), deren Codes das Programm nicht kennt. Leer: Codes der Preisliste",
 "Disegni":"Zeichnungen",
 "Spett.le":"An",
 "Chiudi":"Schließen",
@@ -3218,15 +3221,19 @@ function offerTsv(){
 }
 /* --- righe dell'offerta per il programma gestionale (VkAngebotPositionen.xml) ---
    Valgono i dati del configuratore: codici, nomi e descrizioni (nella lingua di stampa), quantità, acquisto, maggiorazione, IVA.
-   Lo sconto sul totale va su ogni riga (prezzi «Rabattiert» e importi); gli articoli da fattura non sono segnalati. */
+   Lo sconto sul totale va su ogni riga (prezzi «Rabattiert» e importi); gli articoli da fattura non sono segnalati.
+   Le righe azzurre (da fatture, pezzi speciali) hanno codici che il gestionale non conosce: se c'è un articolo jolly
+   vanno con quel codice, e il codice del listino resta davanti al nome e nel codice produttore. */
+const JKEY = 'stagedeck.articoloJolly', JDEF = 'VARIO';
+function xmlJolly(){ try{ const v = localStorage.getItem(JKEY); return v==null ? JDEF : v; }catch(e){ return JDEF; } }
 function offerXml(){
   if(!res || !res.plan) return '';
   return inLang(cfg.lingua, () => {
   const x = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\r?\n/g, '\r\n');
   const n = v => String(r2(v));
-  const iva = +cfg.vat||0, sc = +cfg.discount||0;
+  const iva = +cfg.vat||0, sc = +cfg.discount||0, jolly = xmlJolly().trim();
   const rows = res.lines.filter(l => l.qty>0).map((l, i) => {
-    const d = descOf(l.code), nome = (d && d.nome) || tr(l.name);
+    const d = descOf(l.code), jl = !!(jolly && l.fattura), nome = (jl ? l.code+' ' : '') + ((d && d.nome) || tr(l.name));
     const ep = l.unit, epR = r2(ep*(1-sc/100)), es = l.unitCost, q = l.qty;
     const mwstU = r2(ep*iva/100), netto = r2(epR*q), mwst = r2(netto*iva/100), lordo = r2(netto+mwst), lordoNoSc = r2(ep*q), costo = r2(es*q);
     const db = epR ? (epR-es)/epR*100 : 0, zu = es ? (epR-es)/es*100 : 0;
@@ -3248,7 +3255,7 @@ function offerXml(){
       EinstandspreisClc:n(es), EinzelpreisRechnungsempfaengerDW:n(epR), RabatteAlsPreisAusweisen:0};
     const code = c => `    <${c[0]} Code="${x(c[1])}"/>`;
     return `  <VkAngebotPosition ${Object.entries(a).map(([k,v]) => `${k}="${x(v)}"`).join(' ')}>\r\n` + [
-      code(['Artikel', l.code]),
+      code(['Artikel', jl ? jolly : l.code]),
       `    <Beschreibung>${x(d ? d.desc : '')}</Beschreibung>`,
       ...[['Einheit', l.isSet ? 'SET' : 'ST'], ['Artikelart','MAT'], ['Produktbuchungsgruppe','PODESTE'], ['ProduktMwStGruppe', iva], ['MwStKode', iva], ['Druckattribut','F']].map(code),
       '    <BestaendeLager>\r\n    </BestaendeLager>', '    <BestaendeLagerplatzgruppen>\r\n    </BestaendeLagerplatzgruppen>'].join('\r\n') + '\r\n  </VkAngebotPosition>';
@@ -3482,6 +3489,8 @@ function bind(){
   $('#pdfDraw').addEventListener('click', () => printPart('disegni'));
   $('#dlOrder').addEventListener('click', downloadOrder);
   $('#dlXml').addEventListener('click', downloadXml);
+  $('#xmlJolly').value = xmlJolly();
+  $('#xmlJolly').addEventListener('change', e => { try{ localStorage.setItem(JKEY, e.target.value.trim()); }catch(_){} });
   $('#v3Show').addEventListener('click', show3d);
   $('#v3Reset').addEventListener('click', () => v3.view && v3.view.reset());
   $('#v3Png').addEventListener('click', save3d);
