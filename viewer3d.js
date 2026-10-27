@@ -307,8 +307,7 @@ function create(canvas){
         railGroups.get(k).list.push(pc.T);
       }
     }
-    // connettori d'angolo (VHCC, disegno Everdeck 41): piastra piatta alta 30 mm piegata a Z tra i due montanti d'angolo
-    // (a 50 mm dall'angolo, 27 mm fuori dal bordo) e due bulloni a farfalla perpendicolari, uno contro ciascun montante;
+    // connettori d'angolo (VHCC, disegno Everdeck 41): piastra piatta alta 30 mm piegata a Z tra i due montanti d'angolo,
     // 2 per angolo, alle altezze dei connettori dei parapetti (273 e 873 mm sul piede)
     {
       const spans = plan.runs.map(r => {
@@ -323,21 +322,24 @@ function create(canvas){
         if(!h || !v) continue;
         const cx = uH*1000, cz = uV*1000, ox = vs==='left' ? -1 : 1, oz = hs==='back' ? -1 : 1;   // verso fuori
         const P = (a, b) => [cx + ox*a, cz + oz*b];   // a: verso fuori in x, b: verso fuori in z (mm dall'angolo)
-        // percorso della piastra in pianta: flangia contro il montante del lato x, gradino a Z, flangia contro l'altro
-        const path = [P(-21, 12), P(-21, 42), P(8, 42), P(8, 8), P(42, 8), P(42, -21), P(12, -21)];
+        // (istruzioni Larcher, «Handrails corner connection»): la piastra a Z sta dentro l'angolo con una flangia contro
+        // ciascun montante (Ø 48, centro a 50 mm dall'angolo e 27 mm fuori dal bordo); ogni bullone attraversa il suo
+        // montante: testa esagonale sulla piastra, rondella e dado a farfalla dall'altra parte
+        const path = [P(-23.5, 42), P(-23.5, 12), P(6, 12), P(6, -23.5), P(42, -23.5)];
         for(const dy of [273, 873]){
           const y = h.y + dy;
           for(let i=0;i<path.length-1;i++){
             const [a, b] = [path[i], path[i+1]];
             push(PL, box([Math.min(a[0],b[0])-2.5, y-15, Math.min(a[1],b[1])-2.5], [Math.max(a[0],b[0])+2.5, y+15, Math.max(a[1],b[1])+2.5]), BOX_IDX);
           }
-          // bulloni: uno lungo x contro il montante del lato retro/fronte, uno lungo z contro quello del lato
-          for(const [s0, s1, axis] of [[P(-26, 27), P(25, 27), 'x'], [P(27, -26), P(27, 25), 'z']]){
-            push(PL, ...cyl([s0[0], y, s0[1]], [s1[0], y, s1[1]], 4, 8));
-            const n0 = axis==='x' ? P(4, 27) : P(27, 4), n1 = axis==='x' ? P(16, 27) : P(27, 16);
-            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 8, 10));                       // dado a farfalla
-            const m = [(n0[0]+n1[0])/2, (n0[1]+n1[1])/2];
-            push(WN, box(axis==='x' ? [m[0]-3, y-22, m[1]-3] : [m[0]-3, y-22, m[1]-3], axis==='x' ? [m[0]+3, y+22, m[1]+3] : [m[0]+3, y+22, m[1]+3]), BOX_IDX);   // alette
+          for(const ax of ['x', 'z']){
+            const Q = (t) => ax==='x' ? P(t, 27) : P(27, t);            // t: lungo l'asse del bullone (montante a -50)
+            const s0 = Q(-82), s1 = Q(-17), hd0 = Q(-21), hd1 = Q(-13), n0 = Q(-86), n1 = Q(-76);
+            push(PL, ...cyl([s0[0], y, s0[1]], [s1[0], y, s1[1]], 4, 8));                        // vite M8
+            push(PL, ...cyl([hd0[0], y, hd0[1]], [hd1[0], y, hd1[1]], 7.5, 6));                 // testa esagonale
+            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 7, 10));                      // dado a farfalla
+            const m = Q(-81);
+            push(WN, box([m[0]-3, y-21, m[1]-3], [m[0]+3, y+21, m[1]+3]), BOX_IDX);                // alette
           }
         }
       }
