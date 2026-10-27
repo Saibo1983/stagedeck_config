@@ -102,6 +102,7 @@ function create(canvas){
   const cam = {az:0.62, el:0.46, dist:9000, target:[0,300,0], fit:9000};
   let dirty = true, W = 1, Hh = 1, stageR = 4000;
   let xray = false;      // pianali delle pedane trasparenti: si vede sotto il palco senza girare la vista
+  let roomClear = false; // pareti e pavimento della sala trasparenti
 
   function makeVAO(pos, idx, instBuf){
     const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
@@ -125,7 +126,7 @@ function create(canvas){
     const inst = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,inst); gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
     const meshes = mats.map(m => {
       const idx = m.idx32 || m.idx, v = makeVAO(m.pos, idx, inst);
-      return {vao:v.vao, pb:v.pb, ib:v.ib, n:idx.length, type: m.idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, color:m.color, spec:m.spec, top:!!m.top};
+      return {vao:v.vao, pb:v.pb, ib:v.ib, n:idx.length, type: m.idx32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, color:m.color, spec:m.spec, top:!!m.top, room:m.room};
     });
     batches.push({meshes, inst, count:transforms.length, src:{mats, data}});   // src: copia per l'esportazione GLB
   }
@@ -395,6 +396,26 @@ function create(canvas){
       addBatch([rawMat(pos,idx,skCol,0.05)],[IDT]);
     }
 
+    // --- sala (pareti di fondo, sinistra e destra, pavimento): superfici piane grigio chiaro, appena più grandi del palco.
+    // Le pareti stanno a filo del palco (30 mm), dietro scale e rampe; senza parete il pavimento sporge di 50 cm.
+    const rm = cfg.room || {};
+    roomClear = !!rm.clear;
+    if(rm.back || rm.left || rm.right || rm.floor){
+      const nSt = Math.max(1, Math.round(H/20));
+      const out = s => Math.max(rbySide[s] ? rl + 300 : 0, byside[s].length ? nSt*240 + 100 : 0);
+      const GAP = 30, M = 500, WH = Math.max(3000, ty + 2500), WALL = [0.93,0.93,0.94];
+      const x0 = -out('left') - (rm.left ? GAP : M), x1 = Wmm + out('right') + (rm.right ? GAP : M);
+      const z0 = -out('back') - (rm.back ? GAP : M), z1 = Dmm + out('front') + M;
+      // wall: normale verso l'interno e un punto della parete (se la vista è dietro la parete, la parete si vede in trasparenza)
+      const surf = (P, color, wall) => Object.assign(rawMat(P, [0,1,2, 0,2,3], color, 0.05), {room:{wall}});
+      const rs = [];
+      if(rm.floor) rs.push(surf([x0,2,z0, x1,2,z0, x1,2,z1, x0,2,z1], [0.86,0.86,0.87], null));
+      if(rm.back)  rs.push(surf([x0,0,z0, x1,0,z0, x1,WH,z0, x0,WH,z0], WALL, {n:[0,0,1], p:[0,0,z0]}));
+      if(rm.left)  rs.push(surf([x0,0,z0, x0,0,z1, x0,WH,z1, x0,WH,z0], WALL, {n:[1,0,0], p:[x0,0,0]}));
+      if(rm.right) rs.push(surf([x1,0,z0, x1,0,z1, x1,WH,z1, x1,WH,z0], WALL, {n:[-1,0,0], p:[x1,0,0]}));
+      addBatch(rs, [IDT]);
+    }
+
     // --- inquadratura
     // anche le rampe devono stare nell'inquadratura (l'ombra a terra resta quella del palco)
     const ext = s => rbySide[s] ? rl + 300 : 0, fr = [-ext('left'), -ext('back'), Wmm + ext('right'), Dmm + ext('front')];
@@ -439,19 +460,26 @@ function create(canvas){
       gl.bindVertexArray(groundMesh.vao); gl.drawElements(gl.TRIANGLES,6,gl.UNSIGNED_SHORT,0); gl.disable(gl.BLEND);
     }
     gl.useProgram(P); gl.uniformMatrix4fv(U.vp,false,vp); gl.uniform3f(U.eye,e[0],e[1],e[2]);
-    // prima i pezzi opachi, poi (in modalità trasparente) i pianali, semitrasparenti e senza scrivere la profondità
+    // prima i pezzi opachi, poi quelli semitrasparenti senza scrivere la profondità: i pianali (modalità trasparente)
+    // e le superfici della sala trasparenti. La parete che sta tra la vista e il palco non si disegna (come in una casa delle bambole).
+    const hidden = m => m.room && m.room.wall && (e[0]-m.room.wall.p[0])*m.room.wall.n[0] + (e[2]-m.room.wall.p[2])*m.room.wall.n[2] < 0;
+    const see = m => m.room ? roomClear : xray && m.top;
     gl.uniform1f(U.alpha, 1);
+    let glass = false;
     for(const b of batches) for(const m of b.meshes){
-      if(xray && m.top) continue;
+      if(hidden(m)) continue;
+      if(see(m)){ glass = true; continue; }
       gl.uniform3f(U.color,m.color[0],m.color[1],m.color[2]); gl.uniform1f(U.spec,m.spec);
       gl.bindVertexArray(m.vao); gl.drawElementsInstanced(gl.TRIANGLES, m.n, m.type, 0, b.count);
     }
-    if(xray){
-      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
-      gl.uniform1f(U.alpha, 0.16);
+    if(glass){
+      // l'alfa del canvas resta 1: se no la pagina sotto schiarisce i pezzi trasparenti
+      gl.enable(gl.BLEND); gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
       for(const b of batches) for(const m of b.meshes){
-        if(!m.top) continue;
-        gl.uniform3f(U.color,m.color[0],m.color[1],m.color[2]); gl.uniform1f(U.spec,0);
+        if(!see(m) || hidden(m)) continue;
+        const k = m.room ? 0.7 : 1;   // sala trasparente un po' più scura, se no sul fondo chiaro non si vede
+        gl.uniform1f(U.alpha, m.room ? 0.3 : 0.16);
+        gl.uniform3f(U.color,m.color[0]*k,m.color[1]*k,m.color[2]*k); gl.uniform1f(U.spec,0);
         gl.bindVertexArray(m.vao); gl.drawElementsInstanced(gl.TRIANGLES, m.n, m.type, 0, b.count);
       }
       gl.depthMask(true); gl.disable(gl.BLEND);
@@ -529,10 +557,10 @@ function create(canvas){
       views.push({buffer:0, byteOffset:off, byteLength:bytes.length, target}); off += bytes.length + pad;
       return views.length - 1;
     };
-    const material = (color, spec) => {
-      const k = color.map(v => v.toFixed(3)).join(',') + '|' + spec.toFixed(2);
+    const material = (color, spec, alpha = 1) => {
+      const k = color.map(v => v.toFixed(3)).join(',') + '|' + spec.toFixed(2) + '|' + alpha;
       if(!matKey.has(k)){
-        materials.push({pbrMetallicRoughness:{baseColorFactor:[color[0],color[1],color[2],1], metallicFactor:Math.min(0.8, spec*0.9), roughnessFactor:Math.max(0.25, 1-spec*0.7)}, doubleSided:true});
+        materials.push(Object.assign({pbrMetallicRoughness:{baseColorFactor:[color[0],color[1],color[2],alpha], metallicFactor:Math.min(0.8, spec*0.9), roughnessFactor:Math.max(0.25, 1-spec*0.7)}, doubleSided:true}, alpha < 1 ? {alphaMode:'BLEND'} : {}));
         matKey.set(k, materials.length-1);
       }
       return matKey.get(k);
@@ -550,8 +578,9 @@ function create(canvas){
       const g = {idx, pa, ia:accessors.length - 1};
       geo.set(m.pos, g); return g;
     };
+    // pareti della sala sempre in trasparenza: negli altri programmi la vista gira libera e una parete piena coprirebbe il palco
     for(const b of batches){
-      const prims = b.src.mats.filter(m => (m.idx32||m.idx).length).map(m => { const g = geometry(m); return {attributes:{POSITION:g.pa}, indices:g.ia, material:material(m.color, m.spec||0)}; });
+      const prims = b.src.mats.filter(m => (m.idx32||m.idx).length).map(m => { const g = geometry(m); return {attributes:{POSITION:g.pa}, indices:g.ia, material:material(m.color, m.spec||0, m.room && (roomClear || m.room.wall) ? 0.3 : 1)}; });
       if(!prims.length) continue;
       meshes.push({primitives:prims});
       for(let i=0;i<b.count;i++) nodes.push({mesh:meshes.length-1, matrix:Array.from(b.src.data.subarray(i*16, i*16+16))});
