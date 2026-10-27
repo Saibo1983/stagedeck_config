@@ -153,42 +153,46 @@ function create(canvas){
   /* ---------- costruzione della scena ---------- */
   function build(plan, cfg){
     clearBatches();
-    const Wmm = plan.W*1000, Dmm = plan.D*1000, H = +cfg.H || 60;
+    // tribuna (plan.trib): ogni pedana ha l'altezza della sua fila (d.hc, cm); H è quella dell'ultima fila
+    const Wmm = plan.W*1000, Dmm = plan.D*1000, H = plan.trib ? plan.hTop : (+cfg.H || 60);
     const ty = H*10 - 30;                       // sotto il deck (mm da terra)
     const delta = H*10 - 600;                   // allungamento rispetto alla gamba da 60 cm del modello
     const fam = cfg.family || 'hexa';
     const frameCol = FRAME_DARK[fam] ? [0.10,0.10,0.11] : null;
     const topCol = DECK_TOP[fam] || DECK_TOP.hexa;
     const deckOver = m => m.key==='64,64,64' ? topCol : (m.key==='254,254,255' && frameCol ? frameCol : null);
-    const spider = cfg.support==='spider' && !plan.round;
+    const spider = cfg.support==='spider' && !plan.round && !plan.trib;
     const roundLeg = cfg.legShape==='round' || cfg.legShape==='roundAdj';
     const legAxes = [];                         // asse di ogni gamba in pianta (per le gambe tonde)
 
     // --- decks e gambe
-    const deckBy = new Map(), legs = [], legPts = new Map();
+    const deckBy = new Map(), legs = [], legPts = new Map(), legsBy = new Map();   // legsBy: gambe di altre altezze (tribuna)
     for(const d of plan.decks){
+      const tyD = d.hc!=null ? d.hc*10 - 30 : ty, dl = d.hc!=null ? d.hc*10 - 600 : delta;
+      const legList = dl===delta ? legs : (legsBy.get(dl) || legsBy.set(dl, []).get(dl));
       const wx = d.w*500, dz = d.h*500;
       const rot = wx > dz;                       // il modello e' 1000 (x) x 2000 (z): se il lato lungo e' su x lo ruoto
       const sx = Math.min(wx,dz) - 1000, sz = Math.max(wx,dz) - 2000;
       const key = Math.min(wx,dz)+'x'+Math.max(wx,dz);
       if(!deckBy.has(key)) deckBy.set(key, {sx, sz, list:[]});
       // rot: x_w = z_m + (x0+1000), z_w = -x_m + (z0 + 969 + sx)
-      const D = !rot ? {r:I3, t:[d.x*500+31, ty, d.y*500+1000]} : {r:[0,0,1, 0,1,0, -1,0,0], t:[d.x*500+1000, ty, d.y*500 + 969 + sx]};
+      const D = !rot ? {r:I3, t:[d.x*500+31, tyD, d.y*500+1000]} : {r:[0,0,1, 0,1,0, -1,0,0], t:[d.x*500+1000, tyD, d.y*500 + 969 + sx]};
       deckBy.get(key).list.push(D);
       for(const T of MD.legT){
         const t = T.t.slice(); if(t[0] > 469) t[0] += sx; if(t[2] > 0) t[2] += sz;
-        t[1] -= delta;                              // la gamba resta ancorata a terra
+        t[1] -= dl;                                 // la gamba resta ancorata a terra
         const L = comp(D, {r:T.R.flat(), t});
-        legs.push(L);
+        legList.push(L);
         // asse del tubo della gamba (in pianta), assegnato all'angolo di deck più vicino: serve per i morsetti
         const a = mulV(L.r, LEG_AXIS), gx = L.t[0]+a[0], gz = L.t[2]+a[2];
-        legAxes.push([gx, gz]);
+        const rl = plan.trib && plan.rows[d.row] && plan.rows[d.row].leg;
+        legAxes.push([gx, gz, tyD, rl ? !!rl.tele : undefined]);
         let best = null, bd = Infinity;
         for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
           const dd = Math.hypot(cx*500-gx, cy*500-gz); if(dd < bd){ bd = dd; best = cx+','+cy; }
         }
-        if(!legPts.has(best)) legPts.set(best, {legs:[]});
-        legPts.get(best).legs.push([gx,gz]);
+        if(!legPts.has(best)) legPts.set(best, {legs:[], ty:Infinity, hc:0});
+        const lp = legPts.get(best); lp.legs.push([gx,gz]); lp.ty = Math.min(lp.ty, tyD); lp.hc = Math.max(lp.hc, d.hc||0);
       }
     }
     if(!spider) for(const [key,v] of deckBy){
@@ -226,13 +230,17 @@ function create(canvas){
     // gambe: la parte sopra z=150 si allunga/accorcia
     if(spider) spiderParts(plan, cfg, ty, topCol);
     else if(roundLeg) roundLegs(legAxes, ty, cfg);
-    else addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
+    else{
+      addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
+      for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z]), list);
+    }
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
-    const cy = ty - Math.min(170, ty*0.45);
     const v4 = [], v2 = [];
-    const conn4 = plan.conn4!==false, conn2 = plan.conn2!==false;   // connettori solo dove l'offerta li mette (gambe oltre 80 cm)
+    const conn4 = plan.trib ? !!plan.conn : plan.conn4!==false, conn2 = plan.trib ? !!plan.conn : plan.conn2!==false;   // solo dove l'offerta li mette (gambe oltre 80 cm)
     if(!spider) for(const p of legPts.values()){
+      if(plan.trib && p.hc < 80) continue;
+      const pty = isFinite(p.ty) ? p.ty : ty, cy = pty - Math.min(170, pty*0.45);
       const n = p.legs.length, mx = p.legs.reduce((s,g) => s+g[0],0)/n, mz = p.legs.reduce((s,g) => s+g[1],0)/n;
       if(conn4 && n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[mx, cy, mz]});
       if(conn2 && n===2){
@@ -244,13 +252,16 @@ function create(canvas){
     }
     // --- connettori deck-deck VD2D: sotto ogni giunto tra due pedane, di traverso, 1 per metro di giunto (come nell'offerta)
     if(plan.vd2d && PARTS.vd2d){
-      const vd = [], ds = plan.decks, yv = ty + 20 - VD2D_TOP;   // i ganci salgono 20 mm dentro il telaio delle pedane
+      const vd = [], ds = plan.decks;
+      let yv = ty + 20 - VD2D_TOP;   // i ganci salgono 20 mm dentro il telaio delle pedane
       const put = (x, z, alongZ) => {   // alongZ: giunto parallelo a z, il connettore corre lungo x
         const R = alongZ ? ZUP : mulR(RY(Math.PI/2), ZUP), o = mulV(R, [VD2D_MID, 0, 0]);
         vd.push({r:R, t:[x - o[0], yv, z - o[2]]});
       };
       for(let i=0;i<ds.length;i++) for(let j=i+1;j<ds.length;j++){
         const a = ds[i], b = ds[j];
+        if(a.row!==b.row) continue;                    // tribuna: solo pedane della stessa fila
+        yv = (a.hc!=null ? a.hc*10 - 30 : ty) + 20 - VD2D_TOP;
         if(a.x+a.w===b.x || b.x+b.w===a.x){           // giunto lungo z
           const y0 = Math.max(a.y,b.y), y1 = Math.min(a.y+a.h,b.y+b.h), L = (y1-y0)/2;
           if(L>0){ const n = Math.ceil(L-1e-9), x = (a.x+a.w===b.x ? b.x : a.x)*500; for(let k=0;k<n;k++) put(x, (y0/2 + (k+0.5)*L/n)*1000, true); }
@@ -266,9 +277,10 @@ function create(canvas){
     if(v2.length) addBatch(plain('vlc'), v2);
 
     // --- ringhiere
-    const r2 = [], r1 = [], r05 = [], ry = ty + 63.5;
+    const r2 = [], r1 = [], r05 = [], ry0 = ty + 63.5;
     for(const run of plan.runs){
       let pos = run.start;
+      const ry = run.h!=null ? run.h*10 - 30 + 63.5 : ry0;   // tribuna: ogni tratto alla quota della sua fila
       const lens = run.pieces || [...Array(run.n2).fill(2), ...Array(run.n1).fill(1), ...Array(run.n05||0).fill(0.5)];
       const side = run.side, limit = (side==='back'||side==='front') ? plan.W : plan.D;
       for(const Lm of lens){
@@ -301,7 +313,7 @@ function create(canvas){
     const sideStart = {back:[0,0], front:[0,Dmm], left:[0,0], right:[Wmm,0]};
     const stepBy = {}, sRail = [];
     const byside = {back:[],front:[],left:[],right:[]};
-    (cfg.stairs||[]).forEach(s => { if(byside[s.side]) byside[s.side].push(s); });
+    if(!plan.trib) (cfg.stairs||[]).forEach(s => { if(byside[s.side]) byside[s.side].push(s); });
     const opening = (plan.opening||1)*1000;
     const st = plan.stair || {}, adjStair = st.kind==='adjustable' && st.len;
     const nMod = st.kind==='modular' ? st.steps : Math.max(1, Math.round(H/20) - 1);
@@ -367,6 +379,28 @@ function create(canvas){
         }
       });
     }
+    // tribuna: scala d'accesso davanti a ogni corridoio e gradini intermedi nei corridoi (sulla fila sotto, contro l'alzata)
+    if(plan.trib){
+      const RF = [1,0,0, 0,0,1, 0,-1,0], dep = plan.depth*1000;          // gradino rivolto verso il fronte
+      const putStep = (h, x, y, z) => { const key = h<=600 ? 'step'+(h/10) : 'tall'+h; (stepBy[key] || (stepBy[key] = [])).push({r:RF, t:[x, y, z]}); };
+      for(const [a,b] of plan.aisles){
+        const cx = (a+b)*500;
+        if(plan.access && plan.access.kind==='modular') for(let k=0;k<plan.access.steps;k++) putStep((plan.access.steps-k)*200, cx, 5, Dmm + SD/2 + k*SD);
+        if(plan.inter) for(const r of plan.rows.slice(0, -1)){
+          const top = r.h*10 + 60, zb = (plan.N-1-r.i)*dep;         // piano della fila e sua alzata (bordo dietro)
+          for(let k=0;k<plan.inter;k++) putStep((plan.inter-k)*200, cx, top, zb + SD/2 + k*SD);
+        }
+      }
+      // bordi anticaduta per le sedie (SKBP): profilo sul bordo davanti di ogni fila
+      if(plan.stops && plan.stops.length){
+        const C = mk();
+        for(const st of plan.stops){
+          const top = plan.rows[st.row].h*10 + 60, z = st.y*500;
+          push(C, box([st.x*500 + 10, top, z - 22], [(st.x+st.w)*500 - 10, top + 45, z - 8]), BOX_IDX);
+        }
+        addBatch([rawMat(C.P, C.I, [0.12,0.12,0.13], 0.2)], [IDT]);
+      }
+    }
     // elementi modulari: i modelli CAD sono larghi 642 mm e profondi 242, si allargano alle misure dei disegni
     const widen = (x,y) => [x + Math.sign(x)*(SW-642)/2, y + Math.sign(y)*(SD-242)/2];
     for(const [key,list] of Object.entries(stepBy)){
@@ -381,7 +415,7 @@ function create(canvas){
     // a terra (ER-SE) e sul palco (ER-EE), piedini tondi (20 e 40 cm) o gambe telescopiche tonde con traverso
     // sotto i giunti e in cima; pedane dalla più lunga (a terra) alla più corta (verso il palco)
     const top = ty + 90, rbySide = {back:0,front:0,left:0,right:0};
-    (cfg.ramps||[]).forEach(r => { if(rbySide[r.side]!==undefined) rbySide[r.side]++; });
+    if(!plan.trib) (cfg.ramps||[]).forEach(r => { if(rbySide[r.side]!==undefined) rbySide[r.side]++; });
     const decksR = (plan.rampDecks && plan.rampDecks.length ? plan.rampDecks : [plan.rampLen||2]).map(x => x*1000);
     const rl = decksR.reduce((a,b) => a+b, 0), g0 = 25;                 // g0: quota del piano sopra l'elemento di partenza
     const yAt = z => top - (top-g0)*z/rl;                                // z: distanza dal bordo del palco, verso fuori
@@ -698,10 +732,11 @@ function create(canvas){
   // gambe tonde Ø 48,3 mm (disegni Everdeck): VRL tubo con tappo, VRLA con piedino regolabile, VRLT telescopica
   // (tubo esterno più grosso in basso, pomello di bloccaggio). In cima la gamba entra 20 mm nel telaio della pedana.
   function roundLegs(axes, ty, cfg){
-    const A = mk(), K = mk(), r = 24.15, top = ty + 20;
+    const A = mk(), K = mk(), r = 24.15;
     const tele = !!cfg.tele || !(+cfg.H >= 20 && +cfg.H <= 120 && +cfg.H % 10 === 0);
-    for(const [x,z] of axes){
-      if(tele){
+    for(const [x,z,tyA,teleA] of axes){
+      const top = (tyA!=null ? tyA : ty) + 20;
+      if(teleA!=null ? teleA : tele){
         const yb = Math.max(140, top*0.45);
         push(A, ...cyl([x,40,z], [x,yb,z], 30, 16)); push(A, ...cyl([x,yb-10,z], [x,top,z], r, 16));
         push(K, ...cyl([x,0,z], [x,40,z], 34, 16)); push(K, ...cyl([x+30,yb-60,z], [x+62,yb-60,z], 12, 8));

@@ -129,6 +129,16 @@ Le descrizioni degli articoli in italiano e in tedesco (denominazione e descrizi
 - Descrizioni mancanti: `python3 tools/genera_descrizioni.py` le compone sul modello delle descrizioni originali della stessa famiglia e con i dati del listino (misure dal codice, peso; per gli articoli da fattura il peso stimato non viene scritto). Sono marcate `"auto": true` e nell'app hanno l'etichetta «descrizione generata · controlla», solo a schermo (mai nel PDF e nelle copie). Il generatore non tocca le descrizioni originali; quando una lista nuova porta la descrizione vera, `importa_descrizioni.py` sostituisce quella generata. Dopo un nuovo listino rilancia il generatore per i codici nuovi.
 - Nella scheda Listino la denominazione italiana compare sotto il nome (passa sopra per la descrizione), e la ricerca del Listino e delle voci aggiuntive trova anche le parole italiane.
 
+## Tribune
+Nel riquadro «Palco», «Tipo» passa da palco a tribuna. La tribuna è fatta di file di pedane StageDeck su gambe (non con lo Spider):
+- dati: larghezza, numero di file, profondità della fila (1 m o 50 cm), altezza della prima fila (la più bassa, davanti) e alzata tra una fila e l'altra (standard 20 cm, da 5 a 40 cm), corridoi larghi 1 m (al bordo sinistro, centrale, al bordo destro), bordi anticaduta per le sedie;
+- ogni fila è coperta da sola con le pedane nello stesso verso; 4 gambe per pedana per l'altezza della fila: fisse se ci sono, altrimenti telescopiche, sotto la gamba più corta la gamba fissa tagliata a misura (nota in offerta);
+- connettori tra le gambe dove la tribuna supera gli 80 cm, VD2D e VDL solo tra pedane della stessa fila (le file vicine sono a quote diverse);
+- parapetti dal riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini (un elemento da 1 m o 0,5 m per fila);
+- bordi anticaduta per le sedie SKBP470/970/1970 sul bordo davanti di ogni fila, fuori dai corridoi;
+- davanti a ogni corridoio la scala d'accesso se la prima fila supera i 20 cm; con alzate oltre 20 cm gradini intermedi VSM nei corridoi;
+- pianta con le file colorate per altezza e sezione laterale quotata; vista 3D a gradoni. Prezzi, PDF, copie ed esportazione XML come per il palco.
+
 ## Esporta XML per il programma gestionale
 «Esporta XML» scarica le righe dell'offerta in un file `VkAngebotPositionen_<rif>.xml` da importare nel gestionale.
 - Il gestionale scarta le righe con un codice articolo che non ha in anagrafica. Per questo l'app tiene la lista dei codici del gestionale (solo i codici, niente prezzi) nel blocco `<script id="gestionale">` di `index.html`. Per aggiornarla: `python3 tools/importa_gestionale.py Artikelliste.xlsx` (primo foglio, colonna «Codice»), poi cambia `VERSION` in `sw.js`.
