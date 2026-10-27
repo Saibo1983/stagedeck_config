@@ -89,7 +89,10 @@ button,input,select{font:inherit;color:inherit}
 /* posizione «Sopra»: i dati vanno sotto la barra dei totali, sopra la pianta, in riquadri affiancati */
 #tab-offerta[data-layout="top"]{grid-template-columns:minmax(0,1fr)}
 #tab-offerta[data-layout="top"] .config{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;background:none;border:0;padding:0}
-#tab-offerta[data-layout="top"] .config>.sec{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+#tab-offerta[data-layout="top"] .config>.sec,#tab-offerta[data-layout="top"] .config>.pairsec>.sec{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+/* Voci aggiuntive e Prezzi: affiancati e della stessa misura nella disposizione «Sopra» (a lato restano in colonna) */
+.pairsec{display:contents}
+@media (min-width:600px){#tab-offerta[data-layout="top"] .config>.pairsec{display:grid;grid-column:span 2;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
 .sec{display:flex;flex-direction:column;gap:10px}
 .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -477,6 +480,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div><button type="button" class="btn small" id="addRamp">+ Aggiungi rampa</button></div>
     </div>
 
+    <div class="pairsec">
     <div class="sec">
       <h3>Voci aggiuntive</h3>
       <div class="row" style="grid-template-columns:minmax(0,1fr) 72px auto">
@@ -499,6 +503,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
       <div class="seg" id="mkSeg" role="group" aria-label="Maggiorazioni rapide"><button type="button" data-mk="0">0</button><button type="button" data-mk="20">20</button><button type="button" data-mk="30">30</button><button type="button" data-mk="37">37</button><button type="button" data-mk="40">40</button><button type="button" data-mk="50">50</button></div>
       <p class="hint">I prezzi del listino sono di acquisto. La maggiorazione (fissa 37%, modificabile) si applica a ogni riga e dà il prezzo di vendita; con + e − nella colonna «Magg. %» dell'offerta la cambi per una singola voce. Lo sconto si applica al totale.</p>
+    </div>
     </div>
   </form>
 
