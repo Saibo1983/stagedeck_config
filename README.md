@@ -132,7 +132,6 @@ Le descrizioni degli articoli in italiano e in tedesco (denominazione e descrizi
 - Il gestionale scarta le righe con un codice articolo che non ha in anagrafica. Per questo l'app tiene la lista dei codici del gestionale (solo i codici, niente prezzi) nel blocco `<script id="gestionale">` di `index.html`. Per aggiornarla: `python3 tools/importa_gestionale.py Artikelliste.xlsx` (primo foglio, colonna «Codice»), poi cambia `VERSION` in `sw.js`.
 - Gli articoli della lista vanno con il codice scritto come nel gestionale (es. `PSP-S 600X2050`; `VASH-R` e `VASH-L` = `VASH`). Gli articoli che non sono nella lista e le righe azzurre (da fatture, pezzi speciali) vanno senza codice articolo: il codice del listino resta davanti alla denominazione e nel codice produttore.
 - La denominazione è tagliata a 60 caratteri (limite del gestionale), all'ultima parola intera; la descrizione resta intera.
-- «Articolo jolly XML» (impostazioni dell'offerta, salvato nel browser): se c'è un codice, le righe senza codice vanno con quell'articolo.
 
 ## Anagrafica clienti
 Nei dati offerta, accanto al campo Cliente, il pulsante «Anagrafica» apre la finestra dei clienti. I campi sono quelli della scheda anagrafica del gestionale: Nome1 (cognome o ragione sociale, obbligatorio), Nome2, titolo, due righe di via, CAP, provincia, paese, luogo, regione; telefoni, fax, cellulare, email, PEC, sito, note; regolamento fiscale speciale; partita IVA comunitaria, partita IVA, codice fiscale.
