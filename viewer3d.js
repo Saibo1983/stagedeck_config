@@ -146,6 +146,7 @@ function create(canvas){
   // mesh generico (pelle, rampa, ...): posizioni float + indici
   function rawMat(pos, idx, color, spec){ const big = pos.length/3 > 65535; return {pos:new Float32Array(pos), idx: big ? null : new Uint16Array(idx), idx32: big ? new Uint32Array(idx) : null, color, spec:spec||0}; }
   const IDT = {r:I3, t:[0,0,0]};
+  const CORNER_GAP = 20;   // mm: i parapetti si fermano 20 mm prima dell'angolo
   // mesh composti: posizioni e indici accumulati, poi un solo lotto
   const mk = () => ({P:[], I:[]});
   const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
@@ -281,6 +282,16 @@ function create(canvas){
     // nel vuoto). Con il battipiede (VHK) una lamiera alta 15 cm sul piano.
     const ry0 = ty + 63.5, railGroups = new Map();
     const kickAll = !!cfg.kick && !cfg.safety && !spider;
+    // angoli dove due tratti si incontrano a 90° (punti in mm): come nel montaggio vero, i parapetti si fermano 20 mm
+    // prima dell'angolo (CORNER_GAP), così i piedi dei due parapetti non si toccano
+    const runSpan = r => { const limit = (r.side==='back'||r.side==='front') ? plan.W : plan.D;
+      return [r.start, Math.min(limit, r.start + (r.pieces || []).reduce((a,b) => a+b, 0))]; };
+    const covers = (side, u) => plan.runs.some(r => r.side===side && (([a,b]) => u >= a-1e-6 && u <= b+1e-6)(runSpan(r)));
+    const corners = [['back','left'],['back','right'],['front','left'],['front','right']]
+      .filter(([hs, vs]) => covers(hs, vs==='left' ? 0 : plan.W) && covers(vs, hs==='back' ? 0 : plan.D))
+      .map(([hs, vs]) => [vs==='left' ? 0 : Wmm, hs==='back' ? 0 : Dmm]);
+    const atCorner = (side, u) => { const p = side==='left' ? [0,u] : side==='right' ? [Wmm,u] : side==='back' ? [u,0] : [u,Dmm];
+      return corners.some(c => Math.abs(c[0]-p[0]) < 1 && Math.abs(c[1]-p[1]) < 1); };
     for(const run of plan.runs){
       let pos = run.start;
       const ry = run.h!=null ? run.h*10 - 30 + 63.5 : ry0;   // tribuna: ogni tratto alla quota della sua fila
@@ -297,6 +308,9 @@ function create(canvas){
         else                    T = {r:[0,0,1, 0,1,0, -1,0,0], t:[s+50, ry, Dmm]};
         // posizione dei connettori lungo il tratto (u, mm): z del modello 1950 (rail2) o -50 (rail1, 0,5 m)
         const zc = Lm===2 ? 1950 : -50, up = side==='left' || side==='front';
+        // all'angolo l'elemento si sposta di 20 mm lungo il tratto, via dall'angolo
+        const du = (atCorner(side, s) ? CORNER_GAP : 0) - (atCorner(side, s+L) ? CORNER_GAP : 0);
+        if(side==='left' || side==='right') T.t[2] += du; else T.t[0] += du;
         pcs.push({Lm, T, a:s, b:s+L, uc: up ? s+50+zc : s+L-50-zc});
         pos += Lm;
       }
@@ -323,9 +337,10 @@ function create(canvas){
         const cx = uH*1000, cz = uV*1000, ox = vs==='left' ? -1 : 1, oz = hs==='back' ? -1 : 1;   // verso fuori
         const P = (a, b) => [cx + ox*a, cz + oz*b];   // a: verso fuori in x, b: verso fuori in z (mm dall'angolo)
         // (istruzioni Larcher, «Handrails corner connection»): la piastra a Z sta dentro l'angolo con una flangia contro
-        // ciascun montante (Ø 48, centro a 50 mm dall'angolo e 27 mm fuori dal bordo); ogni bullone attraversa il suo
+        // ciascun montante (Ø 48, centro a 50 + 20 mm dall'angolo e 27 mm fuori dal bordo); ogni bullone attraversa il suo
         // montante: testa esagonale sulla piastra, rondella e dado a farfalla dall'altra parte
-        const path = [P(-23.5, 42), P(-23.5, 12), P(6, 12), P(6, -23.5), P(42, -23.5)];
+        const g = -50 - CORNER_GAP;                                    // centro dei montanti lungo il bordo
+        const path = [P(g+26.5, 42), P(g+26.5, 12), P(6, 12), P(6, g+26.5), P(42, g+26.5)];
         for(const dy of [273, 873]){
           const y = h.y + dy;
           for(let i=0;i<path.length-1;i++){
@@ -333,13 +348,13 @@ function create(canvas){
             push(PL, box([Math.min(a[0],b[0])-2.5, y-15, Math.min(a[1],b[1])-2.5], [Math.max(a[0],b[0])+2.5, y+15, Math.max(a[1],b[1])+2.5]), BOX_IDX);
           }
           for(const ax of ['x', 'z']){
-            const Q = (t) => ax==='x' ? P(t, 27) : P(27, t);            // t: lungo l'asse del bullone (montante a -50)
-            const s0 = Q(-82), s1 = Q(-17), hd0 = Q(-21), hd1 = Q(-13), n0 = Q(-86), n1 = Q(-76);
+            const Q = (t) => ax==='x' ? P(g + t, 27) : P(27, g + t);    // t: lungo l'asse del bullone dal centro del montante
+            const s0 = Q(-32), s1 = Q(33), hd0 = Q(29), hd1 = Q(37), n0 = Q(-36), n1 = Q(-26);
             push(PL, ...cyl([s0[0], y, s0[1]], [s1[0], y, s1[1]], 4, 8));                        // vite M8
             push(PL, ...cyl([hd0[0], y, hd0[1]], [hd1[0], y, hd1[1]], 7.5, 6));                 // testa esagonale
-            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 6.5, 10));                    // dado a farfalla
-            const w0 = Q(-82.5), w1 = Q(-79.5);                                                     // alette: due orecchie tonde
-            for(const dy2 of [-12, 12]) push(WN, ...cyl([w0[0], y+dy2, w0[1]], [w1[0], y+dy2, w1[1]], 8, 12));
+            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 7, 10));                      // dado a farfalla
+            const m = Q(-31);
+            push(WN, box([m[0]-3, y-21, m[1]-3], [m[0]+3, y+21, m[1]+3]), BOX_IDX);                // alette
           }
         }
       }
@@ -821,31 +836,58 @@ function create(canvas){
   // parapetti StageDeck dai modelli CAD: rail2 (2 m), rail1 (1 m), 0,5 m = rail1 accorciato. Senza connettori: tolti i
   // pezzi piccoli tra 240 e 905 mm di altezza (farfalle, bulloni e pomelli dei 2 connettori). Battipiede: lamiera sul lato
   // interno, dal piano (y 26,5) a 15 cm.
-  const noConnCache = new Map();
-  function noConn(name){
-    if(noConnCache.has(name)) return noConnCache.get(name);
+  // componenti connesse di ogni materiale di un pezzo (vertici uniti anche per posizione): radice e ingombro (y, z) di ognuna
+  const compCache = new Map();
+  function comps(name){
+    if(compCache.has(name)) return compCache.get(name);
     const out = PARTS[name].map(m => {
       const n = m.pos.length/3, par = Int32Array.from({length:n}, (_,i) => i), f = x => { while(par[x]!==x){ par[x] = par[par[x]]; x = par[x]; } return x; };
       const seen = new Map();
       for(let i=0;i<n;i++){ const k = m.pos[i*3].toFixed(1)+','+m.pos[i*3+1].toFixed(1)+','+m.pos[i*3+2].toFixed(1); if(seen.has(k)) par[f(i)] = f(seen.get(k)); else seen.set(k, i); }
       for(let t=0;t<m.idx.length;t+=3){ const a = f(m.idx[t]); par[f(m.idx[t+1])] = a; par[f(m.idx[t+2])] = a; }
-      const bb = new Map();
-      for(let i=0;i<n;i++){ const r = f(i), y = m.pos[i*3+1], z = m.pos[i*3+2], b = bb.get(r) || [Infinity,-Infinity,Infinity,-Infinity];
-        b[0] = Math.min(b[0],y); b[1] = Math.max(b[1],y); b[2] = Math.min(b[2],z); b[3] = Math.max(b[3],z); bb.set(r, b); }
-      const drop = r => { const b = bb.get(r); return b[0] >= 240 && b[1] <= 905 && b[1]-b[0] <= 60 && b[3]-b[2] <= 220; };
-      const idx = []; for(let t=0;t<m.idx.length;t+=3) if(!drop(f(m.idx[t]))) idx.push(m.idx[t], m.idx[t+1], m.idx[t+2]);
-      return {...m, idx:new Uint16Array(idx)};
+      const root = Int32Array.from({length:n}, (_,i) => f(i)), bb = new Map();
+      for(let i=0;i<n;i++){ const y = m.pos[i*3+1], z = m.pos[i*3+2], b = bb.get(root[i]) || {y0:Infinity, y1:-Infinity, z0:Infinity, z1:-Infinity, n:0};
+        b.y0 = Math.min(b.y0,y); b.y1 = Math.max(b.y1,y); b.z0 = Math.min(b.z0,z); b.z1 = Math.max(b.z1,z); b.n++; bb.set(root[i], b); }
+      let main = -1, mn = 0; for(const [r,b] of bb) if(b.n > mn){ mn = b.n; main = r; }
+      return {root, bb, main};
     });
-    noConnCache.set(name, out); return out;
+    compCache.set(name, out); return out;
+  }
+  // parapetti StageDeck dai modelli CAD: rail2 (2 m), rail1 (1 m), 0,5 m = rail1 accorciato.
+  // - conn=false: senza i 2 connettori (pezzi piccoli tra 240 e 905 mm di altezza: farfalle, bulloni, pomelli);
+  // - il piede del modello (piastra lunga 10 cm con il taglio a 45° per l'angolo) si sostituisce con un piede tondo
+  //   attorno al montante, come nei parapetti veri; resta il pomello;
+  // - battipiede: lamiera sul lato interno, dal piano (y 26,5) a 15 cm.
+  const railCache = new Map();
+  function railIdx(name, conn){
+    const k = name+'|'+conn; if(railCache.has(k)) return railCache.get(k);
+    const posts = name==='rail2' ? [0, 1900] : [0, 900];
+    const out = PARTS[name].map((m, mi) => {
+      const C = comps(name)[mi], idx = [];
+      const tube = i => { const x = m.pos[i*3], z = m.pos[i*3+2]; return x >= -52 && x <= -2 && posts.some(p => Math.abs(z-p) <= 25); };
+      for(let t=0;t<m.idx.length;t+=3){
+        const a = m.idx[t], b = m.idx[t+1], c = m.idx[t+2], r = C.root[a], bb = C.bb.get(r);
+        if(!conn && bb.y0 >= 240 && bb.y1 <= 905 && bb.y1-bb.y0 <= 60 && bb.z1-bb.z0 <= 220) continue;   // connettore
+        if(r===C.main && [a,b,c].every(i => m.pos[i*3+1] < 20 && !tube(i))) continue;                     // piede del modello
+        idx.push(a, b, c);
+      }
+      return new Uint16Array(idx);
+    });
+    railCache.set(k, out); return out;
   }
   function railMats(Lm, kick, conn){
-    const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5;
-    const mats = (conn ? PARTS[name] : noConn(name)).filter(m => m.idx.length).map(m => {
+    const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5, idxs = railIdx(name, conn);
+    const mats = PARTS[name].map((m, mi) => {
       const c = colorOf(m);
       let pos = m.pos;
       if(short){ pos = new Float32Array(m.pos); for(let i=2;i<pos.length;i+=3) if(pos[i] > 450) pos[i] -= 500; }   // 0,5 m: quello da 1 m accorciato
-      return {pos, idx:m.idx, color:c.color, spec:c.spec};
-    });
+      return {pos, idx:idxs[mi], color:c.color, spec:c.spec};
+    }).filter(m => m.idx.length);
+    // piedi tondi attorno ai montanti (Ø 60, dal fondo del montante al piano), colore dei parapetti
+    const F = mk(), steel = colorOf(PARTS[name][0]);
+    for(const zp of (Lm===2 ? [0, 1900] : Lm===1 ? [0, 900] : [0, 400]))
+      push(F, ...extrude(Array.from({length:20}, (_,i) => [-27 + 30*Math.cos(i*Math.PI/10), zp + 30*Math.sin(i*Math.PI/10)]), -62, 22));   // chiuso sopra e sotto
+    mats.push(rawMat(F.P, F.I, steel.color, steel.spec));
     if(kick) mats.push(rawMat(box([-24,26.5,-40],[-20,176.5, Lm===2 ? 1940 : Lm===1 ? 940 : 440]), BOX_IDX, [0.80,0.82,0.86], 0.4));
     return mats;
   }
