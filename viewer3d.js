@@ -307,28 +307,42 @@ function create(canvas){
         railGroups.get(k).list.push(pc.T);
       }
     }
-    // connettori d'angolo (VHCC): dove due tratti di parapetto si incontrano a 90°, una squadretta tra i due montanti
-    // d'angolo (a 50 mm dall'angolo, 27 mm fuori dal bordo) alle altezze dei connettori dei parapetti (273 e 873 mm sul piede)
+    // connettori d'angolo (VHCC, disegno Everdeck 41): piastra piatta alta 30 mm piegata a Z tra i due montanti d'angolo
+    // (a 50 mm dall'angolo, 27 mm fuori dal bordo) e due bulloni a farfalla perpendicolari, uno contro ciascun montante;
+    // 2 per angolo, alle altezze dei connettori dei parapetti (273 e 873 mm sul piede)
     {
       const spans = plan.runs.map(r => {
         const limit = (r.side==='back'||r.side==='front') ? plan.W : plan.D, lens = r.pieces || [];
         return {side:r.side, u0:r.start, u1:Math.min(limit, r.start + lens.reduce((a,b) => a+b, 0)), y:r.h!=null ? r.h*10 - 30 + 63.5 : ry0};
       });
       const at = (side, u) => spans.find(sp => sp.side===side && u >= sp.u0-1e-6 && u <= sp.u1+1e-6);
-      const CC = mk();
+      const PL = mk(), WN = mk();
       for(const [hs, vs] of [['back','left'],['back','right'],['front','left'],['front','right']]){
         const uH = vs==='left' ? 0 : plan.W, uV = hs==='back' ? 0 : plan.D;
         const h = at(hs, uH), v = at(vs, uV);
         if(!h || !v) continue;
         const cx = uH*1000, cz = uV*1000, ox = vs==='left' ? -1 : 1, oz = hs==='back' ? -1 : 1;   // verso fuori
-        const pA = [cx - ox*50, cz + oz*27], pC = [cx + ox*27, cz + oz*27], pB = [cx + ox*27, cz - oz*50];   // montanti: 27 mm fuori dal bordo
+        const P = (a, b) => [cx + ox*a, cz + oz*b];   // a: verso fuori in x, b: verso fuori in z (mm dall'angolo)
+        // percorso della piastra in pianta: flangia contro il montante del lato x, gradino a Z, flangia contro l'altro
+        const path = [P(-21, 12), P(-21, 42), P(8, 42), P(8, 8), P(42, 8), P(42, -21), P(12, -21)];
         for(const dy of [273, 873]){
           const y = h.y + dy;
-          for(const [p, q] of [[pA, pC], [pC, pB]]) push(CC, box([Math.min(p[0],q[0])-6, y-12, Math.min(p[1],q[1])-6], [Math.max(p[0],q[0])+6, y+12, Math.max(p[1],q[1])+6]), BOX_IDX);
-          push(CC, ...cyl([pC[0], y-30, pC[1]], [pC[0], y+30, pC[1]], 9, 8));   // bullone a farfalla
+          for(let i=0;i<path.length-1;i++){
+            const [a, b] = [path[i], path[i+1]];
+            push(PL, box([Math.min(a[0],b[0])-2.5, y-15, Math.min(a[1],b[1])-2.5], [Math.max(a[0],b[0])+2.5, y+15, Math.max(a[1],b[1])+2.5]), BOX_IDX);
+          }
+          // bulloni: uno lungo x contro il montante del lato retro/fronte, uno lungo z contro quello del lato
+          for(const [s0, s1, axis] of [[P(-26, 27), P(25, 27), 'x'], [P(27, -26), P(27, 25), 'z']]){
+            push(PL, ...cyl([s0[0], y, s0[1]], [s1[0], y, s1[1]], 4, 8));
+            const n0 = axis==='x' ? P(4, 27) : P(27, 4), n1 = axis==='x' ? P(16, 27) : P(27, 16);
+            push(WN, ...cyl([n0[0], y, n0[1]], [n1[0], y, n1[1]], 8, 10));                       // dado a farfalla
+            const m = [(n0[0]+n1[0])/2, (n0[1]+n1[1])/2];
+            push(WN, box(axis==='x' ? [m[0]-3, y-22, m[1]-3] : [m[0]-3, y-22, m[1]-3], axis==='x' ? [m[0]+3, y+22, m[1]+3] : [m[0]+3, y+22, m[1]+3]), BOX_IDX);   // alette
+          }
         }
       }
-      if(CC.P.length) addBatch([rawMat(CC.P, CC.I, [0.56,0.56,0.57], 0.35)], [IDT]);
+      if(PL.P.length) addBatch([rawMat(PL.P, PL.I, [0.74,0.75,0.77], 0.45)], [IDT]);
+      if(WN.P.length) addBatch([rawMat(WN.P, WN.I, [0.16,0.16,0.17], 0.2)], [IDT]);
     }
     for(const g of railGroups.values()){
       let mats;
