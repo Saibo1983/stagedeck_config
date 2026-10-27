@@ -620,6 +620,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     </div>
     <div class="panel" id="offerPanel">
       <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Offerta</button></h2>
+      <p class="planinfo" id="offerInfo"><span></span> · <span></span></p>
       <div class="tablewrap" id="offerTable"></div>
       <div class="sum" id="sum"></div>
       <p class="tribnotice" hidden></p>
@@ -3557,6 +3558,7 @@ function renderResult(){
   const p = res.plan;
   $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planInfo').textContent = stageTitle(p, ' · ');
+  { const [a, b] = $$('#offerInfo span'); a.textContent = stageTitle(p, ' · '); b.textContent = res.info.famLabel; }
   $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
   draw3d();
   $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
