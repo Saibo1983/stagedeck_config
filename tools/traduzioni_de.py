@@ -332,7 +332,7 @@ DE = {
     "Niente da esportare": "Nichts zu exportieren",
     "File XML": "XML-Datei",
     "Articolo jolly XML": "Sammelartikel XML",
-    "Codice dell'articolo generico del programma gestionale: nell'esportazione XML lo hanno le righe azzurre (articoli da fatture e pezzi speciali), che hanno codici che il gestionale non conosce. Vuoto: codici del listino": "Code des Sammelartikels im Warenwirtschaftsprogramm: im XML-Export erhalten ihn die blauen Zeilen (Artikel aus Rechnungen und Sonderteile), deren Codes das Programm nicht kennt. Leer: Codes der Preisliste",
+    "Codice dell'articolo generico del programma gestionale: nell'esportazione XML lo hanno le righe azzurre (articoli da fatture e pezzi speciali), che hanno codici che il gestionale non conosce. Vuoto: righe azzurre senza articolo, come «Articolo esterno»": "Code des Sammelartikels im Warenwirtschaftsprogramm: im XML-Export erhalten ihn die blauen Zeilen (Artikel aus Rechnungen und Sonderteile), deren Codes das Programm nicht kennt. Leer: blaue Zeilen ohne Artikel, wie «Externer Artikel»",
     "Disegni": "Zeichnungen",
     "Spett.le": "An",
     "Chiudi": "Schließen",
