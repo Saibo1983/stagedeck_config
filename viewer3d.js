@@ -191,8 +191,8 @@ function create(canvas){
         for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
           const dd = Math.hypot(cx*500-gx, cy*500-gz); if(dd < bd){ bd = dd; best = cx+','+cy; }
         }
-        if(!legPts.has(best)) legPts.set(best, {legs:[], ty:Infinity, hc:0});
-        const lp = legPts.get(best); lp.legs.push([gx,gz]); lp.ty = Math.min(lp.ty, tyD); lp.hc = Math.max(lp.hc, d.hc||0);
+        if(!legPts.has(best)) legPts.set(best, {legs:[], ty:Infinity, hc:0, rows:new Set()});
+        const lp = legPts.get(best); lp.legs.push([gx,gz]); lp.ty = Math.min(lp.ty, tyD); lp.hc = Math.max(lp.hc, d.hc||0); lp.rows.add(d.row);
       }
     }
     if(!spider) for(const [key,v] of deckBy){
@@ -239,7 +239,7 @@ function create(canvas){
     const v4 = [], v2 = [];
     const conn4 = plan.trib ? !!plan.conn : plan.conn4!==false, conn2 = plan.trib ? !!plan.conn : plan.conn2!==false;   // solo dove l'offerta li mette (gambe oltre 80 cm)
     if(!spider) for(const p of legPts.values()){
-      if(plan.trib && p.hc < 80) continue;
+      if(plan.trib && p.hc < 80 && p.rows.size < 2) continue;   // tribuna: sempre tra le file, dentro la fila dagli 80 cm
       const pty = isFinite(p.ty) ? p.ty : ty, cy = pty - Math.min(170, pty*0.45);
       const n = p.legs.length, mx = p.legs.reduce((s,g) => s+g[0],0)/n, mz = p.legs.reduce((s,g) => s+g[1],0)/n;
       if(conn4 && n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[mx, cy, mz]});
