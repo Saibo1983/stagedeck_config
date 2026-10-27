@@ -22,6 +22,9 @@ CORREZIONI = {
     # Spider deck: spessore imballo 60 mm (confermato dall'utente; nel file e' 600)
     "SPHA-2X1": {"pack": [2050, 1050, 60]}, "SPHB-2X1": {"pack": [2050, 1050, 60]},
     "SPHA-1X1": {"pack": [1050, 1050, 60]}, "SPHB-1X1": {"pack": [1050, 1050, 60]},
+    # misure dai disegni quotati Everdeck: nel file sono piu' piccole del pezzo
+    "VPLI": {"pack": [228, 76, 50]},       # limitatore: 228 x 76 x 50 mm (nel file 210 x 40 x 54)
+    "VDT": {"pack": [2075, 608, 1188]},    # carrello verticale da porta: 2075 x 608 x 1188 mm (nel file 2060 x 600 x 1020)
 }
 # Articoli del file Excel da non mettere nell'app (codice normalizzato)
 ESCLUSI = {"VRP20", "VRP40", "VRP60"}   # rampe da fattura: doppioni dei kit rampe, tolte su richiesta dell'utente

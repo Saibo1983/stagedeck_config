@@ -146,6 +146,9 @@ function create(canvas){
   // mesh generico (pelle, rampa, ...): posizioni float + indici
   function rawMat(pos, idx, color, spec){ const big = pos.length/3 > 65535; return {pos:new Float32Array(pos), idx: big ? null : new Uint16Array(idx), idx32: big ? new Uint32Array(idx) : null, color, spec:spec||0}; }
   const IDT = {r:I3, t:[0,0,0]};
+  // mesh composti: posizioni e indici accumulati, poi un solo lotto
+  const mk = () => ({P:[], I:[]});
+  const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
 
   /* ---------- costruzione della scena ---------- */
   function build(plan, cfg){
@@ -157,6 +160,9 @@ function create(canvas){
     const frameCol = FRAME_DARK[fam] ? [0.10,0.10,0.11] : null;
     const topCol = DECK_TOP[fam] || DECK_TOP.hexa;
     const deckOver = m => m.key==='64,64,64' ? topCol : (m.key==='254,254,255' && frameCol ? frameCol : null);
+    const spider = cfg.support==='spider' && !plan.round;
+    const roundLeg = cfg.legShape==='round' || cfg.legShape==='roundAdj';
+    const legAxes = [];                         // asse di ogni gamba in pianta (per le gambe tonde)
 
     // --- decks e gambe
     const deckBy = new Map(), legs = [], legPts = new Map();
@@ -176,6 +182,7 @@ function create(canvas){
         legs.push(L);
         // asse del tubo della gamba (in pianta), assegnato all'angolo di deck più vicino: serve per i morsetti
         const a = mulV(L.r, LEG_AXIS), gx = L.t[0]+a[0], gz = L.t[2]+a[2];
+        legAxes.push([gx, gz]);
         let best = null, bd = Infinity;
         for(const [cx,cy] of [[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]){
           const dd = Math.hypot(cx*500-gx, cy*500-gz); if(dd < bd){ bd = dd; best = cx+','+cy; }
@@ -184,7 +191,7 @@ function create(canvas){
         legPts.get(best).legs.push([gx,gz]);
       }
     }
-    for(const [key,v] of deckBy){
+    if(!spider) for(const [key,v] of deckBy){
       const geo = stretched('deck', (x,y,z) => [x + (x>469 ? v.sx : 0), y, z + (z>0 ? v.sz : 0)], deckOver);
       geo.forEach((m,i) => { if(PARTS.deck[i].key==='64,64,64') m.top = true; });   // il pianale (si può rendere trasparente)
       addBatch(geo, v.list);
@@ -207,7 +214,7 @@ function create(canvas){
           const gx = g.at[0]*1000, gz = g.at[1]*1000;
           let best = null, bd = -Infinity;
           for(const o of rots){ const d = Math.min(...o.f.map(([x,z]) => inside(gx+x, gz+z))); if(d > bd + 1e-6){ bd = d; best = o; } }
-          legs.push({r:best.r, t:[gx - best.a[0], ty + LT.t[1] - delta, gz - best.a[2]]});
+          legs.push({r:best.r, t:[gx - best.a[0], ty + LT.t[1] - delta, gz - best.a[2]]}); legAxes.push([gx, gz]);
           if(g.aligned){   // gambe allineate con quelle dei pezzi vicini: morsetti come nelle pedane normali
             const k = Math.round(g.p[0]*200)/100 + ',' + Math.round(g.p[1]*200)/100;
             if(!legPts.has(k)) legPts.set(k, {legs:[]});
@@ -217,13 +224,15 @@ function create(canvas){
       }
     }
     // gambe: la parte sopra z=150 si allunga/accorcia
-    addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
+    if(spider) spiderParts(plan, cfg, ty, topCol);
+    else if(roundLeg) roundLegs(legAxes, ty, cfg);
+    else addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
     const cy = ty - Math.min(170, ty*0.45);
     const v4 = [], v2 = [];
     const conn4 = plan.conn4!==false, conn2 = plan.conn2!==false;   // connettori solo dove l'offerta li mette (gambe oltre 80 cm)
-    for(const p of legPts.values()){
+    if(!spider) for(const p of legPts.values()){
       const n = p.legs.length, mx = p.legs.reduce((s,g) => s+g[0],0)/n, mz = p.legs.reduce((s,g) => s+g[1],0)/n;
       if(conn4 && n===4) v4.push({r:mulR(RY(Math.PI/2), ZUP), t:[mx, cy, mz]});
       if(conn2 && n===2){
@@ -282,8 +291,6 @@ function create(canvas){
     }
     if(r05.length) addBatch(stretched('rail1', (x,y,z) => [x, y, z > 450 ? z-500 : z]), r05);   // elemento da 0,5 m: quello da 1 m accorciato
 
-    const mk = () => ({P:[], I:[]});
-    const push = (m, P, I) => { const o = m.P.length/3; m.P.push(...P); m.I.push(...I.map(k => k+o)); };
     // --- scale (disegni Everdeck). Modulare: elementi VSM larghi 910 mm e profondi 282, l'ultimo 20 cm sotto il palco
     // (palco da 60 cm: VSM20 + VSM40), corrimano VHSM ogni 2 gradini partendo dall'alto. Regolabile (VAS): due cosciali
     // lunghi st.len, larga 975 mm con i ganci, gradini sempre orizzontali, corrimano VASH lungo 2180 mm e alto 750.
@@ -684,6 +691,46 @@ function create(canvas){
     cam.target = [(mn[0]+mx[0])/2, (mn[1]+mx[1])/2, (mn[2]+mx[2])/2];
     cam.az = spec.az!=null ? spec.az : 0.62; cam.el = spec.el!=null ? spec.el : 0.42; cam.dist = cam.fit = r/Math.tan(0.31)*1.08; cam.userMoved = true;
     bg = [1,1,1]; dirty = true; draw();
+  }
+  // gambe tonde Ø 48,3 mm (disegni Everdeck): VRL tubo con tappo, VRLA con piedino regolabile, VRLT telescopica
+  // (tubo esterno più grosso in basso, pomello di bloccaggio). In cima la gamba entra 20 mm nel telaio della pedana.
+  function roundLegs(axes, ty, cfg){
+    const A = mk(), K = mk(), r = 24.15, top = ty + 20;
+    const tele = !!cfg.tele || !(+cfg.H >= 20 && +cfg.H <= 120 && +cfg.H % 10 === 0);
+    for(const [x,z] of axes){
+      if(tele){
+        const yb = Math.max(140, top*0.45);
+        push(A, ...cyl([x,40,z], [x,yb,z], 30, 16)); push(A, ...cyl([x,yb-10,z], [x,top,z], r, 16));
+        push(K, ...cyl([x,0,z], [x,40,z], 34, 16)); push(K, ...cyl([x+30,yb-60,z], [x+62,yb-60,z], 12, 8));
+      } else if(cfg.legShape==='roundAdj'){
+        push(A, ...cyl([x,45,z], [x,top,z], r, 16)); push(K, ...cyl([x,0,z], [x,14,z], 45, 18)); push(A, ...cyl([x,14,z], [x,45,z], 8, 8));
+      } else {
+        push(A, ...cyl([x,12,z], [x,top,z], r, 16)); push(K, ...cyl([x,0,z], [x,12,z], 26, 16));
+      }
+    }
+    addBatch([rawMat(A.P, A.I, [0.80,0.82,0.86], 0.5)], [IDT]);
+    addBatch([rawMat(K.P, K.I, [0.10,0.10,0.11], 0.15)], [IDT]);
+  }
+  // Spider Deck (disegni Everdeck 73-80): pianale spesso 55 mm su gambe a forbice, una ogni metro quadro (1×1:
+  // 914 × 914 mm, 9 montanti, croci tra i montanti vicini); il pianale 2×1 ne ha due. Gambe in alluminio o nere.
+  function spiderParts(plan, cfg, ty, topCol){
+    const fr = mk(), tp = mk(), rs = mk(), y0 = ty + 35, y1 = ty + 90;
+    const black = cfg.family==='spiderb', rcol = black ? [0.10,0.10,0.11] : [0.80,0.82,0.86];
+    for(const d of plan.decks){
+      const x0 = d.x*500 + 2, z0 = d.y*500 + 2, x1 = (d.x+d.w)*500 - 2, z1 = (d.y+d.h)*500 - 2;
+      push(fr, ...extrude([[x0,z0],[x1,z0],[x1,z1],[x0,z1]], y0, y1 - 12, true));
+      push(tp, ...extrude([[x0,z0],[x1,z0],[x1,z1],[x0,z1]], y1 - 12, y1, true));
+      for(let cx = d.x; cx < d.x + d.w; cx += 2) for(let cz = d.y; cz < d.y + d.h; cz += 2){
+        const ox = cx*500 + 43, oz = cz*500 + 43, s = 914/2, hR = y0;
+        const P = []; for(let i=0;i<3;i++) for(let k=0;k<3;k++) P.push([ox + i*s, oz + k*s]);
+        for(const [x,z] of P) push(rs, box([x-15,0,z-15],[x+15,hR,z+15]), BOX_IDX);
+        const bar = (a, b) => { push(rs, ...cyl([a[0],30,a[1]], [b[0],hR-30,b[1]], 9, 6)); push(rs, ...cyl([b[0],30,b[1]], [a[0],hR-30,a[1]], 9, 6)); };
+        for(let i=0;i<3;i++) for(let k=0;k<2;k++){ bar(P[i*3+k], P[i*3+k+1]); bar(P[k*3+i], P[(k+1)*3+i]); }
+      }
+    }
+    addBatch([rawMat(fr.P, fr.I, black ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5)], [IDT]);
+    addBatch([Object.assign(rawMat(tp.P, tp.I, topCol, 0.15), {top:true})], [IDT]);
+    addBatch([rawMat(rs.P, rs.I, rcol, black ? 0.15 : 0.45)], [IDT]);
   }
   // parapetto di sicurezza VHX (dalle immagini Everdeck/GlobalTruss): corrimano tondo in alto, due montanti quadri,
   // traverso basso e montanti tondi ogni ~11 cm, tubo quadro di base sotto il bordo; alto 115 cm sul piano; misure in mm
