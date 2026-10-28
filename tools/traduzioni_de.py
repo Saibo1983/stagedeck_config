@@ -845,6 +845,20 @@ DE = {
     "Email pronta con {} allegati: apri il file .eml scaricato": "E-Mail mit {0} Anhängen bereit: die heruntergeladene .eml-Datei öffnen",
     "Scaricati {} allegati": "{0} Anhänge heruntergeladen",
     "Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».": "Dieses Gerät kann einige der gewählten Dateien nicht teilen: «E-Mail erstellen» verwenden.",
+    "Offerta esterna": "Externes Angebot",
+    "Trascina qui il PDF o il file Word di un'offerta fatta con un altro programma, oppure clicca per sceglierlo": "PDF oder Word-Datei eines mit einem anderen Programm erstellten Angebots hierher ziehen oder klicken, um sie auszuwählen",
+    "Carica l'offerta esterna": "Externes Angebot hochladen",
+    "Togli l'offerta esterna": "Externes Angebot entfernen",
+    "Offerta esterna caricata": "Externes Angebot hochgeladen",
+    "Formato non accettato: per l'offerta esterna serve un PDF o un file Word.": "Format nicht akzeptiert: Für das externe Angebot ist ein PDF oder eine Word-Datei nötig.",
+    "Firma": "Signatur",
+    "Saluti e firma del venditore": "Grüße und Signatur des Verkäufers",
+    "Immagine di firma / piè di pagina (JPEG)": "Signatur- / Fußzeilenbild (JPEG)",
+    "Trascina qui un'immagine JPEG (firma, logo, piè di pagina)": "Ein JPEG-Bild hierher ziehen (Signatur, Logo, Fußzeile)",
+    "oppure clicca per sceglierla": "oder klicken, um es auszuwählen",
+    "Carica l'immagine della firma": "Signaturbild hochladen",
+    "Togli immagine": "Bild entfernen",
+    "Formato non accettato: serve un'immagine JPEG.": "Format nicht akzeptiert: Ein JPEG-Bild ist nötig.",
 }
 
 

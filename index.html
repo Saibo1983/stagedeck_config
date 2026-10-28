@@ -247,6 +247,12 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .mailtext{display:flex;flex-direction:column;gap:10px}
 .mailtext textarea{resize:vertical;font:inherit;line-height:1.5}
 #mailMsg.err{color:var(--brand)}
+.mailtext .drop{min-height:70px}
+.mailgrp .drop{min-height:56px;margin-top:4px}
+.mailgrp .extrow{display:flex;gap:8px;align-items:center}
+.mailgrp .extrow label{flex:1 1 auto;min-width:0}
+#sigBox .sigprev{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+#sigBox img{max-width:100%;max-height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
 #trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 #cliDlg{width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 .cligrid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
@@ -379,7 +385,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   tr.grp{break-after:avoid}
   tr{break-inside:avoid}
   body[data-print="offerta"] #planPanel,body[data-print="offerta"] #stairPanel{display:none!important}
-  body[data-print="disegni"] #offerPanel,body[data-print="disegni"] #shipPanel{display:none!important}
+  body[data-print="disegni"] #offerPanel,#shipPanel,.shipnote{display:none!important}
   #shipPanel .tiles{display:flex!important}
   #shipPanel{break-before:page}
   /* pianta, titolo, intestazione e legenda devono stare su una pagina A4 (anche con intestazione e piè di pagina
@@ -694,6 +700,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <label class="field"><span>Oggetto</span><input type="text" id="mailSubj" autocomplete="off"></label>
           <label class="field"><span>Testo della mail</span><textarea id="mailBody" rows="7" data-noi18n></textarea></label>
           <div class="archrow"><button type="button" class="btn small" id="mailReset" title="Rimette il testo iniziale della mail nella lingua di stampa">Testo predefinito</button></div>
+          <fieldset class="trset"><legend>Firma</legend>
+            <label class="field"><span>Saluti e firma del venditore</span><textarea id="mailSig" rows="4" data-noi18n></textarea></label>
+            <div class="field"><span>Immagine di firma / piè di pagina (JPEG)</span><div id="sigBox"></div></div>
+            <input type="file" id="sigFile" accept=".jpg,.jpeg,image/jpeg" hidden>
+          </fieldset>
         </div>
       </div>
       <div class="archrow">
@@ -703,6 +714,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="btn" id="mailCopy">Copia testo</button>
         <span class="status" id="mailMsg" role="status" aria-live="polite"></span>
       </div>
+      <input type="file" id="extFile" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
     </div>
     <dialog id="imgDlg" aria-labelledby="imgTitle">
       <form method="dialog" class="imgform">
@@ -1633,7 +1645,21 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Creo il messaggio…":"Erstelle die Nachricht…",
 "Email pronta con {} allegati: apri il file .eml scaricato":"E-Mail mit {0} Anhängen bereit: die heruntergeladene .eml-Datei öffnen",
 "Scaricati {} allegati":"{0} Anhänge heruntergeladen",
-"Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».":"Dieses Gerät kann einige der gewählten Dateien nicht teilen: «E-Mail erstellen» verwenden."
+"Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».":"Dieses Gerät kann einige der gewählten Dateien nicht teilen: «E-Mail erstellen» verwenden.",
+"Offerta esterna":"Externes Angebot",
+"Trascina qui il PDF o il file Word di un'offerta fatta con un altro programma, oppure clicca per sceglierlo":"PDF oder Word-Datei eines mit einem anderen Programm erstellten Angebots hierher ziehen oder klicken, um sie auszuwählen",
+"Carica l'offerta esterna":"Externes Angebot hochladen",
+"Togli l'offerta esterna":"Externes Angebot entfernen",
+"Offerta esterna caricata":"Externes Angebot hochgeladen",
+"Formato non accettato: per l'offerta esterna serve un PDF o un file Word.":"Format nicht akzeptiert: Für das externe Angebot ist ein PDF oder eine Word-Datei nötig.",
+"Firma":"Signatur",
+"Saluti e firma del venditore":"Grüße und Signatur des Verkäufers",
+"Immagine di firma / piè di pagina (JPEG)":"Signatur- / Fußzeilenbild (JPEG)",
+"Trascina qui un'immagine JPEG (firma, logo, piè di pagina)":"Ein JPEG-Bild hierher ziehen (Signatur, Logo, Fußzeile)",
+"oppure clicca per sceglierla":"oder klicken, um es auszuwählen",
+"Carica l'immagine della firma":"Signaturbild hochladen",
+"Togli immagine":"Bild entfernen",
+"Formato non accettato: serve un'immagine JPEG.":"Format nicht akzeptiert: Ein JPEG-Bild ist nötig."
 }}</script>
 <script>
 "use strict";
@@ -2890,6 +2916,9 @@ function normCfg(src){
   c.docs = (Array.isArray(c.docs) ? c.docs : []).map(d => ({t:String(d && d.t || ''),
     f:d && d.f && d.f.id ? {id:String(d.f.id), name:String(d.f.name||''), type:String(d.f.type||''), size:+d.f.size||0} : null, ...(d && d.m ? {m:true} : {})}));
   while(c.docs.length < DOC_MIN) c.docs.push({t:'', f:null});
+  // offerta fatta con un programma esterno (PDF o Word, il file in IndexedDB), da allegare alla mail
+  const x = c.ext && c.ext.f && c.ext.f.id ? c.ext.f : null;
+  c.ext = x ? {f:{id:String(x.id), name:String(x.name||''), type:String(x.type||''), size:+x.size||0}, ...(c.ext.m===false ? {m:false} : {})} : null;
   return c;
 }
 function load(){
@@ -3009,7 +3038,8 @@ async function docTx(mode, fn){
 // toglie da IndexedDB i file che non usa più nessuno: né l'offerta aperta né quelle in archivio
 async function docGc(){
   try{
-    const used = new Set([cfg, ...archLoad().map(e => e.cfg)].flatMap(c => (c && c.docs || []).map(d => d.f && d.f.id)).filter(Boolean));
+    const used = new Set([cfg, ...archLoad().map(e => e.cfg)].flatMap(c => [...(c && c.docs || []).map(d => d.f && d.f.id), c && c.ext && c.ext.f && c.ext.f.id]).filter(Boolean));
+    used.add(SIG_ID);
     const old = (await docTx('readonly', s => s.getAllKeys())).filter(k => !used.has(k));
     if(old.length) await docTx('readwrite', s => old.forEach(k => s.delete(k)));
   }catch(e){}
@@ -3828,7 +3858,8 @@ function renderResult(){
   $('#offerTable').classList.toggle('desc-on', !!cfg.descShow);
   renderSecImgs();
   $('#adjReset').hidden = !res.lines.some(l => l.adj || l.mkMod);
-  $('#techNotes').innerHTML = res.notes.map(n => `<li>${esc(n)}</li>`).join('');
+  // la nota della spedizione resta a schermo ma non va nel PDF dell'offerta
+  $('#techNotes').innerHTML = res.notes.map(n => `<li${n.startsWith('Spedizione (stima)') ? ' class="shipnote"' : ''}>${esc(n)}</li>`).join('');
   $$('.tribnotice').forEach(e => { e.hidden = !p.trib; e.textContent = p.trib ? tr(TRIB_NOTICE) : ''; });
   $('#sum').innerHTML = `
     <div class="c-cost"><span>Totale acquisto</span><span class="num">${money(t.cost)} €</span></div>
@@ -4223,7 +4254,10 @@ function mailMsg(t, err){ const m = $('#mailMsg'); m.textContent = t; m.classLis
 function renderMail(){
   const docs = cfg.docs.map((d,i) => ({d, i})).filter(x => x.d.f);
   const box = (k, label, on, extra = '') => `<label><input type="checkbox" data-mail="${k}"${on ? ' checked' : ''}> <span>${label}${extra}</span></label>`;
-  const grps = [...new Set(MAIL_ITEMS.map(x => x.grp))].map(g => `<fieldset class="mailgrp"><legend>${esc(g)}</legend>${MAIL_ITEMS.filter(x => x.grp===g).map(x => box(x.k, esc(x.label), mailOn(x.k))).join('')}</fieldset>`);
+  const xf = cfg.ext && cfg.ext.f;
+  const ext = xf ? `<div class="extrow">${box('ext', '<span>Offerta esterna</span>', cfg.ext.m!==false, ` <small data-noi18n>${esc(xf.name)} · ${docSize(xf.size)}</small>`)}<button type="button" class="btn small" data-extdel title="Togli l'offerta esterna" aria-label="Togli l'offerta esterna">✕</button></div>`
+    : `<div class="drop" data-extdrop role="button" tabindex="0" aria-label="Carica l'offerta esterna"><span><b>Offerta esterna</b></span><span>Trascina qui il PDF o il file Word di un'offerta fatta con un altro programma, oppure clicca per sceglierlo</span></div>`;
+  const grps = [...new Set(MAIL_ITEMS.map(x => x.grp))].map(g => `<fieldset class="mailgrp"><legend>${esc(g)}</legend>${MAIL_ITEMS.filter(x => x.grp===g).map(x => box(x.k, esc(x.label), mailOn(x.k))).join('')}${g==='Offerta' ? ext : ''}</fieldset>`);
   grps.push(`<fieldset class="mailgrp"><legend>Archivio documenti</legend>${docs.length ? docs.map(({d,i}) => box('doc'+i, `<span data-noi18n>${esc(d.t.trim() || d.f.name)}</span>`, d.m, ` <small data-noi18n>${esc(d.f.name)} · ${docSize(d.f.size)}</small>`)).join('') : '<span class="hint">Nessun documento caricato</span>'}</fieldset>`);
   $('#mailList').innerHTML = grps.join('');
   const to = cfg.cli && cfg.cli.email ? String(cfg.cli.email).trim() : '';
@@ -4233,6 +4267,37 @@ function renderMail(){
   if(mailAuto.subj===null || si.value===mailAuto.subj) si.value = subj;
   mailAuto.to = to; mailAuto.subj = subj;
   if(mailAuto.lang!==cfg.lingua){ bi.value = mailText(); mailAuto.lang = cfg.lingua; }
+  if(!renderMail.sig){ renderMail.sig = true; $('#mailSig').value = mailState().firma || ''; renderSig(); }
+}
+/* firma della mail: testo (saluti, nome del venditore) e un'immagine JPEG sotto, uguali per tutte le offerte.
+   Il testo sta in localStorage, l'immagine in IndexedDB con gli altri file. */
+const SIG_ID = 'mail.firma';
+let sigUrl = '';
+async function renderSig(){
+  const im = mailState().firmaImg, box = $('#sigBox');
+  if(sigUrl){ URL.revokeObjectURL(sigUrl); sigUrl = ''; }
+  let b = null; if(im) try{ b = await docTx('readonly', s => s.get(SIG_ID)); }catch(e){}
+  if(b){ sigUrl = URL.createObjectURL(b);
+    box.innerHTML = `<div class="sigprev"><img src="${sigUrl}" alt=""><span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><button type="button" class="btn small" data-sigdel>Togli immagine</button></div>`; }
+  else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica l'immagine della firma"><span>Trascina qui un'immagine JPEG (firma, logo, piè di pagina)</span><span>oppure clicca per sceglierla</span></div>`;
+}
+async function sigAdd(f){
+  if(!f) return;
+  if(!/jpe?g$/i.test(f.type) && !/\.jpe?g$/i.test(f.name)){ mailMsg('Formato non accettato: serve un\'immagine JPEG.', true); return; }
+  try{ await docTx('readwrite', s => s.put(f, SIG_ID)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
+  const m = mailState(); m.firmaImg = {name:f.name, size:f.size}; mailStore(m); renderSig();
+}
+async function sigBlob(){ if(!mailState().firmaImg) return null; try{ return await docTx('readonly', s => s.get(SIG_ID)) || null; }catch(e){ return null; } }
+// testo completo: messaggio e firma
+const mailFull = () => [$('#mailBody').value.replace(/\s+$/, ''), $('#mailSig').value.trim()].filter(Boolean).join('\n\n');
+async function extAdd(f){
+  if(!f) return;
+  const k = docKind(f);
+  if(k!=='PDF' && k!=='WORD'){ mailMsg('Formato non accettato: per l\'offerta esterna serve un PDF o un file Word.', true); return; }
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  try{ await docTx('readwrite', s => s.put(f, id)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
+  cfg.ext = {f:{id, name:f.name, type:f.type || '', size:f.size}};
+  save(); renderMail(); docGc(); mailMsg('Offerta esterna caricata');
 }
 const fileSafe = s => String(s).replace(/[\\/:*?"<>|\r\n]+/g, '-').trim() || 'file';
 // documenti spuntati come file: [{name, blob}]
@@ -4255,6 +4320,11 @@ async function mailFiles(){
       try{ v3.view.resize(); draw3dNow(); out.push({name:`vista3d_${ref3d()}.png`, blob: await v3.view.png()}); }
       finally{ if(shut){ pnl.classList.add('shut'); v3.view.resize(); } }
     }
+    else if(k==='ext'){
+      const f = cfg.ext && cfg.ext.f; let b = null; try{ b = f && await docTx('readonly', s => s.get(f.id)); }catch(e){}
+      if(!b) throw new Error(`File non disponibile in questo browser: ${f ? f.name : tr('Offerta esterna')}`);
+      out.push({name: fileSafe(f.name), blob: new Blob([b], {type: f.type || b.type || 'application/octet-stream'})});
+    }
     else if(k.startsWith('doc')){
       const d = cfg.docs[+k.slice(3)], b = await docBlob(+k.slice(3));
       if(!b) throw new Error(`File non disponibile in questo browser: ${d.f.name}`);
@@ -4275,11 +4345,19 @@ const b64 = async blob => {
 // intestazioni con lettere accentate: parole codificate UTF-8 (RFC 2047), a pezzi corti
 const mimeWord = s => /^[\x20-\x7e]*$/.test(s) ? s : [...s].reduce((a, c, i) => { if(i % 12===0) a.push(''); a[a.length-1] += c; return a; }, [])
   .map(p => '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(p))) + '?=').join('\r\n ');
-async function emlBlob(to, subj, text, files){
+// con l'immagine di firma il testo va anche in HTML, con l'immagine dentro il messaggio (multipart/related, cid:firma)
+async function emlBlob(to, subj, text, files, sig){
   const B = 'stagedeck_' + Date.now().toString(36), parts = [];
   const head = [`To: ${to}`, `Subject: ${mimeWord(subj)}`, 'X-Unsent: 1', 'MIME-Version: 1.0', `Content-Type: multipart/mixed; boundary="${B}"`, '', 'This is a multi-part message in MIME format.'];
   parts.push(head.join('\r\n'));
-  parts.push(`\r\n--${B}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([text.replace(/\r?\n/g, '\r\n')]))}`);
+  const plain = `Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([text.replace(/\r?\n/g, '\r\n')]))}`;
+  if(sig){
+    const html = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt">${esc(text).replace(/\r?\n/g, '<br>\r\n')}<br>\r\n<br>\r\n<img src="cid:firma@stagedeck" alt="" style="max-width:600px"></body></html>`;
+    parts.push(`\r\n--${B}\r\nContent-Type: multipart/related; boundary="${B}r"\r\n\r\n--${B}r\r\nContent-Type: multipart/alternative; boundary="${B}a"\r\n`
+      + `\r\n--${B}a\r\n${plain}\r\n--${B}a\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([html]))}\r\n--${B}a--\r\n`
+      + `\r\n--${B}r\r\nContent-Type: image/jpeg; name="firma.jpg"\r\nContent-ID: <firma@stagedeck>\r\nContent-Disposition: inline; filename="firma.jpg"\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(sig)}\r\n--${B}r--\r\n`);
+  }
+  else parts.push(`\r\n--${B}\r\n${plain}`);
   for(const f of files){
     const n = mimeWord(f.name).replace(/"/g, '');
     parts.push(`\r\n--${B}\r\nContent-Type: ${f.blob.type || 'application/octet-stream'}; name="${n}"\r\nContent-Disposition: attachment; filename="${n}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(f.blob)}`);
@@ -4298,7 +4376,7 @@ async function mailRun(fn){
 const mailEml = () => mailRun(async () => {
   const files = await mailFiles(), subj = $('#mailSubj').value.trim();
   mailMsg('Creo il messaggio…');
-  const blob = await emlBlob($('#mailTo').value.trim(), subj, $('#mailBody').value, files);
+  const blob = await emlBlob($('#mailTo').value.trim(), subj, mailFull(), files, await sigBlob());
   // nome del file senza accenti e trattini lunghi: con questi alcuni browser lo scaricano come «download»
   await saveBlob(blob, fileSafe(subj || tr('Offerta')).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e]+/g, '-') + '.eml', 'Email');
   mailMsg(tr(`Email pronta con ${files.length} allegati: apri il file .eml scaricato`));
@@ -4306,7 +4384,8 @@ const mailEml = () => mailRun(async () => {
 const mailShare = () => mailRun(async () => {
   const files = (await mailFiles()).map(f => new File([f.blob], f.name, {type: f.blob.type}));
   if(!navigator.canShare({files})) throw new Error('Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».');
-  await navigator.share({files, title: $('#mailSubj').value, text: $('#mailBody').value});
+  const sig = await sigBlob(); if(sig) files.push(new File([sig], 'firma.jpg', {type:'image/jpeg'}));
+  await navigator.share({files, title: $('#mailSubj').value, text: mailFull()});
   mailMsg('');
 });
 const mailDl = () => mailRun(async () => {
@@ -4767,6 +4846,7 @@ function bind(){
     const c = e.target.closest('[data-mail]'); if(!c) return;
     const k = c.dataset.mail;
     if(k.startsWith('doc')){ const d = cfg.docs[+k.slice(3)]; if(c.checked) d.m = true; else delete d.m; save(); return; }
+    if(k==='ext'){ if(c.checked) delete cfg.ext.m; else cfg.ext.m = false; save(); return; }
     const m = mailState(); m.sel = {...(m.sel || {}), [k]: c.checked}; mailStore(m);
   });
   $('#mailBody').addEventListener('input', e => { const m = mailState(); m.testo = {...(m.testo || {}), [cfg.lingua]: e.target.value}; mailStore(m); });
@@ -4776,7 +4856,30 @@ function bind(){
   });
   $('#mailEml').addEventListener('click', mailEml);
   $('#mailDl').addEventListener('click', mailDl);
-  $('#mailCopy').addEventListener('click', () => copy($('#mailBody').value).then(() => mailMsg('Copiato')));
+  $('#mailCopy').addEventListener('click', () => copy(mailFull()).then(() => mailMsg('Copiato')));
+  $('#mailSig').addEventListener('input', e => { const m = mailState(); m.firma = e.target.value; mailStore(m); });
+  // offerta esterna e immagine della firma: clic o trascinamento nella zona
+  const dropIn = (box, sel, add, input) => {
+    const z = e => e.target.closest && e.target.closest(sel);
+    box.addEventListener('click', e => { if(z(e)){ $(input).value = ''; $(input).click(); } });
+    box.addEventListener('keydown', e => { if(z(e) && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); $(input).value = ''; $(input).click(); } });
+    box.addEventListener('dragover', e => { const x = z(e); if(!x) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; x.classList.add('over'); });
+    box.addEventListener('dragleave', e => { const x = z(e); if(x && !x.contains(e.relatedTarget)) x.classList.remove('over'); });
+    box.addEventListener('drop', e => { const x = z(e); if(!x) return; e.preventDefault(); x.classList.remove('over'); if(e.dataTransfer.files.length) add(e.dataTransfer.files[0]); });
+    $(input).addEventListener('change', e => add(e.target.files[0]));
+  };
+  dropIn($('#mailList'), '[data-extdrop]', extAdd, '#extFile');
+  dropIn($('#sigBox'), '[data-sigdrop]', sigAdd, '#sigFile');
+  $('#mailList').addEventListener('click', e => {
+    if(!e.target.closest('[data-extdel]') || !cfg.ext) return;
+    if(!confirm(tr(`Togliere il file «${cfg.ext.f.name}»?`))) return;
+    cfg.ext = null; save(); renderMail(); docGc();
+  });
+  $('#sigBox').addEventListener('click', async e => {
+    if(!e.target.closest('[data-sigdel]')) return;
+    try{ await docTx('readwrite', s => s.delete(SIG_ID)); }catch(_){}
+    const m = mailState(); delete m.firmaImg; mailStore(m); renderSig();
+  });
   try{ $('#mailShare').hidden = !(navigator.canShare && navigator.canShare({files:[new File(['x'], 'x.pdf', {type:'application/pdf'})]})); }catch(e){}
   $('#mailShare').addEventListener('click', mailShare);
   $('#shipPanel').addEventListener('click', e => {
