@@ -2199,14 +2199,14 @@ function compute(cfg, R, look, kits){
   const taken = s => stairsOn[s]*opening + rampsOn[s]*rampOpening;
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
   // posizione di scale e rampe lungo il lato, a (m) dall'inizio del lato (sinistra per retro e fronte, retro per i lati):
-  // prima quelle spostate col cursore della vista schematica (pos), poi le altre nel primo spazio libero, a passi di 0,5 m
+  // prima quelle spostate col cursore della vista schematica (pos), poi le altre nel primo spazio libero, a passi di 1 m
   const places = [...cfg.stairs.map((x,i) => ({kind:'stair', i, side:x.side, L:opening, pos:x.pos})),
     ...(cfg.ramps||[]).map((x,i) => ({kind:'ramp', i, side:x.side, L:rampOpening, pos:x.pos}))].filter(q => q.side in sideLen);
   const hits = (q, a, o) => o!==q && o.a!=null && o.side===q.side && a < o.a+o.L-1e-9 && a+q.L > o.a+1e-9;
   if(round){   // palco rotondo: scale centrate sul lato (il bordo tocca il quadrato solo al centro)
     for(const s of Object.keys(sideLen)) places.filter(q => q.side===s).forEach((q,k,all) => { q.a = (sideLen[s] - all.length*opening)/2 + k*opening; });
   } else {
-    for(const q of places) if(q.pos!=null && isFinite(+q.pos)) q.a = Math.max(0, Math.min(sideLen[q.side]-q.L, Math.round(+q.pos*2)/2));
+    for(const q of places) if(q.pos!=null && isFinite(+q.pos)) q.a = Math.max(0, Math.min(sideLen[q.side]-q.L, Math.round(+q.pos)));
     for(const s of Object.keys(sideLen)){
       const on = places.filter(q => q.side===s && q.a!=null);
       if(on.some((q,k) => on.slice(k+1).some(o => hits(q, q.a, o)))) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe si sovrappongono.`);
@@ -2214,7 +2214,7 @@ function compute(cfg, R, look, kits){
     for(const q of places){
       if(q.a!=null) continue;
       let a = 0;
-      while(a+q.L <= sideLen[q.side]+1e-9 && places.some(o => hits(q, a, o))) a += 0.5;
+      while(a+q.L <= sideLen[q.side]+1e-9 && places.some(o => hits(q, a, o))) a += 1;
       if(a+q.L > sideLen[q.side]+1e-9) a = places.filter(o => o!==q && o.a!=null && o.side===q.side).reduce((m,o) => Math.max(m, o.a+o.L), 0);
       q.a = a;
     }
@@ -3657,7 +3657,7 @@ function renderPos(p){
     posKey = key;
     box.innerHTML = list.map(q => {
       const name = `${q.kind==='stair' ? 'Scala' : 'Rampa'} ${q.i+1} · ${SIDE_LABEL[q.side].toLowerCase()}`;
-      return `<span>${name}</span><input type="range" min="0" max="${q.max}" step="0.5" value="${q.a}" data-pos="${q.kind}" data-pi="${q.i}" aria-label="Posizione: ${name}" ${q.max>0 ? '' : 'disabled'}>`
+      return `<span>${name}</span><input type="range" min="0" max="${q.max}" step="1" value="${q.a}" data-pos="${q.kind}" data-pi="${q.i}" aria-label="Posizione: ${name}" ${q.max>0 ? '' : 'disabled'}>`
         + `<output>${nf(q.a)} m ${from(q.side)}</output><button type="button" class="btn small" data-posauto="${q.kind}" data-pi="${q.i}" title="Torna alla posizione automatica, nel primo spazio libero dall'inizio del lato">Automatica</button>`;
     }).join('');
   }
