@@ -235,7 +235,18 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .drop .dname{color:var(--ink);font-weight:600}
 .doc .docbtns{display:flex;gap:6px;flex-wrap:wrap}
 #docMsg.err{color:var(--brand)}
-@media print{#docPanel{display:none!important}}
+@media print{#docPanel,#mailPanel{display:none!important}}
+/* invio per e-mail: allegati da spuntare a sinistra, destinatario, oggetto e testo a destra */
+.mailgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;margin:12px 0;align-items:start}
+@media (max-width:760px){.mailgrid{grid-template-columns:minmax(0,1fr)}}
+.mailatt{display:flex;flex-direction:column;gap:4px}
+.mailgrp{border:1px solid var(--line);border-radius:8px;padding:6px 12px 8px;margin:0 0 8px;display:flex;flex-direction:column;gap:4px}
+.mailgrp legend{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:0 4px}
+.mailgrp label{display:flex;gap:8px;align-items:baseline;cursor:pointer;overflow-wrap:anywhere}
+.mailgrp small{color:var(--muted)}
+.mailtext{display:flex;flex-direction:column;gap:10px}
+.mailtext textarea{resize:vertical;font:inherit;line-height:1.5}
+#mailMsg.err{color:var(--brand)}
 #trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 #cliDlg{width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 .cligrid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
@@ -672,6 +683,26 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="docgrid" id="docList"></div>
       <div class="archrow"><button type="button" class="btn small" id="docAdd">Aggiungi documento</button><span class="status" id="docMsg" role="status" aria-live="polite"></span></div>
       <input type="file" id="docFile" multiple hidden>
+    </div>
+    <div class="panel" id="mailPanel">
+      <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Invio per e-mail</button></h2>
+      <p class="hint">Spunta i documenti da allegare: si preparano nella lingua di stampa, come i file dei riquadri. «Crea email» scarica un messaggio (.eml) con destinatario, testo e allegati: aprilo con un doppio clic e Outlook, Thunderbird o Mail lo mostrano pronto da inviare.</p>
+      <div class="mailgrid">
+        <div class="mailatt"><span class="lbl">Allegati</span><div id="mailList"></div></div>
+        <div class="mailtext">
+          <label class="field"><span>Destinatario</span><input type="text" id="mailTo" inputmode="email" autocomplete="off" placeholder="e-Mail del cliente in anagrafica"></label>
+          <label class="field"><span>Oggetto</span><input type="text" id="mailSubj" autocomplete="off"></label>
+          <label class="field"><span>Testo della mail</span><textarea id="mailBody" rows="7" data-noi18n></textarea></label>
+          <div class="archrow"><button type="button" class="btn small" id="mailReset" title="Rimette il testo iniziale della mail nella lingua di stampa">Testo predefinito</button></div>
+        </div>
+      </div>
+      <div class="archrow">
+        <button type="button" class="btn primary" id="mailEml">Crea email</button>
+        <button type="button" class="btn" id="mailShare" hidden title="Passa testo e allegati a un'app di posta del dispositivo (il destinatario si scrive nell'app)">Condividi</button>
+        <button type="button" class="btn" id="mailDl" title="Scarica i documenti spuntati, per allegarli a mano (per esempio in una posta web)">Scarica allegati</button>
+        <button type="button" class="btn" id="mailCopy">Copia testo</button>
+        <span class="status" id="mailMsg" role="status" aria-live="polite"></span>
+      </div>
     </div>
     <dialog id="imgDlg" aria-labelledby="imgTitle">
       <form method="dialog" class="imgform">
@@ -1576,7 +1607,33 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Prezzi caricati":"Preise geladen",
 "File prezzi non valido":"Ungültige Preisdatei",
 "Prezzi di acquisto presenti per {} articoli su {}.":"Einkaufspreise vorhanden für {0} von {1} Artikeln.",
-"Prezzi non caricati. Carica il file prezzi.json generato dallo script (resta sul tuo dispositivo, non va su GitHub).":"Preise nicht geladen. Die vom Skript erzeugte Datei prezzi.json laden (bleibt auf deinem Gerät, kommt nicht auf GitHub)."
+"Prezzi non caricati. Carica il file prezzi.json generato dallo script (resta sul tuo dispositivo, non va su GitHub).":"Preise nicht geladen. Die vom Skript erzeugte Datei prezzi.json laden (bleibt auf deinem Gerät, kommt nicht auf GitHub).",
+"Invio per e-mail":"Versand per E-Mail",
+"Spunta i documenti da allegare: si preparano nella lingua di stampa, come i file dei riquadri. «Crea email» scarica un messaggio (.eml) con destinatario, testo e allegati: aprilo con un doppio clic e Outlook, Thunderbird o Mail lo mostrano pronto da inviare.":"Die anzuhängenden Dokumente ankreuzen: Sie werden in der Drucksprache erstellt, wie die Dateien der Bereiche. «E-Mail erstellen» lädt eine Nachricht (.eml) mit Empfänger, Text und Anhängen herunter: Mit Doppelklick öffnen, Outlook, Thunderbird oder Mail zeigen sie versandbereit an.",
+"Allegati":"Anhänge",
+"Destinatario":"Empfänger",
+"e-Mail del cliente in anagrafica":"E-Mail des Kunden aus den Stammdaten",
+"Oggetto":"Betreff",
+"Testo predefinito":"Standardtext",
+"Rimette il testo iniziale della mail nella lingua di stampa":"Setzt den ursprünglichen E-Mail-Text in der Drucksprache wieder ein",
+"Condividi":"Teilen",
+"Passa testo e allegati a un'app di posta del dispositivo (il destinatario si scrive nell'app)":"Übergibt Text und Anhänge an eine Mail-App des Geräts (den Empfänger in der App eingeben)",
+"Scarica allegati":"Anhänge herunterladen",
+"Scarica i documenti spuntati, per allegarli a mano (per esempio in una posta web)":"Lädt die angekreuzten Dokumente herunter, um sie von Hand anzuhängen (zum Beispiel bei Webmail)",
+"Disegni (PDF)":"Zeichnungen (PDF)",
+"Offerta (PDF)":"Angebot (PDF)",
+"Nessun documento caricato":"Kein Dokument hochgeladen",
+"Buongiorno\ngrazie per averci contattato.\nInvio in allegato l'offerta richiesta.\nLe spese di trasporto verranno calcolate in caso di conferma d'ordine\nResto a disposizione per ulteriori chiarimenti.":"Guten Tag\nvielen Dank für Ihre Anfrage.\nIm Anhang sende ich Ihnen das gewünschte Angebot.\nDie Transportkosten werden im Falle einer Auftragsbestätigung berechnet\nFür weitere Fragen stehe ich gerne zur Verfügung.",
+"Preparo: {}…":"Erstelle: {0}…",
+"Pagina {} di {}":"Seite {0} von {1}",
+"Spunta almeno un documento da allegare, oppure usa «Copia testo».":"Mindestens ein Dokument zum Anhängen ankreuzen oder «Text kopieren» verwenden.",
+"File non disponibile in questo browser: {}":"Datei in diesem Browser nicht verfügbar: {0}",
+"Preparazione degli allegati non riuscita":"Erstellen der Anhänge fehlgeschlagen",
+"Preparazione degli allegati non riuscita: serve la connessione a internet per creare i PDF.":"Erstellen der Anhänge fehlgeschlagen: Für die PDFs ist eine Internetverbindung nötig.",
+"Creo il messaggio…":"Erstelle die Nachricht…",
+"Email pronta con {} allegati: apri il file .eml scaricato":"E-Mail mit {0} Anhängen bereit: die heruntergeladene .eml-Datei öffnen",
+"Scaricati {} allegati":"{0} Anhänge heruntergeladen",
+"Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».":"Dieses Gerät kann einige der gewählten Dateien nicht teilen: «E-Mail erstellen» verwenden."
 }}</script>
 <script>
 "use strict";
@@ -2831,7 +2888,7 @@ function normCfg(src){
   c.ramps = (c.ramps||[]).map(x => ({side:x.side||'back', ...posOf(x)}));
   // archivio documenti: titolo e dati del file (il file vero sta in IndexedDB), almeno DOC_MIN riquadri
   c.docs = (Array.isArray(c.docs) ? c.docs : []).map(d => ({t:String(d && d.t || ''),
-    f:d && d.f && d.f.id ? {id:String(d.f.id), name:String(d.f.name||''), type:String(d.f.type||''), size:+d.f.size||0} : null}));
+    f:d && d.f && d.f.id ? {id:String(d.f.id), name:String(d.f.name||''), type:String(d.f.type||''), size:+d.f.size||0} : null, ...(d && d.m ? {m:true} : {})}));
   while(c.docs.length < DOC_MIN) c.docs.push({t:'', f:null});
   return c;
 }
@@ -2981,6 +3038,7 @@ function renderDocs(){
       const img = document.createElement('img'); img.src = u; img.alt = ''; box.replaceWith(img);
     }catch(e){}
   });
+  renderMail();
 }
 // file nel riquadro i; con più file, gli altri vanno nei riquadri vuoti seguenti (se servono se ne aggiungono)
 async function docAdd(i, files){
@@ -3781,7 +3839,7 @@ function renderResult(){
     <div><span>IVA ${dec(+cfg.vat||0,0)}%</span><span class="num">${money(t.vat)} €</span></div>
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
-function update(){ save(); renderResult(); cliHint(); }
+function update(){ save(); renderResult(); cliHint(); renderMail(); }
 // cursori della vista schematica: posizione di ogni scala e rampa lungo il suo lato. Si ridisegnano solo quando cambiano
 // scale, rampe o lati (non mentre si trascina), altrimenti si aggiornano valore e scritta.
 let posKey = '';
@@ -3810,6 +3868,14 @@ function renderPos(p){
 /* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
 function printPart(part){
   if(!res || !res.plan){ say('Niente da stampare'); return; }
+  const done = printPrep(part), end = () => { window.removeEventListener('afterprint', end); done(); };
+  window.addEventListener('afterprint', end);
+  window.print();
+}
+// nome proposto per il file PDF (nella lingua di stampa)
+const printName = part => [tr(part==='offerta' ? 'Offerta' : 'Disegni'), cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
+// prepara la pagina per la stampa di una parte (offerta o disegni); restituisce la funzione che la rimette com'era
+function printPrep(part){
   // tutta la pagina passa nella lingua di stampa; dopo la stampa torna nella lingua dell'interfaccia
   const back = LANG;
   if(cfg.lingua !== LANG) setLang(cfg.lingua);
@@ -3821,13 +3887,11 @@ function printPart(part){
   $('#printHead').innerHTML = `<div class="ph-brand"><img src="img/logo-stagedeck.png" alt="StageDeck" class="logo"></div><div class="ph-title">${esc(tr(part==='offerta' ? 'Offerta' : 'Disegni'))} · ${esc(tr(stageTitle(res.plan)) + (part==='offerta' ? ', ' + tr(res.info.famLabel) : ''))}</div><div class="ph-meta">${head.map(esc).join(' · ')}</div>${cli}`;
   const oldTitle = document.title;
   // il titolo diventa il nome proposto per il file PDF
-  document.title = [tr(part==='offerta' ? 'Offerta' : 'Disegni'), cfg.numero, cfg.cliente].filter(Boolean).join(' ').replace(/[\\/:*?"<>|]/g,'-');
+  document.title = printName(part);
   document.body.dataset.print = part;
   document.body.dataset.cost = cfg.pdfCost ? '1' : '0';
   document.body.dataset.desc = cfg.descPdf ? '1' : '0';
-  const done = () => { document.title = oldTitle; delete document.body.dataset.print; delete document.body.dataset.cost; delete document.body.dataset.desc; window.removeEventListener('afterprint', done); if(LANG !== back) setLang(back); };
-  window.addEventListener('afterprint', done);
-  window.print();
+  return () => { document.title = oldTitle; delete document.body.dataset.print; delete document.body.dataset.cost; delete document.body.dataset.desc; if(LANG !== back) setLang(back); };
 }
 
 /* --- copia --- */
@@ -3994,10 +4058,13 @@ async function save3d(){
 // immagine a 4 viste (assonometria, fronte, lato, pianta) con il titolo del palco o della tribuna
 async function save3d4(){
   if(!v3.view || !res || !res.plan) return;
-  draw3dNow();
-  const blob = await v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)));
+  const blob = await png3d4();
   if(!blob) return;
   await saveBlob(blob, `viste_${ref3d()}.png`, 'Immagine a 4 viste');
+}
+function png3d4(){
+  draw3dNow();
+  return v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)));
 }
 const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
 // modello 3D per altri programmi (Visualizzatore 3D di Windows, Anteprima del Mac, Blender, ...)
@@ -4009,6 +4076,9 @@ async function saveGlb(){
 // pagina HTML da mandare al cliente: si apre con un doppio clic nel browser e il palco si gira con il dito o il mouse
 async function saveHtml3d(){
   if(!v3.view) return;
+  await saveBlob(await html3d(), `palco3d_${ref3d()}.html`, 'Pagina 3D');
+}
+async function html3d(){
   draw3dNow();
   const buf = new Uint8Array(await v3.view.glb().arrayBuffer());
   let bin = ''; for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
@@ -4025,7 +4095,7 @@ model-viewer{width:100%;height:calc(100% - 74px);background:linear-gradient(#fff
 <model-viewer id="mv" camera-controls touch-action="pan-y" shadow-intensity="0.6" exposure="1.05" camera-orbit="35deg 65deg auto" alt="${esc(title)}"></model-viewer>
 <script>const b=atob("${btoa(bin)}"),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);
 document.getElementById('mv').src=URL.createObjectURL(new Blob([u],{type:'model/gltf-binary'}));<\/script></body></html>`;
-  await saveBlob(new Blob([html], {type:'text/html'}), `palco3d_${ref3d()}.html`, 'Pagina 3D');
+  return new Blob([html], {type:'text/html'});
 }
 function draw3dNow(){ cancelAnimationFrame(v3.raf); try{ v3.view.build(res.plan, cfg); }catch(e){ console.error(e); } }
 async function saveBlob(blob, filename, what){
@@ -4040,6 +4110,210 @@ async function saveBlob(blob, filename, what){
     say('Scaricato: '+what);
   }catch(e){ if(!(e && e.code==='declined')) say('Salvataggio non riuscito'); }
 }
+/* --- PDF come file (allegati della mail) ---
+   La stampa del browser non dà un file: la pagina di stampa (stesse regole @media print) si ricompone in un iframe
+   largo come l'area utile di un foglio A4, si fotografa con html2canvas e si taglia in pagine A4 con jsPDF,
+   senza spezzare righe, paragrafi e disegni. Le due librerie si caricano solo la prima volta che servono. */
+const PDF_LIBS = ['https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.11/dist/html2canvas-pro.min.js', 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js'];
+const PDF_MM = {w:210, h:297, top:12, side:12, bottom:14}, PDF_PX = 96/25.4;   // margini come @page; 96 px CSS per pollice
+async function pdfBlob(part){
+  if(!(window.jspdf && window.jspdf.jsPDF)) await loadScript(PDF_LIBS[1]);
+  const W = Math.round((PDF_MM.w - 2*PDF_MM.side)*PDF_PX), H = Math.floor((PDF_MM.h - PDF_MM.top - PDF_MM.bottom)*PDF_PX);
+  const fr = document.createElement('iframe');
+  fr.setAttribute('aria-hidden', 'true'); fr.tabIndex = -1;
+  fr.style.cssText = `position:fixed;left:-20000px;top:0;width:${W}px;height:${H}px;border:0;visibility:hidden`;
+  document.body.appendChild(fr);
+  try{
+    const d = fr.contentDocument;
+    // regole di stampa valide sempre; via @page (margini e numeri di pagina li mette jsPDF)
+    const css = $$('style').map(x => x.textContent.replace(/@media\s+print\b/g, '@media all').replace(/@page\s*\{([^{}]*\{[^{}]*\})*[^{}]*\}/g, '')).join('\n');
+    const fonts = $$('link[rel="stylesheet"]').map(l => `<link rel="stylesheet" href="${esc(l.href)}">`).join('');
+    d.open(); d.write(`<!doctype html><html><head><meta charset="utf-8"><base href="${esc(location.href)}">${fonts}<style>${css}</style></head><body></body></html>`); d.close();
+    // copia della pagina preparata per la stampa (lingua di stampa, intestazione, prezzi e descrizioni come nel PDF)
+    const done = printPrep(part);
+    let body;
+    try{
+      d.documentElement.lang = LANG;
+      body = d.importNode(document.body, true);
+      const cv = $('#v3Canvas'), cv2 = body.querySelector('#v3Canvas');
+      if(cv2){
+        if(v3.on && cv.width > 2){ const img = d.createElement('img'); img.src = cv.toDataURL('image/png'); img.style.cssText = cv.style.cssText; img.alt = ''; cv2.replaceWith(img); }
+        else cv2.remove();
+      }
+    }finally{ done(); }
+    body.querySelectorAll('script,dialog,#tab-regole,#tab-listino,input[type="file"]').forEach(x => x.remove());
+    body.querySelectorAll('img[loading]').forEach(i => i.removeAttribute('loading'));   // fuori schermo le immagini «lazy» non arriverebbero mai
+    // html2canvas non disegna le immagini dentro le celle delle tabelle: le miniature diventano <span> con l'immagine come sfondo
+    body.querySelectorAll('button.thumb').forEach(b => {
+      const x = d.createElement('span'), i = b.querySelector('img');
+      x.className = b.className;
+      if(i) x.style.cssText = `background:#fff url("${i.src.replace(/"/g, '%22')}") center/contain no-repeat;background-origin:content-box`;
+      b.replaceWith(x);
+    });
+    d.body.replaceWith(body);
+    await Promise.race([new Promise(ok => setTimeout(ok, 8000)),
+      Promise.all([d.fonts ? d.fonts.ready : null, ...[...d.images].map(i => i.complete ? null : new Promise(ok => { i.onload = i.onerror = ok; }))])]);
+    const win = fr.contentWindow;
+    // html2canvas lavora sul documento della pagina che lo carica: va caricato nell'iframe
+    await new Promise((ok, ko) => { const e = d.createElement('script'); e.src = PDF_LIBS[0]; e.onload = ok; e.onerror = () => ko(new Error(PDF_LIBS[0])); d.head.appendChild(e); });
+    // i disegni SVG si copiano come immagini a sé: colori e testi che vengono dal foglio di stile (var(--deck), classi) vanno scritti sugli elementi
+    const SVG_P = ['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','text-anchor','dominant-baseline','visibility','display'];
+    body.querySelectorAll('svg *').forEach(e => { const cs = win.getComputedStyle(e); e.setAttribute('style', SVG_P.map(k => `${k}:${cs.getPropertyValue(k)}`).join(';')); });
+    fr.style.height = body.scrollHeight + 'px';
+    const top0 = body.getBoundingClientRect().top, Y = r => r - top0;
+    const end = Math.ceil(body.scrollHeight);
+    // pezzi da non tagliare e salti pagina obbligati (break-before:page)
+    const blocks = [], forced = [];
+    for(const e of body.querySelectorAll('*')){
+      const r = e.getBoundingClientRect(); if(!r.height) continue;
+      const cs = win.getComputedStyle(e), t = Y(r.top), b = Y(r.bottom);
+      if(cs.breakBefore==='page') forced.push(t);
+      if(cs.breakInside==='avoid' || e.matches('tr,li,p,h2,h3,figure,svg,img,canvas,.printhead,.tile,.legend,#sum > div')) blocks.push([t, b]);
+      if(e.matches('tr.grp') && e.nextElementSibling) blocks.push([t, Y(e.nextElementSibling.getBoundingClientRect().bottom)]);
+    }
+    const cuts = [...new Set(blocks.flat().map(Math.round))].sort((a,b) => a-b);
+    const free = y => !blocks.some(([t,b]) => b - t < H && t < y - 1 && b > y + 1);
+    const pages = [];
+    for(let s = 0; s < end - 2;){
+      let e = s + H;
+      const f = forced.filter(y => y > s + 20 && y <= e).sort((a,b) => a-b)[0];
+      if(f) e = f;
+      else if(e >= end) e = end;
+      else{ const c = cuts.filter(y => y > s + H*0.3 && y <= e && free(y)).pop(); if(c) e = c; }
+      pages.push([s, e]); s = e;
+    }
+    const scale = 2;
+    // nella copia che si fa html2canvas Chrome può perdere il legame degli id con le regole #id: si riscrivono
+    const onclone = c => c.querySelectorAll('[id]').forEach(e => { const id = e.id; e.removeAttribute('id'); e.setAttribute('id', id); });
+    const shot = await win.html2canvas(body, {scale, onclone, backgroundColor:'#ffffff', useCORS:true, logging:false, width:W, windowWidth:W, height:end, windowHeight:end});
+    const pdf = new window.jspdf.jsPDF({unit:'mm', format:'a4', compress:true});
+    const pc = document.createElement('canvas'), ctx = pc.getContext('2d');
+    pages.forEach(([s, e], i) => {
+      if(i) pdf.addPage();
+      pc.width = shot.width; pc.height = Math.max(1, Math.round((e - s)*scale));
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, pc.width, pc.height);
+      ctx.drawImage(shot, 0, Math.round(s*scale), pc.width, pc.height, 0, 0, pc.width, pc.height);
+      pdf.addImage(pc.toDataURL('image/jpeg', 0.92), 'JPEG', PDF_MM.side, PDF_MM.top, PDF_MM.w - 2*PDF_MM.side, (e - s)/PDF_PX);
+      pdf.setFontSize(8); pdf.setTextColor(86, 103, 116);
+      pdf.text(inLang(cfg.lingua, () => tr(`Pagina ${i+1} di ${pages.length}`)), PDF_MM.w - PDF_MM.side, PDF_MM.h - PDF_MM.bottom/2, {align:'right'});
+    });
+    pdf.setProperties({title: inLang(cfg.lingua, () => printName(part))});
+    return pdf.output('blob');
+  }finally{ fr.remove(); }
+}
+
+/* --- invio per e-mail ---
+   Allegati scelti fra i documenti in uscita dei riquadri (disegni, vista 3D, offerta, archivio documenti); il messaggio
+   è un file .eml (bozza con X-Unsent: Outlook la apre pronta da inviare) oppure va a un'app di posta con «Condividi». */
+const MKEY = 'stagedeck.mail', MAIL_TEXT = "Buongiorno\ngrazie per averci contattato.\nInvio in allegato l'offerta richiesta.\nLe spese di trasporto verranno calcolate in caso di conferma d'ordine\nResto a disposizione per ulteriori chiarimenti.";
+const MAIL_ITEMS = [
+  {k:'disegni', grp:'Vista schematica', label:'Disegni (PDF)', def:true},
+  {k:'png', grp:'Vista 3D', label:'Immagine (PNG)'},
+  {k:'png4', grp:'Vista 3D', label:'4 viste (PNG)'},
+  {k:'html', grp:'Vista 3D', label:'3D interattivo (.html)'},
+  {k:'offerta', grp:'Offerta', label:'Offerta (PDF)', def:true}];
+const mailState = () => { try{ const m = JSON.parse(localStorage.getItem(MKEY) || 'null'); return m && typeof m==='object' ? m : {}; }catch(e){ return {}; } };
+const mailStore = m => { try{ localStorage.setItem(MKEY, JSON.stringify(m)); }catch(e){} };
+const mailOn = k => { const s = mailState().sel || {}; return k in s ? !!s[k] : !!(MAIL_ITEMS.find(x => x.k===k) || {}).def; };
+const mailDefText = () => inLang(cfg.lingua, () => tr(MAIL_TEXT));
+const mailText = () => { const t = (mailState().testo || {})[cfg.lingua]; return typeof t==='string' ? t : mailDefText(); };
+const mailAuto = {to:null, subj:null, lang:null};
+function mailMsg(t, err){ const m = $('#mailMsg'); m.textContent = t; m.classList.toggle('err', !!err); clearTimeout(mailMsg.t); if(!err) mailMsg.t = setTimeout(() => m.textContent = '', 5000); }
+// lista degli allegati, destinatario dall'anagrafica e oggetto (finché non li si cambia a mano), testo nella lingua di stampa
+function renderMail(){
+  const docs = cfg.docs.map((d,i) => ({d, i})).filter(x => x.d.f);
+  const box = (k, label, on, extra = '') => `<label><input type="checkbox" data-mail="${k}"${on ? ' checked' : ''}> <span>${label}${extra}</span></label>`;
+  const grps = [...new Set(MAIL_ITEMS.map(x => x.grp))].map(g => `<fieldset class="mailgrp"><legend>${esc(g)}</legend>${MAIL_ITEMS.filter(x => x.grp===g).map(x => box(x.k, esc(x.label), mailOn(x.k))).join('')}</fieldset>`);
+  grps.push(`<fieldset class="mailgrp"><legend>Archivio documenti</legend>${docs.length ? docs.map(({d,i}) => box('doc'+i, `<span data-noi18n>${esc(d.t.trim() || d.f.name)}</span>`, d.m, ` <small data-noi18n>${esc(d.f.name)} · ${docSize(d.f.size)}</small>`)).join('') : '<span class="hint">Nessun documento caricato</span>'}</fieldset>`);
+  $('#mailList').innerHTML = grps.join('');
+  const to = cfg.cli && cfg.cli.email ? String(cfg.cli.email).trim() : '';
+  const subj = inLang(cfg.lingua, () => [cfg.numero ? tr('Offerta n.')+' '+cfg.numero : tr('Offerta'), cfg.progetto].filter(Boolean).join(' – '));
+  const ti = $('#mailTo'), si = $('#mailSubj'), bi = $('#mailBody');
+  if(mailAuto.to===null || ti.value===mailAuto.to) ti.value = to;
+  if(mailAuto.subj===null || si.value===mailAuto.subj) si.value = subj;
+  mailAuto.to = to; mailAuto.subj = subj;
+  if(mailAuto.lang!==cfg.lingua){ bi.value = mailText(); mailAuto.lang = cfg.lingua; }
+}
+const fileSafe = s => String(s).replace(/[\\/:*?"<>|\r\n]+/g, '-').trim() || 'file';
+// documenti spuntati come file: [{name, blob}]
+async function mailFiles(){
+  const sel = $$('#mailList [data-mail]').filter(c => c.checked).map(c => c.dataset.mail), out = [];
+  if(!sel.length) throw new Error('Spunta almeno un documento da allegare, oppure usa «Copia testo».');
+  const need3d = sel.some(k => /^png|^html$/.test(k));
+  if((sel.includes('offerta') || sel.includes('disegni') || need3d) && (!res || !res.plan)) throw new Error('Niente da stampare');
+  if(need3d && !v3.view){ await show3d(); if(!v3.view) throw new Error('Vista 3D non disponibile su questo dispositivo'); }
+  for(const k of sel){
+    const it = MAIL_ITEMS.find(x => x.k===k);
+    if(it) mailMsg(tr(`Preparo: ${tr(it.label)}…`));
+    if(k==='offerta' || k==='disegni') out.push({name: inLang(cfg.lingua, () => fileSafe(printName(k))) + '.pdf', blob: await pdfBlob(k)});
+    else if(k==='png4') out.push({name:`viste_${ref3d()}.png`, blob: await inLang(cfg.lingua, png3d4)});
+    else if(k==='html') out.push({name:`palco3d_${ref3d()}.html`, blob: await inLang(cfg.lingua, html3d)});
+    else if(k==='png'){
+      // con il riquadro chiuso la tela non ha misure: lo si apre il tempo della foto
+      const pnl = $('#v3Panel'), shut = pnl.classList.contains('shut');
+      if(shut) pnl.classList.remove('shut');
+      try{ v3.view.resize(); draw3dNow(); out.push({name:`vista3d_${ref3d()}.png`, blob: await v3.view.png()}); }
+      finally{ if(shut){ pnl.classList.add('shut'); v3.view.resize(); } }
+    }
+    else if(k.startsWith('doc')){
+      const d = cfg.docs[+k.slice(3)], b = await docBlob(+k.slice(3));
+      if(!b) throw new Error(`File non disponibile in questo browser: ${d.f.name}`);
+      out.push({name: fileSafe(d.f.name), blob: new Blob([b], {type: d.f.type || b.type || 'application/octet-stream'})});
+    }
+  }
+  if(out.some(f => !f.blob)) throw new Error('Preparazione degli allegati non riuscita');
+  // nomi doppi: (2), (3), ...
+  const seen = {};
+  for(const f of out){ const n = f.name.toLowerCase(); if(seen[n]){ seen[n]++; f.name = f.name.replace(/(\.[^.]*)?$/, m => ` (${seen[n]})${m}`); } else seen[n] = 1; }
+  return out;
+}
+const b64 = async blob => {
+  const u = new Uint8Array(await blob.arrayBuffer()); let bin = '';
+  for(let i=0;i<u.length;i+=0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i+0x8000));
+  return btoa(bin).replace(/.{76}(?=.)/g, '$&\r\n');
+};
+// intestazioni con lettere accentate: parole codificate UTF-8 (RFC 2047), a pezzi corti
+const mimeWord = s => /^[\x20-\x7e]*$/.test(s) ? s : [...s].reduce((a, c, i) => { if(i % 12===0) a.push(''); a[a.length-1] += c; return a; }, [])
+  .map(p => '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(p))) + '?=').join('\r\n ');
+async function emlBlob(to, subj, text, files){
+  const B = 'stagedeck_' + Date.now().toString(36), parts = [];
+  const head = [`To: ${to}`, `Subject: ${mimeWord(subj)}`, 'X-Unsent: 1', 'MIME-Version: 1.0', `Content-Type: multipart/mixed; boundary="${B}"`, '', 'This is a multi-part message in MIME format.'];
+  parts.push(head.join('\r\n'));
+  parts.push(`\r\n--${B}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([text.replace(/\r?\n/g, '\r\n')]))}`);
+  for(const f of files){
+    const n = mimeWord(f.name).replace(/"/g, '');
+    parts.push(`\r\n--${B}\r\nContent-Type: ${f.blob.type || 'application/octet-stream'}; name="${n}"\r\nContent-Disposition: attachment; filename="${n}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(f.blob)}`);
+  }
+  parts.push(`\r\n--${B}--\r\n`);
+  return new Blob(parts, {type:'message/rfc822'});
+}
+// un passo alla volta, con un solo invio in corso
+async function mailRun(fn){
+  if(mailRun.busy) return; mailRun.busy = true;
+  const btns = $$('#mailPanel .archrow .btn'); btns.forEach(b => b.disabled = true);
+  try{ await fn(); }
+  catch(e){ if(e && e.name==='AbortError') mailMsg(''); else{ console.error(e); mailMsg(tr(e && e.message && !/^https?:/.test(e.message) ? e.message : 'Preparazione degli allegati non riuscita: serve la connessione a internet per creare i PDF.'), true); } }
+  finally{ mailRun.busy = false; btns.forEach(b => b.disabled = false); }
+}
+const mailEml = () => mailRun(async () => {
+  const files = await mailFiles(), subj = $('#mailSubj').value.trim();
+  mailMsg('Creo il messaggio…');
+  const blob = await emlBlob($('#mailTo').value.trim(), subj, $('#mailBody').value, files);
+  // nome del file senza accenti e trattini lunghi: con questi alcuni browser lo scaricano come «download»
+  await saveBlob(blob, fileSafe(subj || tr('Offerta')).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e]+/g, '-') + '.eml', 'Email');
+  mailMsg(tr(`Email pronta con ${files.length} allegati: apri il file .eml scaricato`));
+});
+const mailShare = () => mailRun(async () => {
+  const files = (await mailFiles()).map(f => new File([f.blob], f.name, {type: f.blob.type}));
+  if(!navigator.canShare({files})) throw new Error('Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».');
+  await navigator.share({files, title: $('#mailSubj').value, text: $('#mailBody').value});
+  mailMsg('');
+});
+const mailDl = () => mailRun(async () => {
+  const files = await mailFiles();
+  for(const f of files) await saveBlob(f.blob, f.name, f.name);
+  mailMsg(tr(`Scaricati ${files.length} allegati`));
+});
 /* offerta in Excel per il cliente: intestazione, righe con prezzi di vendita, totali e note (nella lingua di stampa) */
 function offerXlsx(){
   return inLang(cfg.lingua, () => {
@@ -4443,6 +4717,7 @@ function bind(){
   $$('#outLang button').forEach(b => b.addEventListener('click', () => {
     cfg.lingua = b.dataset.lang; save();
     $$('#outLang button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.lang===cfg.lingua)));
+    renderMail();
   }));
   const setBg = on => {
     if(on) document.documentElement.dataset.bg = 'grigio'; else delete document.documentElement.dataset.bg;
@@ -4487,6 +4762,23 @@ function bind(){
     list.addEventListener('dragleave', e => { const z = zone(e); if(z && !z.contains(e.relatedTarget)) z.classList.remove('over'); });
     list.addEventListener('drop', e => { const z = zone(e); if(!z) return; e.preventDefault(); z.classList.remove('over'); if(e.dataTransfer.files.length) docAdd(+z.dataset.drop, e.dataTransfer.files); });
   }
+  // invio per e-mail: spunte e testo restano salvati nel browser (il testo per lingua di stampa), le spunte dei documenti con l'offerta
+  $('#mailList').addEventListener('change', e => {
+    const c = e.target.closest('[data-mail]'); if(!c) return;
+    const k = c.dataset.mail;
+    if(k.startsWith('doc')){ const d = cfg.docs[+k.slice(3)]; if(c.checked) d.m = true; else delete d.m; save(); return; }
+    const m = mailState(); m.sel = {...(m.sel || {}), [k]: c.checked}; mailStore(m);
+  });
+  $('#mailBody').addEventListener('input', e => { const m = mailState(); m.testo = {...(m.testo || {}), [cfg.lingua]: e.target.value}; mailStore(m); });
+  $('#mailReset').addEventListener('click', () => {
+    const m = mailState(); if(m.testo) delete m.testo[cfg.lingua]; mailStore(m);
+    $('#mailBody').value = mailDefText();
+  });
+  $('#mailEml').addEventListener('click', mailEml);
+  $('#mailDl').addEventListener('click', mailDl);
+  $('#mailCopy').addEventListener('click', () => copy($('#mailBody').value).then(() => mailMsg('Copiato')));
+  try{ $('#mailShare').hidden = !(navigator.canShare && navigator.canShare({files:[new File(['x'], 'x.pdf', {type:'application/pdf'})]})); }catch(e){}
+  $('#mailShare').addEventListener('click', mailShare);
   $('#shipPanel').addEventListener('click', e => {
     if(!e.target.closest('#trOpen')) return;
     trFill(); $('#trDlg').showModal();
