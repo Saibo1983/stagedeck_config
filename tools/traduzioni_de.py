@@ -816,6 +816,35 @@ DE = {
     "File prezzi non valido": "Ungültige Preisdatei",
     "Prezzi di acquisto presenti per {} articoli su {}.": "Einkaufspreise vorhanden für {0} von {1} Artikeln.",
     "Prezzi non caricati. Carica il file prezzi.json generato dallo script (resta sul tuo dispositivo, non va su GitHub).": "Preise nicht geladen. Die vom Skript erzeugte Datei prezzi.json laden (bleibt auf deinem Gerät, kommt nicht auf GitHub).",
+    # --- invio per e-mail ---
+    "Invio per e-mail": "Versand per E-Mail",
+    "Spunta i documenti da allegare: si preparano nella lingua di stampa, come i file dei riquadri. «Crea email» scarica un messaggio (.eml) con destinatario, testo e allegati: aprilo con un doppio clic e Outlook, Thunderbird o Mail lo mostrano pronto da inviare.":
+        "Die anzuhängenden Dokumente ankreuzen: Sie werden in der Drucksprache erstellt, wie die Dateien der Bereiche. «E-Mail erstellen» lädt eine Nachricht (.eml) mit Empfänger, Text und Anhängen herunter: Mit Doppelklick öffnen, Outlook, Thunderbird oder Mail zeigen sie versandbereit an.",
+    "Allegati": "Anhänge",
+    "Destinatario": "Empfänger",
+    "e-Mail del cliente in anagrafica": "E-Mail des Kunden aus den Stammdaten",
+    "Oggetto": "Betreff",
+    "Testo predefinito": "Standardtext",
+    "Rimette il testo iniziale della mail nella lingua di stampa": "Setzt den ursprünglichen E-Mail-Text in der Drucksprache wieder ein",
+    "Condividi": "Teilen",
+    "Passa testo e allegati a un'app di posta del dispositivo (il destinatario si scrive nell'app)": "Übergibt Text und Anhänge an eine Mail-App des Geräts (den Empfänger in der App eingeben)",
+    "Scarica allegati": "Anhänge herunterladen",
+    "Scarica i documenti spuntati, per allegarli a mano (per esempio in una posta web)": "Lädt die angekreuzten Dokumente herunter, um sie von Hand anzuhängen (zum Beispiel bei Webmail)",
+    "Disegni (PDF)": "Zeichnungen (PDF)",
+    "Offerta (PDF)": "Angebot (PDF)",
+    "Nessun documento caricato": "Kein Dokument hochgeladen",
+    "Buongiorno\ngrazie per averci contattato.\nInvio in allegato l'offerta richiesta.\nLe spese di trasporto verranno calcolate in caso di conferma d'ordine\nResto a disposizione per ulteriori chiarimenti.":
+        "Guten Tag\nvielen Dank für Ihre Anfrage.\nIm Anhang sende ich Ihnen das gewünschte Angebot.\nDie Transportkosten werden im Falle einer Auftragsbestätigung berechnet\nFür weitere Fragen stehe ich gerne zur Verfügung.",
+    "Preparo: {}…": "Erstelle: {0}…",
+    "Pagina {} di {}": "Seite {0} von {1}",
+    "Spunta almeno un documento da allegare, oppure usa «Copia testo».": "Mindestens ein Dokument zum Anhängen ankreuzen oder «Text kopieren» verwenden.",
+    "File non disponibile in questo browser: {}": "Datei in diesem Browser nicht verfügbar: {0}",
+    "Preparazione degli allegati non riuscita": "Erstellen der Anhänge fehlgeschlagen",
+    "Preparazione degli allegati non riuscita: serve la connessione a internet per creare i PDF.": "Erstellen der Anhänge fehlgeschlagen: Für die PDFs ist eine Internetverbindung nötig.",
+    "Creo il messaggio…": "Erstelle die Nachricht…",
+    "Email pronta con {} allegati: apri il file .eml scaricato": "E-Mail mit {0} Anhängen bereit: die heruntergeladene .eml-Datei öffnen",
+    "Scaricati {} allegati": "{0} Anhänge heruntergeladen",
+    "Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».": "Dieses Gerät kann einige der gewählten Dateien nicht teilen: «E-Mail erstellen» verwenden.",
 }
 
 
