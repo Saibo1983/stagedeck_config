@@ -132,6 +132,12 @@ label.tgl::before{content:none}
 .btn.small{padding:3px 9px;min-height:28px;font-size:13px}
 .planbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 8px}
 .planbar .hint{margin:0;font-size:12.5px;color:var(--muted)}
+.posbar{display:grid;grid-template-columns:auto minmax(80px,1fr) auto auto;gap:6px 10px;align-items:center;margin:0 0 10px;font-size:13px}
+.posbar>span{font-weight:600}
+.posbar input[type=range]{width:100%;margin:0;accent-color:var(--stair)}
+.posbar input[data-pos="ramp"]{accent-color:var(--ramp)}
+.posbar output{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);white-space:nowrap}
+@media (max-width:520px){ .posbar{grid-template-columns:minmax(0,1fr) auto} .posbar input[type=range]{grid-column:1/-1;order:1} }
 .list{display:flex;flex-direction:column;gap:6px}
 .item-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .item-row.x3{grid-template-columns:minmax(0,1fr) 72px auto}
@@ -328,7 +334,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
   :root[lang="de"]{--pg-a:"Seite ";--pg-b:" von "}
   .ph-cli{margin-top:6px;font-size:12px;line-height:1.4}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .top,.config,.actions,.bar,.planbar,.shipside,.wresize,.tabs,footer,.toprow,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
+  .top,.config,.actions,.bar,.planbar,.posbar,.shipside,.wresize,.tabs,footer,.toprow,#notes,#stairPick,#stairInfo,#stairParts,.qed button{display:none!important}
   body:not([data-cost="1"]) .c-cost{display:none!important}
   .pdfopt{display:none!important}
   .grid2{display:block}
@@ -580,6 +586,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <button type="button" class="tgl" id="deckMix" aria-pressed="false">Ottimizza pedane</button>
         <span class="hint" id="deckMixHint"></span>
       </div>
+      <div class="posbar" id="posBar" role="group" aria-label="Posizione di scale e rampe lungo il lato" hidden></div>
       <div id="planBox"></div>
       <p class="tribnotice" hidden></p>
       <div class="legend">
@@ -944,6 +951,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Lato della rampa {}":"Seite der Rampe {0}",
 "Rimuovi rampa {}":"Rampe {0} entfernen",
 "Rampa {} · lato {}":"Rampe {0} · Seite {1}",
+"Rampa {} · {}":"Rampe {0} · {1}",
+"Posizione di scale e rampe lungo il lato":"Position von Treppen und Rampen entlang der Seite",
+"Posizione: {}":"Position: {0}",
+"{} m da sinistra":"{0} m von links",
+"{} m dal retro":"{0} m von hinten",
+"Torna alla posizione automatica, nel primo spazio libero dall'inizio del lato":"Zurück zur automatischen Position, im ersten freien Platz vom Anfang der Seite",
+"Lato {}: scale e rampe si sovrappongono.":"Seite {0}: Treppen und Rampen überlappen sich.",
 "Rampa {} cm":"Rampe {0} cm",
 "Rampa {} cm montata al palco":"Rampe {0} cm an der Bühne montiert",
 "Immagine indicativa del kit rampa per questa altezza":"Beispielbild des Rampen-Sets für diese Höhe",
@@ -2184,6 +2198,37 @@ function compute(cfg, R, look, kits){
   (cfg.ramps||[]).forEach(s => { if(s.side in rampsOn) rampsOn[s.side]++; });
   const taken = s => stairsOn[s]*opening + rampsOn[s]*rampOpening;
   for(const s of Object.keys(sideLen)) if(taken(s) > sideLen[s]+1e-9) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe occupano ${nf(taken(s))} m, il lato è lungo ${nf(sideLen[s])} m.`);
+  // posizione di scale e rampe lungo il lato, a (m) dall'inizio del lato (sinistra per retro e fronte, retro per i lati):
+  // prima quelle spostate col cursore della vista schematica (pos), poi le altre nel primo spazio libero, a passi di 1 m
+  const places = [...cfg.stairs.map((x,i) => ({kind:'stair', i, side:x.side, L:opening, pos:x.pos})),
+    ...(cfg.ramps||[]).map((x,i) => ({kind:'ramp', i, side:x.side, L:rampOpening, pos:x.pos}))].filter(q => q.side in sideLen);
+  const hits = (q, a, o) => o!==q && o.a!=null && o.side===q.side && a < o.a+o.L-1e-9 && a+q.L > o.a+1e-9;
+  if(round){   // palco rotondo: scale centrate sul lato (il bordo tocca il quadrato solo al centro)
+    for(const s of Object.keys(sideLen)) places.filter(q => q.side===s).forEach((q,k,all) => { q.a = (sideLen[s] - all.length*opening)/2 + k*opening; });
+  } else {
+    for(const q of places) if(q.pos!=null && isFinite(+q.pos)) q.a = Math.max(0, Math.min(sideLen[q.side]-q.L, Math.round(+q.pos)));
+    for(const s of Object.keys(sideLen)){
+      const on = places.filter(q => q.side===s && q.a!=null);
+      if(on.some((q,k) => on.slice(k+1).some(o => hits(q, q.a, o)))) warn('warn',`Lato ${SIDE_LABEL[s]}: scale e rampe si sovrappongono.`);
+    }
+    for(const q of places){
+      if(q.a!=null) continue;
+      let a = 0;
+      while(a+q.L <= sideLen[q.side]+1e-9 && places.some(o => hits(q, a, o))) a += 1;
+      if(a+q.L > sideLen[q.side]+1e-9) a = places.filter(o => o!==q && o.a!=null && o.side===q.side).reduce((m,o) => Math.max(m, o.a+o.L), 0);
+      q.a = a;
+    }
+  }
+  // tratti liberi del lato [a,b] dentro [from,to], fuori da scale e rampe
+  const freeSpans = (s, from = 0, to = sideLen[s]) => {
+    const out = []; let a = from;
+    for(const q of places.filter(q => q.side===s).sort((x,y) => x.a-y.a)){
+      if(q.a > a+1e-9) out.push([a, Math.min(q.a, to)]);
+      a = Math.max(a, q.a+q.L);
+    }
+    if(to > a+1e-9) out.push([a, to]);
+    return out.filter(([x,y]) => y-x > 1e-9);
+  };
 
   // --- parapetti
   // parapetto di sicurezza VHX (1 kN/m): elementi da 2 m e 1 m, non esiste da 0,5 m; senza battipiede.
@@ -2196,23 +2241,27 @@ function compute(cfg, R, look, kits){
   const runs = []; let rails = 0, railLinks = 0;
   for(const s of ['back','front','left','right']){
     if(!cfg.rails[s] || round) continue;
-    const start = Math.min(sideLen[s], taken(s));
-    const L = sideLen[s] - start;
-    if(L<=1e-9){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
-    const pc = railPieces(L);
-    if(safe && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto di sicurezza non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
-    if(spiderRails && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
-    const n = pc.n2+pc.n1+pc.n05;
-    runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
-    rails += n; railLinks += n-1;
-    if(pc.cover > L+1e-9) warn('info',`Lato ${SIDE_LABEL[s]}: servono ${nf(L)} m di parapetto, gli elementi coprono ${nf(pc.cover)} m (${nf(pc.cover-L)} m in più).`);
+    const spans = freeSpans(s);
+    if(!spans.length){ warn('warn',`Lato ${SIDE_LABEL[s]}: tutto occupato da scale e rampe, nessun parapetto.`); continue; }
+    for(const [start, end] of spans){
+      const L = end - start;
+      const pc = railPieces(L);
+      if(safe && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto di sicurezza non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
+      if(spiderRails && pc.n05){ pc.n05 = 0; pc.cover -= 0.5; warn('warn',`Lato ${SIDE_LABEL[s]}: il parapetto Spider non esiste da 0,5 m, resta un tratto di 0,5 m da chiudere a parte.`); }
+      const n = pc.n2+pc.n1+pc.n05;
+      runs.push({side:s, start, L, n2:pc.n2, n1:pc.n1, n05:pc.n05, cover:pc.cover, pieces:railOrder(pc, start, halfEdges(s))});
+      rails += n; railLinks += n-1;
+      if(pc.cover > L+1e-9) warn('info',`Lato ${SIDE_LABEL[s]}: servono ${nf(L)} m di parapetto, gli elementi coprono ${nf(pc.cover)} m (${nf(pc.cover-L)} m in più).`);
+    }
   }
   const tn2 = runs.reduce((s,r) => s+r.n2,0), tn1 = runs.reduce((s,r) => s+r.n1,0), tn05 = runs.reduce((s,r) => s+r.n05,0);
   if(tn2) out.lines.push({group:'Parapetti', code:c2, qty:tn2});
   if(tn1) out.lines.push({group:'Parapetti', code:c1, qty:tn1});
   if(tn05) out.lines.push({group:'Parapetti', code:c05, qty:tn05});
   M.rail = rails; M.rail_link = railLinks;
-  M.rail_corner = round ? 0 : [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => cfg.rails[a] && cfg.rails[b]).length;
+  // angoli: dove i parapetti dei due lati arrivano tutti e due all'angolo (una scala sull'angolo lo lascia aperto)
+  const railAt = (s, u) => runs.some(r => r.side===s && u >= r.start-1e-9 && u <= r.start+r.L+1e-9);
+  M.rail_corner = round ? 0 : [['back','left'],['back','right'],['front','left'],['front','right']].filter(([a,b]) => railAt(a, b==='left' ? 0 : W) && railAt(b, a==='back' ? 0 : D)).length;
   if(round && Object.values(cfg.rails).some(Boolean)) warn('warn','Palco rotondo: non ci sono parapetti curvi, i parapetti non sono in offerta.');
   // bordi anticaduta per le sedie (SKBP) sui lati senza parapetto, fuori da scale e rampe: un profilo per lato di pedana
   const stops = [];
@@ -2223,17 +2272,18 @@ function compute(cfg, R, look, kits){
       if(safe && Object.values(cfg.rails).some(Boolean)) warn('warn','Il parapetto di sicurezza VHX non ha parapiede: sui lati con parapetto le sedie non hanno il bordo anticaduta.');
       for(const sd of ['back','front','left','right']){
         if(cfg.rails[sd]) continue;
-        const horiz = sd==='back' || sd==='front', t0 = taken(sd);
+        const horiz = sd==='back' || sd==='front';
         for(const d of decks){
           const on = sd==='back' ? d.y===0 : sd==='front' ? d.y+d.h===Dc : sd==='left' ? d.x===0 : d.x+d.w===Wc;
           if(!on) continue;
           // davanti a scale e rampe niente bordo: della pedana resta il tratto libero, coperto con i profili da 2, 1 e 0,5 m
-          const e = (horiz ? d.x+d.w : d.y+d.h)/2;
-          let a = Math.max((horiz ? d.x : d.y)/2, t0);
-          while(e - a >= 0.5 - 1e-9){
-            const L = [2, 1, 0.5].find(x => x <= e - a + 1e-9);
-            out.lines.push({group:'Parapetti', code:CHAIR_STOP[L], qty:1});
-            stops.push({side:sd, a, L}); a += L;
+          for(const [a0, e] of freeSpans(sd, (horiz ? d.x : d.y)/2, (horiz ? d.x+d.w : d.y+d.h)/2)){
+            let a = a0;
+            while(e - a >= 0.5 - 1e-9){
+              const L = [2, 1, 0.5].find(x => x <= e - a + 1e-9);
+              out.lines.push({group:'Parapetti', code:CHAIR_STOP[L], qty:1});
+              stops.push({side:sd, a, L}); a += L;
+            }
           }
         }
       }
@@ -2322,7 +2372,8 @@ function compute(cfg, R, look, kits){
   out.plan = {W, D, decks, legs:support==='legs', legRound:!!(leg && leg.round), conn2:onLegs && trigUsed.has('junction2|legsHigh'), conn4:onLegs && trigUsed.has('junction34|legsHigh'), vertices:[...vmap.keys()].map(k => k.split(',').map(Number)), runs, c2, c1, c05,
     vd2d: lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
     round: round ? {D:Dm, pieces:rp} : null,
-    skirt:skSides, skirtH, stops, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0}, opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
+    skirt:skSides, skirtH, stops, stairs:stairsOn, ramps:kit ? rampsOn : {back:0,front:0,left:0,right:0},
+    places:places.filter(q => q.kind==='stair' || kit).map(({kind, i, side, a, L}) => ({kind, i, side, a, L, max:Math.max(0, sideLen[side]-L)})), opening, rampOpening, rampLen, rampDecks, rampFeet, stairOk:!!stair,
     stair: stair ? {...stair, ...stairGeom(stair, H, look), H, list:cfg.stairs.map((s,i) => ({side:s.side, rails:sr[i]}))} : null};
   out.info.metrics = M;
   out.info.famLabel = fam.label;
@@ -2730,7 +2781,9 @@ function normCfg(src){
   c.adj = (c.adj && typeof c.adj==='object') ? c.adj : {};
   c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
   if(!c.mk37){ c.markup = 37; c.mk37 = true; }   // una volta: maggiorazione fissa 37%
-  c.stairs = (c.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2}));
+  const posOf = x => x.pos!=null && isFinite(+x.pos) ? {pos:+x.pos} : {};   // posizione scelta col cursore (m), sennò automatica
+  c.stairs = (c.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2, ...posOf(x)}));
+  c.ramps = (c.ramps||[]).map(x => ({side:x.side||'back', ...posOf(x)}));
   return c;
 }
 function load(){
@@ -3120,18 +3173,16 @@ function planSVG(p, H){
     const l = st.side==='back' ? [a,o,b,o] : st.side==='front' ? [a,D-o,b,D-o] : st.side==='left' ? [o,a,o,b] : [W-o,a,W-o,b];
     s += seg(l[0],l[1],l[2],l[3],'var(--ink)',2.5);
   }
-  // scale e rampe: prima le scale, poi le rampe, a partire dall'inizio del lato
+  // scale e rampe, alla loro posizione lungo il lato (p.places: a in m dall'inizio del lato)
   const slot = (side, off, len, depth) => {
-    // palco rotondo: scale centrate sul lato (il bordo tocca il quadrato solo al centro)
-    if(p.round) off += ((side==='back'||side==='front' ? p.W : p.D) - p.stairs[side]*p.opening)/2;
     const o = off*100, l = len*100;
     return side==='back' ? {x:o,y:-depth,w:l,h:depth} : side==='front' ? {x:o,y:D,w:l,h:depth}
          : side==='left' ? {x:-depth,y:o,w:depth,h:l} : {x:W,y:o,w:depth,h:l};
   };
-  for(const side of Object.keys(p.stairs)){
-    const horiz = side==='back' || side==='front';
-    for(let i=0;i<p.stairs[side];i++){
-      const {x,y,w,h} = slot(side, i*p.opening, p.opening, sd);
+  for(const q of (p.places||[])){
+    const side = q.side, horiz = side==='back' || side==='front';
+    if(q.kind==='stair'){
+      const {x,y,w,h} = slot(side, q.a, q.L, sd);
       const col = p.stairOk ? 'var(--stair)' : 'var(--bad)';
       s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}" fill-opacity=".08" stroke="${col}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
       // pedate: una per gradino, alla distanza dal bordo del palco che hanno nella vista laterale (1 = la più bassa)
@@ -3143,8 +3194,8 @@ function planSVG(p, H){
         if((b-a)/px >= 11) s += `<text x="${r.x+r.w/2}" y="${r.y+r.h/2+fs*.3}" font-size="${fs*.85}" text-anchor="middle">${tr.k}</text>`;
       }
     }
-    for(let j=0;j<p.ramps[side];j++){
-      const {x,y,w,h} = slot(side, p.stairs[side]*p.opening + j*p.rampOpening, p.rampOpening, p.rampLen*100);
+    else{
+      const {x,y,w,h} = slot(side, q.a, q.L, p.rampLen*100);
       s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--ramp)" fill-opacity=".16" stroke="var(--ramp)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
       s += horiz ? seg(x+w/2,y+(side==='back'?h:0),x+w/2,y+(side==='back'?0:h),'var(--ramp)',1) : seg(x+(side==='left'?w:0),y+h/2,x+(side==='left'?0:w),y+h/2,'var(--ramp)',1);
       s += `<text x="${x+w/2}" y="${y+h/2+fs*.35}" font-size="${fs}" text-anchor="middle"${horiz ? '' : ` transform="rotate(-90 ${x+w/2} ${y+h/2})"`}>${nf(p.rampLen)} m</text>`;
@@ -3554,12 +3605,13 @@ function renderResult(){
     <div class="tile"><div class="k">Pedane in offerta</div><div class="v">${nDecks}${nRampDecks ? ` <small>+ ${nRampDecks} rampa</small>` : ''}</div></div>` : '';
   renderShip();
   $('#notes').innerHTML = [...cliWarnings(), ...res.warnings].map(w => `<div class="note ${w.level}">${esc(w.text)}</div>`).join('');
-  if(!res.plan){ $('#stairPanel').hidden = true; $('#planBox').innerHTML = ''; $('#planInfo').textContent = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
+  if(!res.plan){ $('#stairPanel').hidden = true; $('#posBar').hidden = true; $('#planBox').innerHTML = ''; $('#planInfo').textContent = ''; $('#offerTable').innerHTML = ''; $('#sum').innerHTML = ''; $('#techNotes').innerHTML = ''; return; }
   const p = res.plan;
   $('#legHint').textContent = p.trib ? 'Gambe per fila: ' + p.rows.map(r => `${r.i+1}ª ${r.h} cm ${r.leg ? r.leg.code : '—'}`).join(', ') + '.' : res.info.leg ? `Gamba: ${res.info.leg.code} (${res.info.leg.note}).` : (res.info.support==='roll' ? 'Rollrisers da 30 o 40 cm.' : res.info.support==='spider' ? 'Spider da 20, 40 o 60 cm.' : '');
   $('#planInfo').textContent = stageTitle(p, ' · ');
   { const [a, b] = $$('#offerInfo span'); a.textContent = stageTitle(p, ' · '); b.textContent = res.info.famLabel; }
   $('#planBox').innerHTML = p.trib ? tribPlanSVG(p) + tribSectionSVG(p) : planSVG(p, cfg.H);
+  renderPos(p);
   draw3d();
   $('#lgConn2').hidden = !p.conn2; $('#lgConn4').hidden = !p.conn4;
   renderStair(p);
@@ -3593,6 +3645,30 @@ function renderResult(){
     <div class="tot"><span>Totale</span><span class="num">${money(t.grand)} €</span></div>`;
 }
 function update(){ save(); renderResult(); cliHint(); }
+// cursori della vista schematica: posizione di ogni scala e rampa lungo il suo lato. Si ridisegnano solo quando cambiano
+// scale, rampe o lati (non mentre si trascina), altrimenti si aggiornano valore e scritta.
+let posKey = '';
+function renderPos(p){
+  const box = $('#posBar'), list = p.trib || p.round ? [] : (p.places||[]);
+  box.hidden = !list.length;
+  const from = side => side==='back' || side==='front' ? 'da sinistra' : 'dal retro';
+  const key = list.map(q => [q.kind, q.i, q.side, q.max].join(':')).join('|');
+  if(key!==posKey){
+    posKey = key;
+    box.innerHTML = list.map(q => {
+      const name = `${q.kind==='stair' ? 'Scala' : 'Rampa'} ${q.i+1} · ${SIDE_LABEL[q.side].toLowerCase()}`;
+      return `<span>${name}</span><input type="range" min="0" max="${q.max}" step="1" value="${q.a}" data-pos="${q.kind}" data-pi="${q.i}" aria-label="Posizione: ${name}" ${q.max>0 ? '' : 'disabled'}>`
+        + `<output>${nf(q.a)} m ${from(q.side)}</output><button type="button" class="btn small" data-posauto="${q.kind}" data-pi="${q.i}" title="Torna alla posizione automatica, nel primo spazio libero dall'inizio del lato">Automatica</button>`;
+    }).join('');
+  }
+  list.forEach((q,k) => {
+    const r = box.querySelectorAll('input[data-pos]')[k], o = box.querySelectorAll('output')[k], b = box.querySelectorAll('[data-posauto]')[k];
+    if(!r) return;
+    if(r!==document.activeElement && +r.value!==q.a) r.value = q.a;
+    o.textContent = `${nf(q.a)} m ${from(q.side)}`;
+    b.disabled = (q.kind==='stair' ? cfg.stairs : cfg.ramps)[q.i].pos==null;
+  });
+}
 
 /* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
 function printPart(part){
@@ -3964,9 +4040,9 @@ function bind(){
     if(t.id==='skHeight'){ cfg.skirt.height = t.value; update(); }
     if(t.id==='trolleyType'){ cfg.trolley.type = t.value; update(); }
     if(t.id==='trolleyQty'){ cfg.trolley.qty = t.value===''?'':Math.max(0,Math.round(+t.value)); update(); }
-    if(t.dataset.ramp!==undefined){ cfg.ramps[+t.dataset.ramp].side = t.value; update(); }
+    if(t.dataset.ramp!==undefined){ const r = cfg.ramps[+t.dataset.ramp]; r.side = t.value; delete r.pos; update(); }
     if(t.dataset.side){ cfg.rails[t.dataset.side] = t.checked; renderRailSeg(); update(); }
-    if(t.dataset.stair!==undefined){ cfg.stairs[+t.dataset.stair].side = t.value; update(); }
+    if(t.dataset.stair!==undefined){ const r = cfg.stairs[+t.dataset.stair]; r.side = t.value; delete r.pos; update(); }
     if(t.dataset.stairrails!==undefined){ cfg.stairs[+t.dataset.stairrails].rails = +t.value; update(); }
     if(t.id==='nStairs'){
       const n = Math.max(0, Math.min(12, Math.round(+t.value||0)));
@@ -3992,6 +4068,17 @@ function bind(){
   $('#mkSeg').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
     cfg.markup = +b.dataset.mk; $('#markup').value = cfg.markup; update();
+  });
+  $('#posBar').addEventListener('input', e => {
+    const t = e.target; if(!t.dataset.pos) return;
+    const it = (t.dataset.pos==='stair' ? cfg.stairs : cfg.ramps)[+t.dataset.pi];
+    // le altre dello stesso lato restano dove sono (sennò quelle automatiche salterebbero nello spazio lasciato libero)
+    for(const q of res.plan.places){ const o = (q.kind==='stair' ? cfg.stairs : cfg.ramps)[q.i]; if(o!==it && q.side===it.side && o.pos==null) o.pos = q.a; }
+    it.pos = +t.value; update();
+  });
+  $('#posBar').addEventListener('click', e => {
+    const b = e.target.closest('[data-posauto]'); if(!b) return;
+    delete (b.dataset.posauto==='stair' ? cfg.stairs : cfg.ramps)[+b.dataset.pi].pos; update();
   });
   $('#addRamp').addEventListener('click', () => { cfg.ramps.push({side:'back'}); renderRamps(); update(); });
   $('#rampList').addEventListener('click', e => {
