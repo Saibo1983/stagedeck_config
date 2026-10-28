@@ -388,7 +388,9 @@ function create(canvas){
     const sideStart = {back:[0,0], front:[0,Dmm], left:[0,0], right:[Wmm,0]};
     const stepBy = {}, sRail = [];
     const byside = {back:[],front:[],left:[],right:[]};
-    if(!plan.trib) (cfg.stairs||[]).forEach(s => { if(byside[s.side]) byside[s.side].push(s); });
+    if(!plan.trib) (cfg.stairs||[]).forEach((s,i) => { if(byside[s.side]) byside[s.side].push({...s, i}); });
+    // posizione lungo il lato (m dall'inizio, dal calcolo); se manca, una dopo l'altra dall'inizio del lato
+    const placeOf = (kind, i) => (plan.places||[]).find(q => q.kind===kind && q.i===i);
     const opening = (plan.opening||1)*1000;
     const st = plan.stair || {}, adjStair = st.kind==='adjustable' && st.len;
     const nMod = st.kind==='modular' ? st.steps : Math.max(1, Math.round(H/20) - 1);
@@ -399,7 +401,8 @@ function create(canvas){
       byside[side].forEach((stc,i) => {
         const o = OUT[side], horiz = side==='back'||side==='front';
         // centro della scala lungo il lato (palco rotondo: scale centrate, il bordo tocca il lato solo al centro)
-        const along = (i+0.5)*opening + (plan.round ? ((horiz ? Wmm : Dmm) - byside[side].length*opening)/2 : 0);
+        const pl = placeOf('stair', stc.i);
+        const along = pl ? (pl.a + pl.L/2)*1000 : (i+0.5)*opening + (plan.round ? ((horiz ? Wmm : Dmm) - byside[side].length*opening)/2 : 0);
         const base = sideStart[side];
         const cx = base[0] + (horiz ? along : 0), cz = base[1] + (horiz ? 0 : along);
         const sides = stc.rails===0 ? 0 : stc.rails===1 ? 1 : 2;
@@ -501,7 +504,8 @@ function create(canvas){
     // a terra (ER-SE) e sul palco (ER-EE), piedini tondi (20 e 40 cm) o gambe telescopiche tonde con traverso
     // sotto i giunti e in cima; pedane dalla più lunga (a terra) alla più corta (verso il palco)
     const top = ty + 90, rbySide = {back:0,front:0,left:0,right:0};
-    if(!plan.trib) (cfg.ramps||[]).forEach(r => { if(rbySide[r.side]!==undefined) rbySide[r.side]++; });
+    const rIdx = {back:[],front:[],left:[],right:[]};
+    if(!plan.trib) (cfg.ramps||[]).forEach((r,i) => { if(rbySide[r.side]!==undefined){ rbySide[r.side]++; rIdx[r.side].push(i); } });
     const decksR = (plan.rampDecks && plan.rampDecks.length ? plan.rampDecks : [plan.rampLen||2]).map(x => x*1000);
     const rl = decksR.reduce((a,b) => a+b, 0), g0 = 25;                 // g0: quota del piano sopra l'elemento di partenza
     const yAt = z => top - (top-g0)*z/rl;                                // z: distanza dal bordo del palco, verso fuori
@@ -509,7 +513,8 @@ function create(canvas){
     for(const side of Object.keys(rbySide)){
       for(let j=0;j<rbySide[side];j++){
         const o = OUT[side], horiz = side==='back'||side==='front';
-        const along = ((plan.stairs[side]||0)*opening + (j+0.5)*(plan.rampOpening||1)*1000);
+        const pl = placeOf('ramp', rIdx[side][j]);
+        const along = pl ? (pl.a + pl.L/2)*1000 : ((plan.stairs[side]||0)*opening + (j+0.5)*(plan.rampOpening||1)*1000);
         const base = sideStart[side], w2 = Math.min(500, (plan.rampOpening||1)*500) - 10;
         const cx = base[0] + (horiz ? along : 0), cz = base[1] + (horiz ? 0 : along);
         const px = horiz ? [1,0,0] : [0,0,1];
