@@ -28,6 +28,15 @@ const RY = a => { const c = Math.round(Math.cos(a)), s = Math.round(Math.sin(a))
 const ZUP = [1,0,0, 0,0,1, 0,-1,0];   // modelli CAD con z verso l'alto -> y verso l'alto
 const LEG_AXIS = [-13,-1,0];           // centro del tubo nel modello della gamba (in pianta)
 const VLC_JAW = -30;                   // centro delle ganasce del morsetto VLC (asse z del modello)
+// gambe della pedana (modello 1000 x 2000): nel CAD la gamba posteriore sinistra ha il tubo a 90 mm dal bordo invece di 74
+// come le altre; la riporto simmetrica, se no dove si incontrano due gambe (VLC) restano sfalsate di 16 mm
+const LEG_T = MD.legT.map(T => {
+  const t = T.t.slice(), a = mulV(T.R.flat(), LEG_AXIS);
+  if(t[0] < 469 && t[2] < 0){ const br = MD.legT.find(U => U.t[0] > 469 && U.t[2] < 0), b = mulV(br.R.flat(), LEG_AXIS);
+    t[0] = 938 - (br.t[0] + b[0]) - a[0]; }                // 938 = 1000 - 2*31: il deck va da -31 a 969
+  return {R:T.R, t};
+});
+const VLC_HALF = 82.5;                 // metà della distanza tra le ganasce del VLC (asse x del modello)
 const VD2D_MID = 60, VD2D_TOP = 60;    // connettore deck-deck: centro tra le due ganasce (x) e punta dei ganci (z, verso l'alto)
 
 /* ---------- WebGL ---------- */
@@ -181,7 +190,7 @@ function create(canvas){
       // rot: x_w = z_m + (x0+1000), z_w = -x_m + (z0 + 969 + sx)
       const D = !rot ? {r:I3, t:[d.x*500+31, tyD, d.y*500+1000]} : {r:[0,0,1, 0,1,0, -1,0,0], t:[d.x*500+1000, tyD, d.y*500 + 969 + sx]};
       deckBy.get(key).list.push(D);
-      for(const T of MD.legT){
+      for(const T of LEG_T){
         const t = T.t.slice(); if(t[0] > 469) t[0] += sx; if(t[2] > 0) t[2] += sz;
         t[1] -= dl;                                 // la gamba resta ancorata a terra
         const L = comp(D, {r:T.R.flat(), t});
@@ -239,7 +248,7 @@ function create(canvas){
     }
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
-    const v4 = [], v2 = [];
+    const v4 = [], v2 = new Map();   // v2: morsetti VLC per spostamento delle ganasce (mm)
     const conn4 = plan.trib ? !!plan.conn : plan.conn4!==false, conn2 = plan.trib ? !!plan.conn : plan.conn2!==false;   // solo dove l'offerta li mette (gambe oltre 80 cm)
     if(!spider) for(const p of legPts.values()){
       if(plan.trib && p.hc < 80 && p.rows.size < 2) continue;   // tribuna: sempre tra le file, dentro la fila dagli 80 cm
@@ -249,8 +258,11 @@ function create(canvas){
       if(conn2 && n===2){
         // il morsetto corre da una gamba all'altra; le sue ganasce (a z = -30 nel modello) stringono i tubi
         const alongX = Math.abs(p.legs[0][0]-p.legs[1][0]) > Math.abs(p.legs[0][1]-p.legs[1][1]);
+        // le gambe non sono sempre a 165 mm (davanti 147): le ganasce si spostano fino ai tubi
         const R = alongX ? I3 : RY(Math.PI/2), o = mulV(R, [0,0,VLC_JAW]);
-        v2.push({r:R, t:[mx - o[0], cy, mz - o[2]]});
+        const s = Math.round(Math.hypot(p.legs[0][0]-p.legs[1][0], p.legs[0][1]-p.legs[1][1])/2 - VLC_HALF);
+        if(!v2.has(s)) v2.set(s, []);
+        v2.get(s).push({r:R, t:[mx - o[0], cy, mz - o[2]]});
       }
     }
     // --- connettori deck-deck VD2D: sotto ogni giunto tra due pedane, di traverso, 1 per metro di giunto (come nell'offerta)
@@ -277,7 +289,7 @@ function create(canvas){
       if(vd.length) addBatch(plain('vd2d'), vd);
     }
     if(v4.length) addBatch(plain('v4lc'), v4);
-    if(v2.length) addBatch(plain('vlc'), v2);
+    for(const [dj, list] of v2) addBatch(dj ? stretched('vlc', (x,y,z) => [Math.abs(x) > 30 ? x + Math.sign(x)*dj : x, y, z]) : plain('vlc'), list);
 
     // --- ringhiere. Ogni elemento ha 2 connettori a un'estremità, verso il parapetto vicino (rail2 alla fine, rail1 e
     // 0,5 m all'inizio): dove da quella parte non c'è un altro elemento dello stesso tratto non si disegnano (spunterebbero
