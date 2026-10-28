@@ -222,6 +222,20 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .shipside{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--surface-2)}
 .shipside ul{margin:0;padding-left:16px;font-size:12.5px}
 @media (max-width:760px){.shiprow{grid-template-columns:minmax(0,1fr)}}
+/* archivio documenti: un riquadro per documento, con titolo e zona dove trascinare il file */
+.docgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:12px 0}
+.doc{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2);min-width:0}
+.doc .dochead{display:flex;gap:6px;align-items:center}
+.doc .dochead input{flex:1 1 auto;min-width:0}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:120px;padding:10px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);color:var(--muted);font-size:12.5px;text-align:center;cursor:pointer;overflow-wrap:anywhere}
+.drop:hover,.drop:focus-visible,.drop.over{border-color:var(--brand);color:var(--ink);outline:none}
+.doc.full .drop{border-style:solid;cursor:default}
+.drop .dtype{font-family:var(--f-mono);font-weight:700;font-size:13px;padding:6px 10px;border-radius:4px;background:var(--brand);color:#fff}
+.drop img{max-width:100%;max-height:90px;border-radius:4px;display:block}
+.drop .dname{color:var(--ink);font-weight:600}
+.doc .docbtns{display:flex;gap:6px;flex-wrap:wrap}
+#docMsg.err{color:var(--brand)}
+@media print{#docPanel{display:none!important}}
 #trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 #cliDlg{width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 .cligrid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
@@ -652,6 +666,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       </div>
     </div>
     <div class="panel" id="shipPanel" hidden></div>
+    <div class="panel" id="docPanel">
+      <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Archivio documenti</button></h2>
+      <p class="hint">Trascina in ogni riquadro un PDF, un'immagine JPEG o un file Word e dagli un titolo. I file restano in questo browser, insieme all'offerta (anche a quella salvata in archivio): non vanno nel PDF né nell'esportazione dell'archivio.</p>
+      <div class="docgrid" id="docList"></div>
+      <div class="archrow"><button type="button" class="btn small" id="docAdd">Aggiungi documento</button><span class="status" id="docMsg" role="status" aria-live="polite"></span></div>
+      <input type="file" id="docFile" multiple hidden>
+    </div>
     <dialog id="imgDlg" aria-labelledby="imgTitle">
       <form method="dialog" class="imgform">
         <div class="trhead"><h2 id="imgTitle"></h2><button type="submit" class="btn small" aria-label="Chiudi">✕</button></div>
@@ -1341,6 +1362,25 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Senza misure d'imballo, non conteggiati: {}.":"Ohne Verpackungsmaße, nicht gezählt: {0}.",
 "Nessun articolo da spedire.":"Keine Artikel zu versenden.",
 "Richiedi offerta trasporto":"Transportangebot anfragen",
+"Archivio documenti":"Dokumentenarchiv",
+"Trascina in ogni riquadro un PDF, un'immagine JPEG o un file Word e dagli un titolo. I file restano in questo browser, insieme all'offerta (anche a quella salvata in archivio): non vanno nel PDF né nell'esportazione dell'archivio.":"Ziehen Sie in jedes Feld eine PDF-, JPEG- oder Word-Datei und geben Sie ihr einen Titel. Die Dateien bleiben in diesem Browser beim Angebot (auch beim im Archiv gespeicherten): Sie kommen weder ins PDF noch in den Archivexport.",
+"Aggiungi documento":"Dokument hinzufügen",
+"Titolo del documento":"Titel des Dokuments",
+"Titolo del documento {}":"Titel des Dokuments {0}",
+"Togli il file":"Datei entfernen",
+"Togli il file {}":"Datei {0} entfernen",
+"Togli il riquadro":"Feld entfernen",
+"Togli il riquadro {}":"Feld {0} entfernen",
+"Carica il documento {}":"Dokument {0} hochladen",
+"Trascina qui un PDF, un JPEG o un file Word":"PDF-, JPEG- oder Word-Datei hierher ziehen",
+"oppure clicca per sceglierlo":"oder klicken, um sie auszuwählen",
+"Scarica":"Herunterladen",
+"Formato non accettato: {}. Solo PDF, JPEG o Word.":"Format nicht zulässig: {0}. Nur PDF, JPEG oder Word.",
+"Caricamento non riuscito: memoria del browser piena o bloccata.":"Hochladen nicht möglich: Browserspeicher voll oder gesperrt.",
+"Documento caricato":"Dokument hochgeladen",
+"Caricati {} documenti":"{0} Dokumente hochgeladen",
+"File non disponibile in questo browser: caricalo di nuovo.":"Datei in diesem Browser nicht verfügbar: bitte erneut hochladen.",
+"Togliere il file «{}»?":"Datei «{0}» entfernen?",
 "Richiesta offerta trasporto":"Anfrage Transportangebot",
 "Colli":"Packstücke",
 "Colli:":"Packstücke:",
@@ -2789,6 +2829,10 @@ function normCfg(src){
   const posOf = x => x.pos!=null && isFinite(+x.pos) ? {pos:+x.pos} : {};   // posizione scelta col cursore (m), sennò automatica
   c.stairs = (c.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2, ...posOf(x)}));
   c.ramps = (c.ramps||[]).map(x => ({side:x.side||'back', ...posOf(x)}));
+  // archivio documenti: titolo e dati del file (il file vero sta in IndexedDB), almeno DOC_MIN riquadri
+  c.docs = (Array.isArray(c.docs) ? c.docs : []).map(d => ({t:String(d && d.t || ''),
+    f:d && d.f && d.f.id ? {id:String(d.f.id), name:String(d.f.name||''), type:String(d.f.type||''), size:+d.f.size||0} : null}));
+  while(c.docs.length < DOC_MIN) c.docs.push({t:'', f:null});
   return c;
 }
 function load(){
@@ -2881,7 +2925,95 @@ async function archImport(f){
 function archDel(){
   const a = archLoad(), e = a.find(x => x.id===$('#archSel').value); if(!e) return;
   if(!confirm(tr(`Eliminare dall'archivio «${e.base} · n. ${e.n}»?`))) return;
-  archStore(a.filter(x => x !== e)); renderArchive(); archMsg('Offerta eliminata');
+  archStore(a.filter(x => x !== e)); renderArchive(); archMsg('Offerta eliminata'); docGc();
+}
+/* --- archivio documenti dell'offerta ---
+   I file (PDF, JPEG, Word) sono troppo grandi per localStorage: stanno in IndexedDB; nell'offerta (cfg.docs) restano
+   titolo, nome, tipo e dimensione, così si salvano e si riaprono con l'archivio offerte. */
+const DOC_MIN = 5, DOC_STORE = 'file';
+const docKind = f => /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name) ? 'PDF' : /jpe?g$/i.test(f.type) || /\.jpe?g$/i.test(f.name) ? 'JPEG'
+  : /msword|wordprocessingml/i.test(f.type) || /\.docx?$/i.test(f.name) ? 'WORD' : '';
+const docSize = n => n < 1048576 ? `${dec(Math.max(1, n/1024), 0)} KB` : `${dec(n/1048576, 1)} MB`;
+let docDbP = null, docUrls = [];
+function docDb(){
+  return docDbP || (docDbP = new Promise((ok, ko) => {
+    const r = indexedDB.open('stagedeck.documenti', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(DOC_STORE);
+    r.onsuccess = () => ok(r.result); r.onerror = () => { docDbP = null; ko(r.error); };
+  }));
+}
+async function docTx(mode, fn){
+  const db = await docDb();
+  return new Promise((ok, ko) => {
+    const t = db.transaction(DOC_STORE, mode), r = fn(t.objectStore(DOC_STORE));
+    t.oncomplete = () => ok(r && r.result); t.onerror = t.onabort = () => ko(t.error);
+  });
+}
+// toglie da IndexedDB i file che non usa più nessuno: né l'offerta aperta né quelle in archivio
+async function docGc(){
+  try{
+    const used = new Set([cfg, ...archLoad().map(e => e.cfg)].flatMap(c => (c && c.docs || []).map(d => d.f && d.f.id)).filter(Boolean));
+    const old = (await docTx('readonly', s => s.getAllKeys())).filter(k => !used.has(k));
+    if(old.length) await docTx('readwrite', s => old.forEach(k => s.delete(k)));
+  }catch(e){}
+}
+function docMsg(t, err){ const m = $('#docMsg'); m.textContent = t; m.classList.toggle('err', !!err); clearTimeout(docMsg.t); docMsg.t = setTimeout(() => m.textContent = '', 4000); }
+function renderDocs(){
+  docUrls.forEach(u => URL.revokeObjectURL(u)); docUrls = [];
+  $('#docList').innerHTML = cfg.docs.map((d,i) => {
+    const f = d.f, k = f ? docKind(f) : '';
+    const inner = f ? `<span class="dtype">${k || 'FILE'}</span><span class="dname">${esc(f.name)}</span><span>${docSize(f.size)}</span>`
+      : '<span>Trascina qui un PDF, un JPEG o un file Word</span><span>oppure clicca per sceglierlo</span>';
+    return `<div class="doc${f ? ' full' : ''}">
+      <div class="dochead"><input type="text" data-doct="${i}" value="${esc(d.t)}" placeholder="Titolo del documento" aria-label="Titolo del documento ${i+1}" autocomplete="off">
+        ${f || cfg.docs.length > DOC_MIN ? `<button type="button" class="btn small" data-docdel="${i}" title="${f ? 'Togli il file' : 'Togli il riquadro'}" aria-label="${f ? 'Togli il file' : 'Togli il riquadro'} ${i+1}">✕</button>` : ''}</div>
+      <div class="drop" data-drop="${i}"${f ? '' : ` role="button" tabindex="0" aria-label="Carica il documento ${i+1}"`}>${inner}</div>
+      ${f ? `<div class="docbtns"><button type="button" class="btn small" data-docopen="${i}">Apri</button><button type="button" class="btn small" data-docsave="${i}">Scarica</button></div>` : ''}
+    </div>`;
+  }).join('');
+  // anteprima delle immagini JPEG
+  cfg.docs.forEach(async (d,i) => {
+    if(!d.f || docKind(d.f)!=='JPEG') return;
+    try{
+      const b = await docTx('readonly', s => s.get(d.f.id)); if(!b) return;
+      const box = $(`#docList [data-drop="${i}"] .dtype`); if(!box || cfg.docs[i]!==d) return;
+      const u = URL.createObjectURL(b); docUrls.push(u);
+      const img = document.createElement('img'); img.src = u; img.alt = ''; box.replaceWith(img);
+    }catch(e){}
+  });
+}
+// file nel riquadro i; con più file, gli altri vanno nei riquadri vuoti seguenti (se servono se ne aggiungono)
+async function docAdd(i, files){
+  files = [...files];
+  const bad = files.filter(f => !docKind(f)); files = files.filter(f => docKind(f));
+  if(bad.length) docMsg(`Formato non accettato: ${bad.map(f => f.name).join(', ')}. Solo PDF, JPEG o Word.`, true);
+  let done = 0;
+  for(const f of files){
+    if(done){ i = cfg.docs.findIndex((d,j) => j > i && !d.f); if(i < 0) i = cfg.docs.push({t:'', f:null}) - 1; }
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8), old = cfg.docs[i].f;
+    try{ await docTx('readwrite', s => s.put(f, id)); }
+    catch(e){ docMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); break; }
+    const d = cfg.docs[i];
+    d.f = {id, name:f.name, type:f.type || '', size:f.size};
+    if(!d.t.trim() || (old && d.t===old.name.replace(/\.[^.]+$/, ''))) d.t = f.name.replace(/\.[^.]+$/, '');
+    done++;
+  }
+  if(done){ save(); renderDocs(); docGc(); if(!bad.length) docMsg(done===1 ? 'Documento caricato' : `Caricati ${done} documenti`); }
+}
+async function docBlob(i){
+  const d = cfg.docs[i]; if(!d || !d.f) return null;
+  let b = null; try{ b = await docTx('readonly', s => s.get(d.f.id)); }catch(e){}
+  if(!b) docMsg('File non disponibile in questo browser: caricalo di nuovo.', true);
+  return b;
+}
+async function docOpen(i, download){
+  const b = await docBlob(i); if(!b) return;
+  const f = cfg.docs[i].f, u = URL.createObjectURL(new Blob([b], {type:f.type || b.type || 'application/octet-stream'}));
+  setTimeout(() => URL.revokeObjectURL(u), 60000);
+  // il browser mostra PDF e JPEG; Word si scarica sempre
+  if(!download && docKind(f)!=='WORD' && window.open(u, '_blank')) return;
+  const l = document.createElement('a'); l.href = u; l.download = f.name;
+  document.body.appendChild(l); l.click(); l.remove();
 }
 /* --- anagrafica clienti (in questo browser) ---
    L'offerta tiene una copia del cliente scelto (cfg.cli): resta giusta anche se poi il cliente cambia o viene eliminato. */
@@ -3041,7 +3173,7 @@ function fillForm(){
   $('#skFabric').innerHTML = Object.entries(SKIRT_FABRICS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
   $('#skFabric').value = cfg.skirt.fabric; $('#skHeight').value = cfg.skirt.height;
   $$('[data-skside]').forEach(c => c.checked = !!cfg.skirt.sides[c.dataset.skside]);
-  renderSkSeg(); renderTrolleys();
+  renderSkSeg(); renderTrolleys(); renderDocs();
 }
 // forma del palco: rettangolare (larghezza × profondità) o rotonda (diametro, suddivisione Everdeck)
 function renderKind(){
@@ -4217,7 +4349,7 @@ function bind(){
   }));
   $('#resetAll').addEventListener('click', () => {
     if(!confirm(tr('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?'))) return;
-    cfg = blankCfg(); stairSel = 0; fillForm(); update(); say('Offerta azzerata');
+    cfg = blankCfg(); stairSel = 0; fillForm(); update(); docGc(); say('Offerta azzerata');
   });
   $('#pdfOffer').addEventListener('click', () => printPart('offerta'));
   $('#pdfCost').addEventListener('change', e => { cfg.pdfCost = e.target.checked; save(); });
@@ -4331,6 +4463,30 @@ function bind(){
     const panel = b.closest('.panel'); setShut(panel, !panel.classList.contains('shut'));
     try{ localStorage.setItem(FKEY, JSON.stringify($$('.panel.shut').map(x => x.id).filter(Boolean))); }catch(e){}
   });
+  // archivio documenti: trascina o clicca nel riquadro, titolo, apri, scarica, togli
+  { let target = 0;
+    const list = $('#docList'), pick = i => { target = i; $('#docFile').value = ''; $('#docFile').click(); };
+    $('#docFile').addEventListener('change', e => { if(e.target.files.length) docAdd(target, e.target.files); });
+    $('#docAdd').addEventListener('click', () => { cfg.docs.push({t:'', f:null}); save(); renderDocs(); list.querySelector(`[data-doct="${cfg.docs.length-1}"]`).focus(); });
+    list.addEventListener('input', e => { const t = e.target.closest('[data-doct]'); if(t){ cfg.docs[+t.dataset.doct].t = t.value; save(); } });
+    list.addEventListener('click', e => {
+      const b = e.target.closest('[data-docdel],[data-docopen],[data-docsave],[data-drop]'); if(!b) return;
+      if(b.dataset.docopen) return docOpen(+b.dataset.docopen);
+      if(b.dataset.docsave) return docOpen(+b.dataset.docsave, true);
+      if(b.dataset.docdel){
+        const i = +b.dataset.docdel, d = cfg.docs[i];
+        if(d.f){ if(!confirm(tr(`Togliere il file «${d.f.name}»?`))) return; d.f = null; }
+        else cfg.docs.splice(i, 1);
+        save(); renderDocs(); docGc(); return;
+      }
+      if(!cfg.docs[+b.dataset.drop].f) pick(+b.dataset.drop);
+    });
+    list.addEventListener('keydown', e => { const z = e.target.closest('[data-drop][role="button"]'); if(z && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); pick(+z.dataset.drop); } });
+    const zone = e => e.target.closest && e.target.closest('[data-drop]');
+    list.addEventListener('dragover', e => { const z = zone(e); if(!z) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; z.classList.add('over'); });
+    list.addEventListener('dragleave', e => { const z = zone(e); if(z && !z.contains(e.relatedTarget)) z.classList.remove('over'); });
+    list.addEventListener('drop', e => { const z = zone(e); if(!z) return; e.preventDefault(); z.classList.remove('over'); if(e.dataTransfer.files.length) docAdd(+z.dataset.drop, e.dataTransfer.files); });
+  }
   $('#shipPanel').addEventListener('click', e => {
     if(!e.target.closest('#trOpen')) return;
     trFill(); $('#trDlg').showModal();

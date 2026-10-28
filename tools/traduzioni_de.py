@@ -585,6 +585,28 @@ DE = {
     "Nessun articolo da spedire.": "Keine Artikel zu versenden.",
     "Richiedi offerta trasporto": "Transportangebot anfragen",
 
+    # --- archivio documenti ---
+    "Archivio documenti": "Dokumentenarchiv",
+    "Trascina in ogni riquadro un PDF, un'immagine JPEG o un file Word e dagli un titolo. I file restano in questo browser, insieme all'offerta (anche a quella salvata in archivio): non vanno nel PDF né nell'esportazione dell'archivio.":
+        "Ziehen Sie in jedes Feld eine PDF-, JPEG- oder Word-Datei und geben Sie ihr einen Titel. Die Dateien bleiben in diesem Browser beim Angebot (auch beim im Archiv gespeicherten): Sie kommen weder ins PDF noch in den Archivexport.",
+    "Aggiungi documento": "Dokument hinzufügen",
+    "Titolo del documento": "Titel des Dokuments",
+    "Titolo del documento {}": "Titel des Dokuments {0}",
+    "Togli il file": "Datei entfernen",
+    "Togli il file {}": "Datei {0} entfernen",
+    "Togli il riquadro": "Feld entfernen",
+    "Togli il riquadro {}": "Feld {0} entfernen",
+    "Carica il documento {}": "Dokument {0} hochladen",
+    "Trascina qui un PDF, un JPEG o un file Word": "PDF-, JPEG- oder Word-Datei hierher ziehen",
+    "oppure clicca per sceglierlo": "oder klicken, um sie auszuwählen",
+    "Scarica": "Herunterladen",
+    "Formato non accettato: {}. Solo PDF, JPEG o Word.": "Format nicht zulässig: {0}. Nur PDF, JPEG oder Word.",
+    "Caricamento non riuscito: memoria del browser piena o bloccata.": "Hochladen nicht möglich: Browserspeicher voll oder gesperrt.",
+    "Documento caricato": "Dokument hochgeladen",
+    "Caricati {} documenti": "{0} Dokumente hochgeladen",
+    "File non disponibile in questo browser: caricalo di nuovo.": "Datei in diesem Browser nicht verfügbar: bitte erneut hochladen.",
+    "Togliere il file «{}»?": "Datei «{0}» entfernen?",
+
     # --- richiesta trasporto ---
     "Richiesta offerta trasporto": "Anfrage Transportangebot",
     "Colli": "Packstücke",
