@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vista 3D</title>
+<style>
+  /* finestra della vista 3D: la apre l'app («Apri in un'altra finestra») e la aggiorna a ogni modifica */
+  :root{color-scheme:light dark;--bg:#E4E9ED;--bar:#FFFFFF;--ink:#12202B;--muted:#566774;--line:#C9D2D9;--brand:#C73D0B}
+  @media (prefers-color-scheme: dark){ :root{--bg:#1E2D38;--bar:#16212A;--ink:#E4ECF1;--muted:#94A6B3;--line:#2B3D4A;--brand:#FF8A5C} }
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+  body{display:flex;flex-direction:column}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 16px;background:var(--bar);border-bottom:3px solid var(--brand)}
+  h1{margin:0;font-size:16px;flex:1 1 auto}
+  header p{margin:0;color:var(--muted);font-size:12.5px}
+  button{font:inherit;font-size:13px;padding:4px 12px;min-height:30px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+  button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+  main{flex:1;position:relative;min-height:0;background:var(--bg)}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  #msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:16px;text-align:center}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Vista 3D</h1>
+  <p data-t="Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom, tasto destro o Maiusc per spostare">Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom, tasto destro o Maiusc per spostare</p>
+  <button type="button" id="xray" aria-pressed="false" data-t="Pianali trasparenti">Pianali trasparenti</button>
+  <button type="button" id="reset" data-t="Ripristina vista">Ripristina vista</button>
+</header>
+<main><canvas id="cv"></canvas><div id="msg" data-t="Apri questa finestra dall'app, con «Apri in un'altra finestra» nel riquadro Vista 3D." hidden>Apri questa finestra dall'app, con «Apri in un'altra finestra» nel riquadro Vista 3D.</div></main>
+<script src="models3d.js"></script>
+<script src="viewer3d.js"></script>
+<script>
+(() => {
+  const app = window.opener && !window.opener.closed ? window.opener : null;
+  let link = null;
+  try{ link = app && app.v3PopReady; }catch(e){}
+  const view = window.StageView ? window.StageView.create(document.getElementById('cv')) : null;
+  if(!link || !view){ document.getElementById('cv').hidden = true; document.getElementById('msg').hidden = false; return; }
+  // l'app chiama show() a ogni modifica: pianta, configurazione, titolo e testi già tradotti
+  window.show = (plan, cfg, title, tr) => {
+    document.title = document.getElementById('title').textContent = title;
+    document.querySelectorAll('[data-t]').forEach(e => { e.textContent = tr(e.dataset.t); });
+    try{ view.build(plan, cfg); }catch(e){ console.error(e); }
+  };
+  window.setXray = on => { document.getElementById('xray').setAttribute('aria-pressed', on ? 'true' : 'false'); view.setXray(on); };
+  document.getElementById('reset').addEventListener('click', () => view.reset());
+  document.getElementById('xray').addEventListener('click', e => { try{ app.v3PopXray(e.currentTarget.getAttribute('aria-pressed')!=='true'); }catch(err){} });
+  link(window);
+})();
+</script>
+</body>
+</html>

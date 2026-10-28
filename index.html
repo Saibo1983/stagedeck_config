@@ -614,13 +614,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
     <div class="panel" id="v3Panel">
       <h2><button type="button" class="fold" aria-expanded="true" title="Chiudi o apri il riquadro">Vista 3D</button></h2>
       <div id="v3Off"><p class="hint" style="margin:0 0 10px">Il palco montato con i pezzi reali (pedane, gambe, morsetti, parapetti, scale, mascheratura). Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom (la rotellina da sola scorre la pagina).</p>
-        <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button></div>
+        <button type="button" class="btn primary" id="v3Show">Mostra vista 3D</button> <button type="button" class="btn" data-v3pop title="Apre la vista 3D in una finestra a parte del browser (per esempio su un altro schermo): si aggiorna da sola a ogni modifica dell'offerta">Apri in un'altra finestra</button></div>
       <div id="v3On" hidden>
         <canvas id="v3Canvas" style="width:100%;aspect-ratio:16/10;display:block;border-radius:6px;touch-action:none;background:var(--surface-2)"></canvas>
         <div class="bar">
           <div class="actions"><span class="lbl">Impostazioni</span><button type="button" class="tgl" id="v3Xray" aria-pressed="false" title="Rende trasparenti i pianali delle pedane: si vedono gambe, morsetti e connettori sotto il palco senza girare la vista">Pianali trasparenti</button></div>
           <div class="actions"><span class="lbl">Sala</span><button type="button" class="tgl" data-room="back" aria-pressed="false" title="Parete dietro il palco, alla distanza scelta (dietro scale e rampe)">Parete di fondo</button><button type="button" class="tgl" data-room="left" aria-pressed="false" title="Parete sul lato sinistro del palco, alla distanza scelta (dietro scale e rampe)">Parete sinistra</button><button type="button" class="tgl" data-room="right" aria-pressed="false" title="Parete sul lato destro del palco, alla distanza scelta (dietro scale e rampe)">Parete destra</button><button type="button" class="tgl" data-room="floor" aria-pressed="false" title="Pavimento della sala sotto il palco">Pavimento</button><button type="button" class="tgl" data-room="clear" aria-pressed="false" title="Pareti e pavimento trasparenti. La parete che sta tra la vista e il palco non si vede mai, per non coprirlo">Sala trasparente</button><label class="roomgap" title="Distanza delle pareti dal palco o dalla tribuna: le 3 pareti si allontanano tutte della stessa misura e si fermano dove si incontrano">Distanza pareti <input type="number" id="roomGap" min="0" max="1000" step="10" inputmode="numeric"> cm</label></div>
-          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn" id="v3Png">Immagine (PNG)</button><button type="button" class="btn" id="v3Png4" title="Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta">4 viste (PNG)</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
+          <div class="actions cmds"><span class="lbl">Comandi</span><button type="button" class="btn" id="v3Reset">Ripristina vista</button><button type="button" class="btn" data-v3pop title="Apre la vista 3D in una finestra a parte del browser (per esempio su un altro schermo): si aggiorna da sola a ogni modifica dell'offerta">Apri in un'altra finestra</button><span class="sep" aria-hidden="true"></span><button type="button" class="btn" id="v3Png">Immagine (PNG)</button><button type="button" class="btn" id="v3Png4" title="Un foglio diviso in 4: vista assonometrica, frontale, laterale e in pianta">4 viste (PNG)</button><button type="button" class="btn" id="v3Html" title="Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.">3D interattivo (.html)</button><button type="button" class="btn" id="v3Glb" title="Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi">Modello 3D (.glb)</button></div>
         </div>
         <p class="hint" id="v3Note" style="margin:8px 0 0">Vista illustrativa: i Rollrisers sono mostrati con gambe StageDeck.</p>
       </div>
@@ -1054,6 +1054,11 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Immagine (PNG)":"Bild (PNG)",
 "3D interattivo (.html)":"Interaktives 3D (.html)",
 "Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.":"Seite zum Öffnen im Browser (auch auf dem Handy) oder zum Senden an den Kunden: Die Bühne lässt sich mit Finger oder Maus drehen. Internetverbindung nötig.",
+"Apri in un'altra finestra":"In einem anderen Fenster öffnen",
+"Apri questa finestra dall'app, con «Apri in un'altra finestra» nel riquadro Vista 3D.":"Dieses Fenster aus der App öffnen, mit «In einem anderen Fenster öffnen» im Bereich 3D-Ansicht.",
+"Apre la vista 3D in una finestra a parte del browser (per esempio su un altro schermo): si aggiorna da sola a ogni modifica dell'offerta":"Öffnet die 3D-Ansicht in einem eigenen Browserfenster (z. B. auf einem anderen Bildschirm): Sie aktualisiert sich bei jeder Änderung des Angebots von selbst",
+"Il browser ha bloccato la finestra: consenti i popup per questa pagina":"Der Browser hat das Fenster blockiert: Pop-ups für diese Seite erlauben",
+"Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom, tasto destro o Maiusc per spostare":"Ziehen zum Drehen, Strg + Mausrad oder Zwei-Finger-Geste zum Zoomen, rechte Maustaste oder Umschalt zum Verschieben",
 "Modello 3D (.glb)":"3D-Modell (.glb)",
 "Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi":"Standard-3D-Modell glTF: öffnet sich mit dem 3D-Viewer von Windows, der Mac-Vorschau, Blender und anderen Programmen",
 "Vista illustrativa: i Rollrisers sono mostrati con gambe StageDeck.":"Illustrative Ansicht: Rollrisers werden mit StageDeck-Beinen gezeigt.",
@@ -3801,9 +3806,10 @@ async function downloadOrder(){
   }
 }
 /* --- vista 3D (caricata solo se richiesta: models3d.js + viewer3d.js) --- */
-const v3 = {on:false, view:null, loading:false};
+const v3 = {on:false, view:null, loading:false, pop:null, xray:false};
 function loadScript(src){ return new Promise((ok,ko) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => ko(new Error(src)); document.head.appendChild(e); }); }
 function draw3d(){
+  draw3dPop();
   if(!v3.on || !v3.view || !res || !res.plan) return;
   cancelAnimationFrame(v3.raf);
   v3.raf = requestAnimationFrame(() => { try{ v3.view.build(res.plan, cfg); }catch(e){ console.error(e); } });
@@ -3826,6 +3832,26 @@ async function show3d(){
     btn.disabled = true;
   }
   v3.loading = false;
+}
+// vista 3D in un'altra finestra del browser (vista3d.html): quando è pronta chiama v3PopReady, poi la si aggiorna
+// a ogni modifica come la vista nella pagina
+function draw3dPop(){
+  const w = v3.pop;
+  if(!w || w.closed || !res || !res.plan) return;
+  try{ w.show(res.plan, cfg, tr(stageTitle(res.plan)), x => tr(x)); }catch(e){ console.error(e); }
+}
+window.v3PopReady = w => { v3.pop = w; w.setXray(v3.xray); draw3dPop(); };
+window.v3PopXray = on => setXray3d(on);
+function setXray3d(on){
+  v3.xray = !!on;
+  $('#v3Xray').setAttribute('aria-pressed', on ? 'true' : 'false');
+  if(v3.view) v3.view.setXray(on);
+  try{ if(v3.pop && !v3.pop.closed) v3.pop.setXray(on); }catch(e){}
+}
+function open3dPop(){
+  if(v3.pop && !v3.pop.closed){ v3.pop.focus(); return; }
+  const w = window.open('vista3d.html', 'stagedeck3d', 'popup,width=1200,height=800');
+  if(!w) say('Il browser ha bloccato la finestra: consenti i popup per questa pagina');
 }
 async function save3d(){
   if(!v3.view) return;
@@ -4205,11 +4231,8 @@ function bind(){
   $('#v3Png').addEventListener('click', save3d);
   $('#v3Png4').addEventListener('click', save3d4);
   $('#v3Glb').addEventListener('click', saveGlb);
-  $('#v3Xray').addEventListener('click', e => {
-    const on = e.currentTarget.getAttribute('aria-pressed')!=='true';
-    e.currentTarget.setAttribute('aria-pressed', on ? 'true' : 'false');
-    if(v3.view) v3.view.setXray(on);
-  });
+  $('#v3Xray').addEventListener('click', e => setXray3d(e.currentTarget.getAttribute('aria-pressed')!=='true'));
+  $$('[data-v3pop]').forEach(b => b.addEventListener('click', open3dPop));
   $('#v3Html').addEventListener('click', saveHtml3d);
   // sala nella vista 3D (pareti, pavimento, trasparenza, distanza delle pareti): salvata con l'offerta
   $('#roomGap').addEventListener('input', e => { cfg.room.gap = Math.max(0, Math.min(1000, Math.round(+e.target.value || 0))); save(); draw3d(); });

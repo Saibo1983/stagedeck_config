@@ -286,6 +286,11 @@ DE = {
     "3D interattivo (.html)": "Interaktives 3D (.html)",
     "Pagina da aprire nel browser (anche sul telefono) o da mandare al cliente: il palco si gira con il dito o il mouse. Serve la connessione a internet.":
         "Seite zum Öffnen im Browser (auch auf dem Handy) oder zum Senden an den Kunden: Die Bühne lässt sich mit Finger oder Maus drehen. Internetverbindung nötig.",
+    "Apri in un'altra finestra": "In einem anderen Fenster öffnen",
+    "Apri questa finestra dall'app, con «Apri in un'altra finestra» nel riquadro Vista 3D.": "Dieses Fenster aus der App öffnen, mit «In einem anderen Fenster öffnen» im Bereich 3D-Ansicht.",
+    "Apre la vista 3D in una finestra a parte del browser (per esempio su un altro schermo): si aggiorna da sola a ogni modifica dell'offerta": "Öffnet die 3D-Ansicht in einem eigenen Browserfenster (z. B. auf einem anderen Bildschirm): Sie aktualisiert sich bei jeder Änderung des Angebots von selbst",
+    "Il browser ha bloccato la finestra: consenti i popup per questa pagina": "Der Browser hat das Fenster blockiert: Pop-ups für diese Seite erlauben",
+    "Trascina per ruotare, Ctrl + rotellina o pizzico per lo zoom, tasto destro o Maiusc per spostare": "Ziehen zum Drehen, Strg + Mausrad oder Zwei-Finger-Geste zum Zoomen, rechte Maustaste oder Umschalt zum Verschieben",
     "Modello 3D (.glb)": "3D-Modell (.glb)",
     "Modello 3D standard glTF: si apre con il Visualizzatore 3D di Windows, l'Anteprima del Mac, Blender e altri programmi": "Standard-3D-Modell glTF: öffnet sich mit dem 3D-Viewer von Windows, der Mac-Vorschau, Blender und anderen Programmen",
     "Vista illustrativa: i Rollrisers sono mostrati con gambe StageDeck.": "Illustrative Ansicht: Rollrisers werden mit StageDeck-Beinen gezeigt.",
