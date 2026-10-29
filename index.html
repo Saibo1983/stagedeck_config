@@ -465,7 +465,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" data-shape="round" aria-pressed="false">Rotondo</button>
         </div>
       </div>
-      <div class="row3 stageOnly">
+      <div class="row3 bottom stageOnly">
         <label class="field rectOnly"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field rectOnly"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
@@ -2140,7 +2140,9 @@ function finishOffer(out, cfg, R, look, area, warn){
     if(m3==null) noVol.push(it.code);
     lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
   }
-  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  // righe per gruppo e, dentro il gruppo, nell'ordine del listino (gli articoli che non ci sono vanno in fondo)
+  const ord = new Map(ITEMS.map((i,n) => [ncode(i.code), n])), at = l => ord.has(ncode(l.code)) ? ord.get(ncode(l.code)) : 1e9;
+  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group) || at(a)-at(b));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
@@ -4385,6 +4387,8 @@ async function extAdd(f){
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   try{ await docTx('readwrite', s => s.put(f, id)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
   cfg.ext = {f:{id, name:f.name, type:f.type || '', size:f.size}};
+  // con l'offerta esterna l'offerta del configuratore di solito non si allega
+  const m = mailState(); m.sel = {...(m.sel || {}), offerta:false}; mailStore(m);
   save(); renderMail(); docGc(); mailMsg('Offerta esterna caricata');
 }
 const fileSafe = s => String(s).replace(/[\\/:*?"<>|\r\n]+/g, '-').trim() || 'file';
@@ -4865,7 +4869,8 @@ function bind(){
   const setLayout = mode => {
     const sec = $('#tab-offerta'), form = $('#cfgForm');
     sec.dataset.layout = mode;
-    if(mode==='top') $('#notes').after(form); else sec.prepend(form);
+    // gli avvisi stanno sempre sopra la vista schematica: con i dati sopra, la comparsa di un avviso non sposta i campi
+    if(mode==='top') $('#notes').before(form); else sec.prepend(form);
     $$('.layseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.layout===mode ? 'true' : 'false'));
     try{ localStorage.setItem(LKEY, mode); }catch(e){}
     draw3d();
