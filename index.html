@@ -251,11 +251,12 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .mailgrp .drop{min-height:56px;margin-top:4px}
 .mailgrp .extrow{display:flex;gap:8px;align-items:center}
 .mailgrp .extrow label{flex:1 1 auto;min-width:0}
+.mailgrp .extrow.over{outline:2px dashed var(--brand);outline-offset:2px;border-radius:4px}
+.mailgrp .extmiss{display:block;color:var(--brand)}
 #sigBox .sigprev{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 #sigBox img{max-width:100%;max-height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
 .mailtext .trset,.mailtext{min-width:0}
-#sigBox .sightml{box-sizing:border-box;width:100%;max-height:260px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:#222;font:11pt Calibri,Arial,sans-serif}
-#sigBox .sightml *{all:revert}
+#sigBox .sigframe{box-sizing:border-box;width:100%;height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
 #sigBox .sigpaste{margin-top:6px;min-height:38px;padding:8px 10px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:12.5px;overflow:hidden;cursor:text}
 #sigBox .sigpaste:empty::before{content:attr(placeholder);color:var(--muted)}
 #sigBox .sigpaste:focus{border-color:var(--brand);outline:none}
@@ -709,7 +710,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <fieldset class="trset"><legend>Firma</legend>
             <label class="field"><span>Saluti e firma del venditore</span><textarea id="mailSig" rows="4" data-noi18n></textarea></label>
             <div class="field"><span>Firma / piè di pagina (immagine o testo copiato)</span><div id="sigBox"></div></div>
-            <input type="file" id="sigFile" accept=".jpg,.jpeg,.png,.gif,.htm,.html,.txt,image/jpeg,image/png,image/gif,text/html,text/plain" hidden>
+            <input type="file" id="sigFile" accept=".msg,.jpg,.jpeg,.png,.gif,.htm,.html,.txt,application/vnd.ms-outlook,image/jpeg,image/png,image/gif,text/html,text/plain" hidden>
           </fieldset>
         </div>
       </div>
@@ -1668,13 +1669,19 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Formato non accettato: serve un'immagine JPEG.":"Format nicht akzeptiert: Ein JPEG-Bild ist nötig.",
 "Firma / piè di pagina (immagine o testo copiato)":"Signatur / Fußzeile (Bild oder kopierter Text)",
 "Carica la firma":"Signatur hochladen",
-"Trascina qui un'immagine (JPEG, PNG) o il file .htm della firma":"Ein Bild (JPEG, PNG) oder die .htm-Datei der Signatur hierher ziehen",
+"Trascina qui una mail di Outlook (.msg) con la firma, un'immagine (JPEG, PNG) o il file .htm della firma":"Eine Outlook-Mail (.msg) mit der Signatur, ein Bild (JPEG, PNG) oder die .htm-Datei der Signatur hierher ziehen",
 "Incolla qui la firma":"Signatur hier einfügen",
 "…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V":"…oder die Signatur kopieren (zum Beispiel aus Outlook) und hier mit Strg+V einfügen",
 "Togli firma":"Signatur entfernen",
 "Firma caricata":"Signatur hochgeladen",
 "Firma copiata":"Kopierte Signatur",
-"Formato non accettato: serve un'immagine JPEG o PNG, un file .htm o un testo.":"Format nicht akzeptiert: Ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig."
+"Formato non accettato: serve una mail di Outlook (.msg), un'immagine JPEG o PNG, un file .htm o un testo.":"Format nicht akzeptiert: Eine Outlook-Mail (.msg), ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig.",
+"Mail di Outlook non leggibile: salvala di nuovo come .msg o copia la firma e incollala.":"Outlook-Mail nicht lesbar: erneut als .msg speichern oder die Signatur kopieren und einfügen.",
+"Anteprima della firma":"Vorschau der Signatur",
+"Cambia":"Ändern",
+"Trascina qui un altro file per sostituirlo":"Eine andere Datei hierher ziehen, um sie zu ersetzen",
+"Sostituisci l'offerta esterna con un altro file":"Externes Angebot durch eine andere Datei ersetzen",
+"File non disponibile in questo browser: caricalo di nuovo":"Datei in diesem Browser nicht verfügbar: erneut hochladen"
 }}</script>
 <script>
 "use strict";
@@ -2938,7 +2945,7 @@ function normCfg(src){
   while(c.docs.length < DOC_MIN) c.docs.push({t:'', f:null});
   // offerta fatta con un programma esterno (PDF o Word, il file in IndexedDB), da allegare alla mail
   const x = c.ext && c.ext.f && c.ext.f.id ? c.ext.f : null;
-  c.ext = x ? {f:{id:String(x.id), name:String(x.name||''), type:String(x.type||''), size:+x.size||0}, ...(c.ext.m===false ? {m:false} : {})} : null;
+  c.ext = x ? {f:{id:String(x.id), name:String(x.name||''), type:String(x.type||''), size:+x.size||0}, ...(c.ext.m===false ? {m:false} : {}), ...(c.ext.o ? {o:true} : {})} : null;
   return c;
 }
 function load(){
@@ -4265,7 +4272,9 @@ const MAIL_ITEMS = [
   {k:'offerta', grp:'Offerta', label:'Offerta (PDF)', def:true}];
 const mailState = () => { try{ const m = JSON.parse(localStorage.getItem(MKEY) || 'null'); return m && typeof m==='object' ? m : {}; }catch(e){ return {}; } };
 const mailStore = m => { try{ localStorage.setItem(MKEY, JSON.stringify(m)); }catch(e){} };
-const mailOn = k => { const s = mailState().sel || {}; return k in s ? !!s[k] : !!(MAIL_ITEMS.find(x => x.k===k) || {}).def; };
+const mailOn = k => { if(k==='offerta' && cfg.ext) return !!cfg.ext.o; const s = mailState().sel || {}; return k in s ? !!s[k] : !!(MAIL_ITEMS.find(x => x.k===k) || {}).def; };
+// una volta: la spunta di «Offerta (PDF)» tolta per tutte le offerte dalla versione precedente torna come prima (ora con l'offerta esterna è per offerta)
+{ const m = mailState(); if(!m.v2){ if(m.sel && m.sel.offerta===false) delete m.sel.offerta; m.v2 = 1; mailStore(m); } }
 const mailDefText = () => inLang(cfg.lingua, () => tr(MAIL_TEXT));
 const mailText = () => { const t = (mailState().testo || {})[cfg.lingua]; return typeof t==='string' ? t : mailDefText(); };
 const mailAuto = {to:null, subj:null, lang:null};
@@ -4275,11 +4284,13 @@ function renderMail(){
   const docs = cfg.docs.map((d,i) => ({d, i})).filter(x => x.d.f);
   const box = (k, label, on, extra = '') => `<label><input type="checkbox" data-mail="${k}"${on ? ' checked' : ''}> <span>${label}${extra}</span></label>`;
   const xf = cfg.ext && cfg.ext.f;
-  const ext = xf ? `<div class="extrow">${box('ext', '<span>Offerta esterna</span>', cfg.ext.m!==false, ` <small data-noi18n>${esc(xf.name)} · ${docSize(xf.size)}</small>`)}<button type="button" class="btn small" data-extdel title="Togli l'offerta esterna" aria-label="Togli l'offerta esterna">✕</button></div>`
+  const ext = xf ? `<div class="extrow" data-extrow title="Trascina qui un altro file per sostituirlo">${box('ext', '<span>Offerta esterna</span>', cfg.ext.m!==false, ` <small data-noi18n>${esc(xf.name)} · ${docSize(xf.size)}</small><small class="extmiss" hidden>File non disponibile in questo browser: caricalo di nuovo</small>`)}<button type="button" class="btn small" data-extnew title="Sostituisci l'offerta esterna con un altro file">Cambia</button><button type="button" class="btn small" data-extdel title="Togli l'offerta esterna" aria-label="Togli l'offerta esterna">✕</button></div>`
     : `<div class="drop" data-extdrop role="button" tabindex="0" aria-label="Carica l'offerta esterna"><span><b>Offerta esterna</b></span><span>Trascina qui il PDF o il file Word di un'offerta fatta con un altro programma, oppure clicca per sceglierlo</span></div>`;
   const grps = [...new Set(MAIL_ITEMS.map(x => x.grp))].map(g => `<fieldset class="mailgrp"><legend>${esc(g)}</legend>${MAIL_ITEMS.filter(x => x.grp===g).map(x => box(x.k, esc(x.label), mailOn(x.k))).join('')}${g==='Offerta' ? ext : ''}</fieldset>`);
   grps.push(`<fieldset class="mailgrp"><legend>Archivio documenti</legend>${docs.length ? docs.map(({d,i}) => box('doc'+i, `<span data-noi18n>${esc(d.t.trim() || d.f.name)}</span>`, d.m, ` <small data-noi18n>${esc(d.f.name)} · ${docSize(d.f.size)}</small>`)).join('') : '<span class="hint">Nessun documento caricato</span>'}</fieldset>`);
   $('#mailList').innerHTML = grps.join('');
+  // offerta esterna salvata con l'offerta ma col file mancante in questo browser (per esempio offerta importata da un altro dispositivo)
+  if(xf) docTx('readonly', s => s.get(xf.id)).then(b => { const x = $('#mailList .extmiss'); if(x) x.hidden = !!b; }, () => {});
   const to = cfg.cli && cfg.cli.email ? String(cfg.cli.email).trim() : '';
   const subj = inLang(cfg.lingua, () => [cfg.numero ? tr('Offerta n.')+' '+cfg.numero : tr('Offerta'), cfg.progetto].filter(Boolean).join(' – '));
   const ti = $('#mailTo'), si = $('#mailSubj'), bi = $('#mailBody');
@@ -4297,6 +4308,23 @@ let sigUrl = '';
 // HTML copiato: restano testo, tabelle, link e stili in linea; via script, stili, classi e immagini locali (al loro posto il testo alternativo)
 function sigClean(html){
   const d = new DOMParser().parseFromString(html, 'text/html');
+  // gli stili delle classi di Word/Outlook (MsoNormal: margini a 0, carattere, colori dei link) passano negli attributi style
+  const css = [...d.querySelectorAll('style')].map(x => x.textContent).join('\n');
+  if(css.trim()) try{
+    const sh = new CSSStyleSheet(); sh.replaceSync(css.replace(/<!--|-->/g, ''));
+    const own = new Map([...d.body.querySelectorAll('[style]')].map(el => [el, new Set([...el.style])]));
+    for(const r of sh.cssRules){
+      if(!r.selectorText) continue;
+      let els; try{ els = d.body.querySelectorAll(r.selectorText); }catch(e){ continue; }
+      for(const el of els) for(const k of r.style) if(!(own.get(el) || new Set()).has(k)) el.style.setProperty(k, r.style.getPropertyValue(k));
+    }
+  }catch(e){}
+  // righe vuote all'inizio (lo spazio per il testo, nelle firme di Outlook)
+  for(let box = d.body, x; (x = box.firstElementChild); ){
+    if(!/^(TABLE|IMG)$/.test(x.tagName) && !x.querySelector('img,table') && !x.textContent.replace(/[\s\u00a0]+/g, '')) x.remove();
+    else if(x.tagName==='DIV') box = x;   // contenitore (WordSection1): si guarda dentro
+    else break;
+  }
   d.querySelectorAll('script,style,meta,link,title,iframe,frame,object,embed,form,input,button,textarea,select,svg,math,template,base').forEach(n => n.remove());
   const w = d.createTreeWalker(d.body, NodeFilter.SHOW_COMMENT), cs = [];
   while(w.nextNode()) cs.push(w.currentNode);
@@ -4323,23 +4351,139 @@ function sigText(html){
     if(n.nodeType===3){ s += n.nodeValue.replace(/\s+/g, ' '); return; }
     if(n.nodeType!==1 || n.tagName==='IMG') return;
     if(n.tagName==='BR'){ s += '\n'; return; }
-    const blk = /^(P|DIV|TR|LI|H[1-6]|TABLE|UL|OL|BLOCKQUOTE|HR)$/.test(n.tagName);
-    if(blk) s += '\n';
+    const blk = /^(P|DIV|TR|LI|H[1-6]|TABLE|UL|OL|BLOCKQUOTE|HR)$/.test(n.tagName), nl = () => { if(!/\n[ \t]*$/.test(s)) s += '\n'; };
+    if(blk) nl();
     n.childNodes.forEach(walk);
     if(n.tagName==='TD' || n.tagName==='TH') s += '   ';
-    if(blk) s += '\n';
+    if(blk) s += '\n';   // un blocco vuoto lascia una riga bianca
   };
   walk(new DOMParser().parseFromString(html, 'text/html').body);
   return s.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+/* firma da un messaggio di Outlook (.msg): file composto (CFB) → corpo RTF compresso → HTML incapsulato,
+   con le immagini allegate (cid:) messe dentro come data: */
+function cfbRead(buf){
+  const v = new DataView(buf), u8 = new Uint8Array(buf), u32 = o => v.getUint32(o, true);
+  if(u32(0)!==0xE011CFD0 || u32(4)!==0xE11AB1A1) throw new Error('not cfb');
+  const ss = 1 << v.getUint16(30, true), ms = 1 << v.getUint16(32, true), sec = n => (n+1)*ss, END = 0xFFFFFFFA;
+  const difat = []; for(let i=0;i<109;i++) difat.push(u32(76+i*4));
+  for(let d = u32(68), n = u32(72); n-- > 0 && d < END; d = u32(sec(d)+ss-4)) for(let i=0;i<ss/4-1;i++) difat.push(u32(sec(d)+i*4));
+  const fat = []; for(const s of difat.slice(0, u32(44))) for(let i=0;i<ss/4;i++) fat.push(u32(sec(s)+i*4));
+  const chain = (s, t) => { const out = []; for(let n=0; s < END && n < t.length; n++){ out.push(s); s = t[s]; } return out; };
+  const big = (s, size) => { const out = new Uint8Array(size); let o = 0; for(const c of chain(s, fat)){ if(o>=size) break; const k = Math.min(ss, size-o); out.set(u8.subarray(sec(c), sec(c)+k), o); o += k; } return out; };
+  const dirB = big(u32(48), chain(u32(48), fat).length*ss), dv = new DataView(dirB.buffer), ents = [];
+  for(let o=0; o+128<=dirB.length; o+=128){
+    const nl = dv.getUint16(o+64, true);
+    ents.push({name: new TextDecoder('utf-16le').decode(dirB.subarray(o, o+Math.max(0, nl-2))), type: dirB[o+66], l: dv.getUint32(o+68, true), r: dv.getUint32(o+72, true), c: dv.getUint32(o+76, true), s: dv.getUint32(o+116, true), size: dv.getUint32(o+120, true)});
+  }
+  const root = ents[0], mini = big(root.s, root.size), mfat = [];
+  for(const c of chain(u32(60), fat)) for(let i=0;i<ss/4;i++) mfat.push(u32(sec(c)+i*4));
+  const cutoff = u32(56);
+  const data = e => {
+    if(e.size >= cutoff) return big(e.s, e.size);
+    const out = new Uint8Array(e.size); let o = 0;
+    for(const c of chain(e.s, mfat)){ if(o>=e.size) break; const k = Math.min(ms, e.size-o); out.set(mini.subarray(c*ms, c*ms+k), o); o += k; }
+    return out;
+  };
+  // figli di una cartella: albero dei fratelli (sinistra/destra) a partire da child
+  const kids = e => { const out = {}, st = [e.c]; while(st.length){ const i = st.pop(); if(i>=END || !ents[i]) continue; const x = ents[i]; out[x.name.toUpperCase()] = x; st.push(x.l, x.r); } return out; };
+  return {root, kids, data};
+}
+// corpo RTF compresso (LZFu, MS-OXRTFCP)
+function rtfDecompress(b){
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength), raw = v.getUint32(4, true), magic = v.getUint32(8, true);
+  if(magic===0x414C454D) return b.subarray(16, 16+raw);
+  const pre = '{\\rtf1\\ansi\\mac\\deff0\\deftab720{\\fonttbl;}{\\f0\\fnil \\froman \\fswiss \\fmodern \\fscript \\fdecor MS Sans SerifSymbolArialTimes New RomanCourier{\\colortbl\\red0\\green0\\blue0\r\n\\par \\pard\\plain\\f0\\fs20\\b\\i\\u\\tab\\tx';
+  const dict = new Uint8Array(4096); for(let i=0;i<pre.length;i++) dict[i] = pre.charCodeAt(i);
+  let w = pre.length, i = 16; const out = [];
+  while(i < b.length){
+    const ctl = b[i++];
+    for(let bit=0; bit<8 && i<b.length; bit++){
+      if(!(ctl & (1<<bit))){ const c = b[i++]; out.push(c); dict[w] = c; w = (w+1) & 4095; continue; }
+      const ref = (b[i] << 8) | b[i+1]; i += 2;
+      const off = ref >> 4, len = (ref & 15) + 2;
+      if(off===w) return Uint8Array.from(out);
+      for(let k=0;k<len;k++){ const c = dict[(off+k) & 4095]; out.push(c); dict[w] = c; w = (w+1) & 4095; }
+    }
+  }
+  return Uint8Array.from(out);
+}
+// HTML incapsulato nell'RTF (\fromhtml1, MS-OXRTFEX): testo e \htmltag escono, quello tra \htmlrtf e \htmlrtf0 no
+function rtfHtml(b){
+  const s = new TextDecoder('latin1').decode(b);
+  if(!/\\fromhtml1/.test(s.slice(0, 400))) return null;
+  let cp = 'windows-1252'; const m = s.match(/\\ansicpg(\d+)/); if(m) cp = m[1]==='65001' ? 'utf-8' : 'windows-'+m[1];
+  let dec; try{ dec = new TextDecoder(cp); }catch(e){ dec = new TextDecoder('windows-1252'); }
+  const SKIP = /^(fonttbl|colortbl|stylesheet|info|pict|object|listtable|listoverridetable|generator|mhtmltag)$/;
+  let out = '', bytes = [], i = 0, uc = 1, skip = 0;
+  const flush = () => { if(bytes.length){ out += dec.decode(Uint8Array.from(bytes)); bytes = []; } };
+  const st = []; let g = {sup:false, ign:false, tag:false, uc:1};
+  const emit = t => { if(g.ign || (g.sup && !g.tag)) return; flush(); out += t; };
+  const emitByte = c => { if(g.ign || (g.sup && !g.tag)) return; bytes.push(c); };
+  while(i < s.length){
+    const c = s[i];
+    if(c==='{'){ st.push(g); g = {...g, first:true}; i++; continue; }
+    if(c==='}'){ g = st.pop() || g; i++; continue; }
+    if(c==='\r' || c==='\n'){ i++; continue; }
+    if(c!=='\\'){ if(skip>0){ skip--; i++; continue; } emitByte(s.charCodeAt(i)); i++; g.first = false; continue; }
+    const n = s[i+1];
+    if(n==='\''){ const h = parseInt(s.substr(i+2, 2), 16); i += 4; if(skip>0){ skip--; continue; } emitByte(h); g.first = false; continue; }
+    if(n==='*'){ i += 2; g.star = true; continue; }
+    if(!/[a-zA-Z]/.test(n)){ i += 2; if(skip>0){ skip--; continue; } if(n==='{' || n==='}' || n==='\\') emitByte(n.charCodeAt(0)); else if(n==='~') emit(' '); g.first = false; continue; }
+    const w = s.slice(i+1).match(/^([a-zA-Z]+)(-?\d+)? ?/); i += 1 + w[0].length;
+    const word = w[1], arg = w[2]!=null ? +w[2] : null, first = g.first; g.first = false;
+    if(first && (SKIP.test(word) || (g.star && !/^htmltag$/.test(word)))){ g.ign = true; continue; }
+    if(word==='htmltag'){ g.tag = true; continue; }
+    if(word==='htmlrtf'){ g.sup = arg!==0; continue; }
+    if(word==='uc'){ g.uc = arg; continue; }
+    if(word==='u'){ emit(String.fromCharCode(arg < 0 ? arg + 65536 : arg)); skip = g.uc; continue; }
+    if(word==='par' || word==='line') emit(g.tag ? '\r\n' : '\r\n');
+    else if(word==='tab') emit('\t');
+    else if(word==='lquote') emit('‘'); else if(word==='rquote') emit('’');
+    else if(word==='ldblquote') emit('“'); else if(word==='rdblquote') emit('”');
+    else if(word==='bullet') emit('•'); else if(word==='endash') emit('–'); else if(word==='emdash') emit('—');
+  }
+  flush();
+  return out;
+}
+async function msgSig(buf){
+  const f = cfbRead(buf), top = f.kids(f.root), str = (d, id) => d[('__substg1.0_'+id).toUpperCase()];
+  const txt = e => e ? new TextDecoder('utf-16le').decode(f.data(e)).replace(/\0+$/, '') : '';
+  let html = '';
+  const h = str(top, '10130102'); if(h) html = new TextDecoder().decode(f.data(h));
+  if(!html){ const r = str(top, '10090102'); if(r) html = rtfHtml(rtfDecompress(f.data(r))) || ''; }
+  if(!html){ const t = txt(str(top, '1000001F')); html = t ? sigPlain(t) : ''; }
+  // immagini allegate richiamate con cid: dentro l'HTML
+  for(const [k, e] of Object.entries(top)){
+    if(!k.startsWith('__ATTACH_VERSION1.0_') || e.type!==1) continue;
+    const a = f.kids(e), cid = txt(str(a, '3712001F')), d = str(a, '37010102');
+    if(!cid || !d) continue;
+    const mime = txt(str(a, '370E001F')) || 'image/png';
+    if(!/^image\/(jpeg|png|gif)$/.test(mime)) continue;
+    const url = `data:${mime};base64,${btoa(Array.from(f.data(d), c => String.fromCharCode(c)).join(''))}`;
+    html = html.split('cid:'+cid).join(url);
+  }
+  return html;
 }
 async function renderSig(){
   const im = mailState().firmaImg, box = $('#sigBox');
   if(sigUrl){ URL.revokeObjectURL(sigUrl); sigUrl = ''; }
   let b = null; if(im) try{ b = await docTx('readonly', s => s.get(SIG_ID)); }catch(e){}
   const info = b && `<span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><button type="button" class="btn small" data-sigdel>Togli firma</button>`;
-  if(b && /^text\//.test(b.type)) box.innerHTML = `<div class="sigprev"><div class="sightml" data-noi18n>${sigClean(await b.text())}</div>${info}</div>`;
+  if(b && /^text\//.test(b.type)){
+    // anteprima in una cornice a parte, senza script: si vede come nella mail, senza gli stili dell'app
+    const doc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"></head><body style="margin:8px;font-family:Calibri,Arial,sans-serif;font-size:11pt">${sigClean(await b.text())}</body></html>`;
+    box.innerHTML = `<div class="sigprev"><iframe class="sigframe" sandbox="allow-same-origin allow-popups" srcdoc="${esc(doc)}" title="Anteprima della firma"></iframe>${info}</div>`;
+    const fr = box.querySelector('iframe');
+    // firma più larga del riquadro: rimpicciolita per vederla intera
+    fr.addEventListener('load', () => { try{
+      const de = fr.contentDocument.documentElement, k = de.clientWidth / de.scrollWidth;
+      if(k < 1) fr.contentDocument.body.style.zoom = k;
+      fr.style.height = Math.min(400, de.scrollHeight + 4) + 'px';
+    }catch(e){} });
+  }
   else if(b){ sigUrl = URL.createObjectURL(b); box.innerHTML = `<div class="sigprev"><img src="${sigUrl}" alt="">${info}</div>`; }
-  else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica la firma"><span>Trascina qui un'immagine (JPEG, PNG) o il file .htm della firma</span><span>oppure clicca per sceglierla</span></div>`
+  else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica la firma"><span>Trascina qui una mail di Outlook (.msg) con la firma, un'immagine (JPEG, PNG) o il file .htm della firma</span><span>oppure clicca per sceglierla</span></div>`
     + `<div class="sigpaste" data-sigpaste contenteditable="true" role="textbox" aria-label="Incolla qui la firma" placeholder="…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V"></div>`;
 }
 async function sigPut(blob, name){
@@ -4350,6 +4494,11 @@ const sigHtml = (html, name) => { html = sigClean(html); if(html && (sigText(htm
 const sigPlain = t => '<div>' + esc(t.trim()).replace(/\r?\n/g, '<br>') + '</div>';
 async function sigAdd(f){
   if(!f) return;
+  if(/\.msg$/i.test(f.name) || f.type==='application/vnd.ms-outlook'){
+    let h = ''; try{ h = await msgSig(await f.arrayBuffer()); }catch(e){ console.error(e); }
+    if(!h) return mailMsg('Mail di Outlook non leggibile: salvala di nuovo come .msg o copia la firma e incollala.', true);
+    return sigHtml(h, f.name);
+  }
   if(SIG_IMG.test(f.type) || /\.(jpe?g|png|gif)$/i.test(f.name)) return sigPut(f, f.name);
   if(/^text\/html$/.test(f.type) || /\.html?$/i.test(f.name)){
     // le firme di Outlook (.htm) sono spesso in windows-1252: si legge il charset dal file
@@ -4358,7 +4507,7 @@ async function sigAdd(f){
     return sigHtml(t, f.name);
   }
   if(/^text\/plain$/.test(f.type) || /\.txt$/i.test(f.name)) return sigHtml(sigPlain(await f.text()), f.name);
-  mailMsg('Formato non accettato: serve un\'immagine JPEG o PNG, un file .htm o un testo.', true);
+  mailMsg('Formato non accettato: serve una mail di Outlook (.msg), un\'immagine JPEG o PNG, un file .htm o un testo.', true);
 }
 // firma incollata o trascinata come testo: HTML se c'è (tabelle, link), altrimenti testo semplice
 function sigData(dt){
@@ -4393,9 +4542,8 @@ async function extAdd(f){
   if(k!=='PDF' && k!=='WORD'){ mailMsg('Formato non accettato: per l\'offerta esterna serve un PDF o un file Word.', true); return; }
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   try{ await docTx('readwrite', s => s.put(f, id)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
+  // con l'offerta esterna l'offerta del configuratore resta senza spunta (scelta salvata con l'offerta, in cfg.ext.o)
   cfg.ext = {f:{id, name:f.name, type:f.type || '', size:f.size}};
-  // con l'offerta esterna l'offerta del configuratore di solito non si allega
-  const m = mailState(); m.sel = {...(m.sel || {}), offerta:false}; mailStore(m);
   save(); renderMail(); docGc(); mailMsg('Offerta esterna caricata');
 }
 const fileSafe = s => String(s).replace(/[\\/:*?"<>|\r\n]+/g, '-').trim() || 'file';
@@ -4802,7 +4950,8 @@ function bind(){
   }));
   $('#resetAll').addEventListener('click', () => {
     if(!confirm(tr('Azzerare tutta l\'offerta e tornare alle impostazioni iniziali?'))) return;
-    cfg = blankCfg(); stairSel = 0; fillForm(); update(); docGc(); say('Offerta azzerata');
+    // normCfg completa i campi (archivio documenti, offerta esterna): senza, il ridisegno si fermava e restava l'offerta esterna vecchia
+    cfg = normCfg(blankCfg()); stairSel = 0; fillForm(); update(); docGc(); say('Offerta azzerata');
   });
   $('#pdfOffer').addEventListener('click', () => printPart('offerta'));
   $('#pdfCost').addEventListener('change', e => { cfg.pdfCost = e.target.checked; save(); });
@@ -4948,6 +5097,7 @@ function bind(){
     const k = c.dataset.mail;
     if(k.startsWith('doc')){ const d = cfg.docs[+k.slice(3)]; if(c.checked) d.m = true; else delete d.m; save(); return; }
     if(k==='ext'){ if(c.checked) delete cfg.ext.m; else cfg.ext.m = false; save(); return; }
+    if(k==='offerta' && cfg.ext){ if(c.checked) cfg.ext.o = true; else delete cfg.ext.o; save(); return; }
     const m = mailState(); m.sel = {...(m.sel || {}), [k]: c.checked}; mailStore(m);
   });
   $('#mailBody').addEventListener('input', e => { const m = mailState(); m.testo = {...(m.testo || {}), [cfg.lingua]: e.target.value}; mailStore(m); });
@@ -4970,14 +5120,16 @@ function bind(){
   // offerta esterna e immagine della firma: clic o trascinamento nella zona
   const dropIn = (box, sel, add, input, addData) => {
     const z = e => e.target.closest && e.target.closest(sel);
-    box.addEventListener('click', e => { if(z(e)){ $(input).value = ''; $(input).click(); } });
-    box.addEventListener('keydown', e => { if(z(e) && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); $(input).value = ''; $(input).click(); } });
+    // clic e tastiera solo sulle zone vuote (role=button); sulle righe già caricate solo il trascinamento
+    const zb = e => { const x = z(e); return x && x.getAttribute('role')==='button' ? x : null; };
+    box.addEventListener('click', e => { if(zb(e)){ $(input).value = ''; $(input).click(); } });
+    box.addEventListener('keydown', e => { if(zb(e) && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); $(input).value = ''; $(input).click(); } });
     box.addEventListener('dragover', e => { const x = z(e); if(!x) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; x.classList.add('over'); });
     box.addEventListener('dragleave', e => { const x = z(e); if(x && !x.contains(e.relatedTarget)) x.classList.remove('over'); });
     box.addEventListener('drop', e => { const x = z(e); if(!x) return; e.preventDefault(); x.classList.remove('over'); if(e.dataTransfer.files.length) add(e.dataTransfer.files[0]); else if(addData) addData(e.dataTransfer); });
     $(input).addEventListener('change', e => add(e.target.files[0]));
   };
-  dropIn($('#mailList'), '[data-extdrop]', extAdd, '#extFile');
+  dropIn($('#mailList'), '[data-extdrop],[data-extrow]', extAdd, '#extFile');
   dropIn($('#sigBox'), '[data-sigdrop]', sigAdd, '#sigFile', sigData);
   // zona in cui incollare la firma: si accetta solo l'incolla (o il trascinamento), non la scrittura
   $('#sigBox').addEventListener('paste', e => { if(!e.target.closest('[data-sigpaste]')) return; e.preventDefault(); sigData(e.clipboardData); });
@@ -4985,6 +5137,7 @@ function bind(){
   $('#sigBox').addEventListener('input', e => { const x = e.target.closest('[data-sigpaste]'); if(x) x.textContent = ''; });
   $('#sigBox').addEventListener('drop', e => { if(!e.target.closest('[data-sigpaste]')) return; e.preventDefault(); sigData(e.dataTransfer); });
   $('#mailList').addEventListener('click', e => {
+    if(e.target.closest('[data-extnew]')){ $('#extFile').value = ''; $('#extFile').click(); return; }
     if(!e.target.closest('[data-extdel]') || !cfg.ext) return;
     if(!confirm(tr(`Togliere il file «${cfg.ext.f.name}»?`))) return;
     cfg.ext = null; save(); renderMail(); docGc();

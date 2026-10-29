@@ -861,13 +861,19 @@ DE = {
     "Formato non accettato: serve un'immagine JPEG.": "Format nicht akzeptiert: Ein JPEG-Bild ist nötig.",
     "Firma / piè di pagina (immagine o testo copiato)": "Signatur / Fußzeile (Bild oder kopierter Text)",
     "Carica la firma": "Signatur hochladen",
-    "Trascina qui un'immagine (JPEG, PNG) o il file .htm della firma": "Ein Bild (JPEG, PNG) oder die .htm-Datei der Signatur hierher ziehen",
+    "Trascina qui una mail di Outlook (.msg) con la firma, un'immagine (JPEG, PNG) o il file .htm della firma": "Eine Outlook-Mail (.msg) mit der Signatur, ein Bild (JPEG, PNG) oder die .htm-Datei der Signatur hierher ziehen",
     "Incolla qui la firma": "Signatur hier einfügen",
     "…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V": "…oder die Signatur kopieren (zum Beispiel aus Outlook) und hier mit Strg+V einfügen",
     "Togli firma": "Signatur entfernen",
     "Firma caricata": "Signatur hochgeladen",
     "Firma copiata": "Kopierte Signatur",
-    "Formato non accettato: serve un'immagine JPEG o PNG, un file .htm o un testo.": "Format nicht akzeptiert: Ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig.",
+    "Formato non accettato: serve una mail di Outlook (.msg), un'immagine JPEG o PNG, un file .htm o un testo.": "Format nicht akzeptiert: Eine Outlook-Mail (.msg), ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig.",
+    "Mail di Outlook non leggibile: salvala di nuovo come .msg o copia la firma e incollala.": "Outlook-Mail nicht lesbar: erneut als .msg speichern oder die Signatur kopieren und einfügen.",
+    "Anteprima della firma": "Vorschau der Signatur",
+    "Cambia": "Ändern",
+    "Trascina qui un altro file per sostituirlo": "Eine andere Datei hierher ziehen, um sie zu ersetzen",
+    "Sostituisci l'offerta esterna con un altro file": "Externes Angebot durch eine andere Datei ersetzen",
+    "File non disponibile in questo browser: caricalo di nuovo": "Datei in diesem Browser nicht verfügbar: erneut hochladen",
 }
 
 
