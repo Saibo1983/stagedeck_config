@@ -474,7 +474,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <div class="row3 bottom stageOnly">
         <label class="field rectOnly"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field rectOnly"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
-        <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
+        <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="2">Ø 2 m</option><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
         <label class="field"><span>Altezza (cm)</span><input type="number" id="H" min="20" max="220" step="5" inputmode="numeric"></label>
       </div>
       <div class="tribOnly" hidden>
@@ -1338,6 +1338,14 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Misure arrotondate a {} × {} m: i moduli di questo piano sono multipli di {}.":"Maße gerundet auf {0} × {1} m: Die Module dieser Deckplatte sind Vielfache von {2}.",
 "Non riesco a coprire la superficie con i moduli del piano scelto.":"Die Fläche lässt sich mit den Modulen der gewählten Deckplatte nicht abdecken.",
 "Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.":"Podeste nach Preis optimiert: Sie können in verschiedenen Richtungen liegen. «Podeste optimieren» ausschalten, damit alle in derselben Richtung liegen.",
+"Palco rotondo Ø {} m: {} pedane 1×1 m a lato curvo (quarto di cerchio, raggio 1 m), 4 gambe ciascuna. Senza parapetti, mascheratura e rampe.":"Runde Bühne Ø {0} m: {1} Podeste 1×1 m mit gebogener Seite (Viertelkreis, Radius 1 m), je 4 Beine. Ohne Geländer, Verkleidung und Rampen.",
+"Il palco rotondo Ø 2 m si fa con le pedane 1×1 a lato curvo, che ci sono solo in HEXA e legno: uso Ø 3 m.":"Die runde Bühne Ø 2 m wird aus Podesten 1×1 mit gebogener Seite gebaut, die es nur in HEXA und Holz gibt: verwende Ø 3 m.",
+"Misure: cateti 1.000 mm, ipotenusa 1.414 mm, angoli 90° e 45°.":"Maße: Katheten 1.000 mm, Hypotenuse 1.414 mm, Winkel 90° und 45°.",
+"Misure: cateti 2.000 mm (a sinistra) e 1.000 mm, ipotenusa 2.236 mm.":"Maße: Katheten 2.000 mm (links) und 1.000 mm, Hypotenuse 2.236 mm.",
+"Misure: cateti 2.000 mm (a destra) e 1.000 mm, ipotenusa 2.236 mm.":"Maße: Katheten 2.000 mm (rechts) und 1.000 mm, Hypotenuse 2.236 mm.",
+"Misure: quarto di cerchio, due lati diritti da 1.000 mm a 90°, lato curvo con raggio 1.000 mm (sviluppo 1.571 mm).":"Maße: Viertelkreis, zwei gerade Seiten 1.000 mm im Winkel von 90°, gebogene Seite mit Radius 1.000 mm (Bogenlänge 1.571 mm).",
+"Misure: lati diritti 2.000 mm (a sinistra) e 1.000 mm a 90°, lato curvo con raggio 2.500 mm tra i loro estremi (corda 2.236 mm, sviluppo 2.318 mm).":"Maße: gerade Seiten 2.000 mm (links) und 1.000 mm im Winkel von 90°, gebogene Seite mit Radius 2.500 mm zwischen ihren Enden (Sehne 2.236 mm, Bogenlänge 2.318 mm).",
+"Misure: lati diritti 2.000 mm (a destra) e 1.000 mm a 90°, lato curvo con raggio 2.500 mm tra i loro estremi (corda 2.236 mm, sviluppo 2.318 mm).":"Maße: gerade Seiten 2.000 mm (rechts) und 1.000 mm im Winkel von 90°, gebogene Seite mit Radius 2.500 mm zwischen ihren Enden (Sehne 2.236 mm, Bogenlänge 2.318 mm).",
 "Palco rotondo Ø {} m (suddivisione Everdeck): {} pedane 2×1 e {} pezzi speciali su misura in {} tipi. Senza parapetti, mascheratura e rampe (non ci sono pezzi curvi).":"Runde Bühne Ø {0} m (Aufteilung Everdeck): {1} Podeste 2×1 und {2} Sonderteile nach Maß in {3} Typen. Ohne Geländer, Verkleidung und Rampen (es gibt keine gebogenen Teile).",
 "Pedana speciale per palco rotondo Ø {} m, tipo {} ({} × {} m)":"Sonderpodest für runde Bühne Ø {0} m, Typ {1} ({2} × {3} m)",
 "square leg {}cm (prezzo medio tra {} e {})":"square leg {0}cm (Mittelpreis zwischen {1} und {2})",
@@ -1725,8 +1733,8 @@ const SUPPORTS = {
   spider:'Spider a traliccio (20, 40 o 60 cm)'
 };
 const FAMILIES = {
-  hexa:  {label:'HEXA nero antiscivolo (esterno)', support:'deck', step:0.5, codes:{'4x2':'VS750H-2x1','2x2':'VS750H-1x1','4x1':'VS750H-2x0,5','2x1':'VS750H-1x0,5','1x1':'VS750H-0,5x0,5'}},
-  wood:  {label:'Legno (interno)', support:'deck', step:0.5, codes:{'4x2':'VS750W-2x1','2x2':'VS750W-1x1','4x1':'VS750W-2x0,5','2x1':'VS750W-1x0,5','1x1':'VS750W-0,5x0,5'}},
+  hexa:  {label:'HEXA nero antiscivolo (esterno)', support:'deck', step:0.5, codes:{'4x2':'VS750H-2x1','2x2':'VS750H-1x1','4x1':'VS750H-2x0,5','2x1':'VS750H-1x0,5','1x1':'VS750H-0,5x0,5'}, circ:'VS750H-1x1C'},
+  wood:  {label:'Legno (interno)', support:'deck', step:0.5, codes:{'4x2':'VS750W-2x1','2x2':'VS750W-1x1','4x1':'VS750W-2x0,5','2x1':'VS750W-1x0,5','1x1':'VS750W-0,5x0,5'}, circ:'VS750W-1x1C'},
   plexb: {label:'Plexi nero (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PB-2x1','2x2':'VS75PB-1x1'}},
   plexm: {label:'Plexi latte (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PM-2x1','2x2':'VS750PM-1x1'}},
   plext: {label:'Plexi trasparente (solo 2×1 e 1×1)', support:'deck', step:1, codes:{'4x2':'VS750PT-2x1','2x2':'VS750PT-1x1'}},
@@ -1776,13 +1784,15 @@ const DEFAULT_RULES = {
     {on:true, label:'Corrimano scala regolabile sinistro', trigger:'stair_adjustable_rail2', code:'VASH-L', qty:1, note:'Solo per le scale con corrimano su 2 lati.'}
   ]
 };
-/* ---------- palco rotondo (suddivisioni Everdeck: disegni 3, 4, 6, 8, 10 m) ----------
+/* ---------- palco rotondo (suddivisioni Everdeck: disegni 3, 4, 6, 8, 10 m; 2 m con 4 pedane 1×1 a lato curvo) ----------
    Rettangoli in metri, origine al centro, y verso il retro: [x0,y0,x1,y1]. «std» sono pedane 2×1 intere; gli altri
    rettangoli vengono ritagliati sul cerchio e diventano pezzi speciali (tipi uguali a meno di una rotazione). */
 const ROUND_LAYOUTS = (() => {
   const L = {};
   const mir = rs => rs.flatMap(([a,b,c,d]) => [[a,b,c,d],[-c,b,-a,d]]);      // + speculare destra/sinistra
   const rot4 = rs => rs.flatMap(([a,b,c,d]) => [[a,b,c,d],[-d,a,-b,c],[-c,-d,-a,-b],[b,-c,d,-a]]);   // + 3 rotazioni di 90°
+  // 2 m: quattro quarti di cerchio 1×1 (raggio 1 m), pedane di serie del listino (famiglia: circ)
+  L[2] = {std:[], spec:rot4([[-1,0,0,1]]), cat:true};
   L[3] = {std:[[-1,-1,0,1],[0,-1,1,1]], spec:[[-1.5,1,0,1.5],[0,1,1.5,1.5],[-1.5,-1.5,0,-1],[0,-1.5,1.5,-1],
     [-1.5,0,-1,1],[-1.5,-1,-1,0],[1,0,1.5,1],[1,-1,1.5,0]]};
   const c4 = Math.sqrt(3)/2;
@@ -1798,7 +1808,7 @@ const ROUND_LAYOUTS = (() => {
       ...mir([[2,4,5,5],[2,3,5,4],[4,1,5,3],[4,-3,5,-1],[2,-4,5,-3],[2,-5,5,-4]])]};
   return L;
 })();
-const ROUND_D = [3,4,6,8,10];
+const ROUND_D = [2,3,4,6,8,10];
 // rettangolo ∩ cerchio (cerchio approssimato da un poligono di 360 lati: le rotazioni di 90° lo lasciano uguale)
 function clipCircle(rect, R){
   let poly = [[rect[0],rect[1]],[rect[2],rect[1]],[rect[2],rect[3]],[rect[0],rect[3]]];
@@ -1894,7 +1904,7 @@ const roundPieces = (() => {
       const k = canon(pl); if(!types.has(k)) types.set(k, String(types.size+1).padStart(2,'0'));
       const xs = pl.map(v => v[0]), ys = pl.map(v => v[1]);
       const bw = Math.max(...xs)-Math.min(...xs), bh = Math.max(...ys)-Math.min(...ys);
-      out.push({std:false, rect:r, poly:pl.map(toPlan), type:types.get(k), code:`KOLO${Dm}-${types.get(k)}`, bw, bh,
+      out.push({std:false, rect:r, poly:pl.map(toPlan), type:lay.cat ? '' : types.get(k), code:`KOLO${Dm}-${types.get(k)}`, bw, bh,
         area: Math.abs(pl.reduce((s,v,i) => { const w = pl[(i+1)%pl.length]; return s + v[0]*w[1]-w[0]*v[1]; }, 0))/2,
         // angoli del pezzo (vertici sui lati del rettangolo): servono per i giunti
         corners: pl.filter(([x,y]) => [r[0],r[2]].some(c => Math.abs(x-c)<1e-6) || [r[1],r[3]].some(c => Math.abs(y-c)<1e-6)).map(toPlan),
@@ -1908,6 +1918,7 @@ const roundPieces = (() => {
 function roundItems(){
   const items = [];
   for(const Dm of ROUND_D){
+    if(ROUND_LAYOUTS[Dm].cat) continue;   // pezzi di serie, già nel listino
     const seen = new Set();
     for(const p of roundPieces(Dm)){
       if(p.std || seen.has(p.code)) continue; seen.add(p.code);
@@ -2202,7 +2213,8 @@ function compute(cfg, R, look, kits){
   // palco rotondo: diametri dei disegni Everdeck, solo su gambe (pedane 2×1 + pezzi speciali)
   const round = cfg.shape==='round' && support==='legs' && fam.support==='deck' && !!fam.codes['4x2'];
   if(cfg.shape==='round' && !round) warn('bad','Il palco rotondo si fa solo su gambe, con pedane StageDeck (HEXA, legno o plexi): uso la forma rettangolare.');
-  const Dm = ROUND_D.includes(+cfg.diam) ? +cfg.diam : 6;
+  let Dm = ROUND_D.includes(+cfg.diam) ? +cfg.diam : 6;
+  if(round && ROUND_LAYOUTS[Dm].cat && !fam.circ){ warn('bad','Il palco rotondo Ø 2 m si fa con le pedane 1×1 a lato curvo, che ci sono solo in HEXA e legno: uso Ø 3 m.'); Dm = 3; }
   if(round){ W = D = Dm; }
   if(!(W>0 && D>0)){ warn('bad','Inserisci larghezza e profondità maggiori di zero.'); return out; }
   if(W>60 || D>60){ warn('bad','Le misure oltre 60 m non sono supportate.'); return out; }
@@ -2242,7 +2254,11 @@ function compute(cfg, R, look, kits){
   for(const d of decks) byDeck.set(d.code,(byDeck.get(d.code)||0)+1);
   for(const [code,qty] of byDeck) out.lines.push({group:'Pedana', code, qty});
   const specials = round ? rp.filter(q => !q.std) : [];
-  if(round){
+  if(round && ROUND_LAYOUTS[Dm].cat){
+    out.lines.push({group:'Pedana', code:fam.circ, qty:specials.length});
+    out.notes.push(`Palco rotondo Ø ${Dm} m: ${specials.length} pedane 1×1 m a lato curvo (quarto di cerchio, raggio 1 m), 4 gambe ciascuna. Senza parapetti, mascheratura e rampe.`);
+  }
+  else if(round){
     const bySp = new Map();
     for(const q of specials) bySp.set(q.code, (bySp.get(q.code)||0)+1);
     for(const [code,qty] of [...bySp].sort()) out.lines.push({group:'Pedana', code, qty});
@@ -2804,6 +2820,22 @@ const VHX_NOTE = 'Non nel listino: prezzo, peso e imballo dalla mail Everdeck (D
 for(const it of [{code:'VHX2.0', name:'2m safety handrail 1kN/m', img:'VHX2.0.jpg', kg:36, pack:[2000,1280,100]}, {code:'VHX1.0', name:'1m safety handrail 1kN/m', img:'VHX1.0.jpg', kg:22, pack:[1000,1280,100]},
                  {code:'VHXC', name:'Safety handrail connection', img:'VHXC.jpg', kg:0.2, pack:[70,38,38]}, {code:'VHXCC', name:'Safety handrail connection corner', img:'VHXCC.jpg', kg:0.25, pack:[73,72,43]}])
   if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push({...it, section:'STAGE HANDRAIL', fattura:VHX_NOTE});
+/* pedane triangolari e a lato curvo (HEXA, legno; StageDeck VS750 e PT750): sagoma e misure dai disegni tecnici dei pezzi.
+   Sagoma in m, y verso l'alto, vista dal piano di calpestio. Sinistra = lato lungo diritto a sinistra. */
+const r3 = n => Math.round(n*1000)/1000;   // al millimetro: l'arco resta liscio
+const arcPts = (cx, cy, r, a0, a1, n = 24) => Array.from({length:n+1}, (_, i) => { const a = (a0+(a1-a0)*i/n)*Math.PI/180; return [r3(cx+r*Math.cos(a)), r3(cy+r*Math.sin(a))]; });
+const mirrorX = (pts, w) => pts.map(([x,y]) => [r3(w-x), y]).reverse();
+const C2L = [[0,2], ...arcPts(-1.5, 2, 2.5, 0, -Math.atan2(2, 1.5)*180/Math.PI)];   // raggio 2,5 m dal centro 1,5 m a sinistra dell'angolo retto
+const SHAPED = {
+  '1X1T':  {shape:[[0,0],[1,0],[1,1]], mis:'Misure: cateti 1.000 mm, ipotenusa 1.414 mm, angoli 90° e 45°.'},
+  '2X1T-L':{shape:[[0,0],[1,0],[0,2]], mis:'Misure: cateti 2.000 mm (a sinistra) e 1.000 mm, ipotenusa 2.236 mm.'},
+  '2X1T-R':{shape:[[0,0],[1,0],[1,2]], mis:'Misure: cateti 2.000 mm (a destra) e 1.000 mm, ipotenusa 2.236 mm.'},
+  '1X1C':  {shape:[[1,1], ...arcPts(1, 1, 1, 180, 270)], mis:'Misure: quarto di cerchio, due lati diritti da 1.000 mm a 90°, lato curvo con raggio 1.000 mm (sviluppo 1.571 mm).'},
+  '2X1C-L':{shape:C2L, mis:'Misure: lati diritti 2.000 mm (a sinistra) e 1.000 mm a 90°, lato curvo con raggio 2.500 mm tra i loro estremi (corda 2.236 mm, sviluppo 2.318 mm).'},
+  '2X1C-R':{shape:mirrorX(C2L, 1), mis:'Misure: lati diritti 2.000 mm (a destra) e 1.000 mm a 90°, lato curvo con raggio 2.500 mm tra i loro estremi (corda 2.236 mm, sviluppo 2.318 mm).'}
+};
+const shapedOf = code => { const m = ncode(code).match(/^(?:VS|PT)750[HW]-(1X1T|2X1T-[LR]|1X1C|2X1C-[LR])$/); return m ? SHAPED[m[1]] : null; };
+for(const it of ITEMS){ const sh = shapedOf(it.code); if(sh) it.shape = sh.shape; }
 // pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
 for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
@@ -2898,7 +2930,8 @@ const fmtDate = (iso, l = LANG) => iso ? iso.split('-').reverse().join(l==='de' 
 const DESC = (() => { try{ return JSON.parse(document.getElementById('descrizioni').textContent); }catch(e){ return {}; } })();
 const descOf = code => {
   const d = DESC[ncode(code)]; if(!d) return null;
-  const de = LANG==='de', nome = (de ? d.nome_de : d.nome) || '', desc = (de ? d.desc_de : d.desc) || '';
+  const de = LANG==='de', nome = (de ? d.nome_de : d.nome) || '', sh = shapedOf(code);
+  const desc = ((de ? d.desc_de : d.desc) || '') + (sh ? '\n- ' + tr(sh.mis) : '');
   return nome || desc ? {nome, desc, auto: !!(de ? d.auto_de : d.auto)} : null;
 };
 // testo per la ricerca: denominazioni in tutte e due le lingue
