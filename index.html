@@ -2140,9 +2140,12 @@ function finishOffer(out, cfg, R, look, area, warn){
     if(m3==null) noVol.push(it.code);
     lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
   }
-  // righe per gruppo e, dentro il gruppo, nell'ordine del listino (gli articoli che non ci sono vanno in fondo)
+  // righe nell'ordine del listino (gli articoli che non ci sono vanno in fondo), tenute insieme per gruppo:
+  // i gruppi vengono nell'ordine del loro primo articolo nel listino
   const ord = new Map(ITEMS.map((i,n) => [ncode(i.code), n])), at = l => ord.has(ncode(l.code)) ? ord.get(ncode(l.code)) : 1e9;
-  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group) || at(a)-at(b));
+  lines.sort((a,b) => at(a)-at(b) || GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  const grpOrd = [...new Set(lines.map(l => l.group))];
+  lines.sort((a,b) => grpOrd.indexOf(a.group)-grpOrd.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
@@ -3859,7 +3862,7 @@ function renderResult(){
   renderStair(p);
   let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num c-cost">Acquisto €</th><th class="num c-cost">Magg. %</th><th class="num">Vendita €</th><th class="num">Totale €</th></tr></thead><tbody>`;
   const mkp = dec(+cfg.markup||0, (+cfg.markup||0)%1 ? 1 : 0);
-  for(const g of GROUPS){
+  for(const g of new Set(res.lines.map(l => l.group))){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="3">${g==='Rampe' ? thumbSrc(rampSrc(+cfg.H,true), `Rampa ${cfg.H} cm montata al palco`, 'Immagine indicativa del kit rampa per questa altezza') : ''}${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
@@ -4305,6 +4308,10 @@ function sigClean(html){
       if(n.startsWith('on') || n==='class' || n==='id' || n.includes(':') || (n==='href' && !/^(https?:|mailto:|tel:)/i.test(v))
         || (n==='src' && !/^(https?:|data:image\/(jpeg|png|gif);)/i.test(v)) || n==='srcset' || n==='background') el.removeAttribute(a.name);
     }
+    // tabelle flottanti o posizionate (align, float, position) potrebbero finire sopra o accanto al testo della mail
+    if(!/^T[DH]$/.test(el.tagName)) el.removeAttribute('align');
+    if(el.style) for(const k of ['float','position','top','left','right','bottom','z-index','transform']) el.style.removeProperty(k);
+    if(el.getAttribute('style')==='') el.removeAttribute('style');
     if(el.tagName==='IMG' && !el.getAttribute('src')) el.replaceWith(el.getAttribute('alt') || '');
   }
   return d.body.innerHTML.trim();
@@ -4376,7 +4383,7 @@ async function sigPart(){
   const html = d.body.innerHTML;
   return {html, text:sigText(html), imgs};
 }
-const mailHtml = (text, sig) => `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt">${esc(text).replace(/\r?\n/g, '<br>\r\n')}<br>\r\n<br>\r\n${sig.html}</body></html>`;
+const mailHtml = (text, sig) => `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt"><div>${esc(text).replace(/\r?\n/g, '<br>\r\n')}</div>\r\n<br>\r\n<div style="clear:both">${sig.html}</div></body></html>`;
 const mailPlain = (text, sig) => [text, sig && sig.text].filter(Boolean).join('\n\n');
 // testo completo: messaggio e firma
 const mailFull = () => [$('#mailBody').value.replace(/\s+$/, ''), $('#mailSig').value.trim()].filter(Boolean).join('\n\n');
