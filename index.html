@@ -256,7 +256,12 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 #sigBox .sigprev{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 #sigBox img{max-width:100%;max-height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
 .mailtext .trset,.mailtext{min-width:0}
-#sigBox .sigframe{box-sizing:border-box;width:100%;height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
+#sigBox .sigwin{position:relative;width:100%;height:150px;overflow:hidden;border:1px solid var(--line);border-radius:4px;background:#fff;cursor:zoom-in}
+#sigBox .sigwin::after{content:"";position:absolute;inset:auto 0 0 0;height:36px;background:linear-gradient(rgba(255,255,255,0),#fff);pointer-events:none}
+#sigBox .sigframe{display:block;width:1000px;height:150px;border:0;pointer-events:none}
+#sigBox .sigbtns{display:flex;gap:8px;flex-wrap:wrap}
+#sigDlg{width:min(1100px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
+#sigDlg .sigfull{display:block;width:100%;height:min(70vh,720px);border:1px solid var(--line);border-radius:6px;background:#fff}
 #sigBox .sigpaste{margin-top:6px;min-height:38px;padding:8px 10px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:12.5px;overflow:hidden;cursor:text}
 #sigBox .sigpaste:empty::before{content:attr(placeholder);color:var(--muted)}
 #sigBox .sigpaste:focus{border-color:var(--brand);outline:none}
@@ -277,7 +282,7 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .clirow{display:flex;gap:8px;align-items:center}
 .clirow input{flex:1 1 160px;min-width:0}
 @media (max-width:820px){.cligrid,.clicols{grid-template-columns:minmax(0,1fr)}.fisrow{grid-template-columns:minmax(0,1fr) auto}.fisrow .fisok{grid-column:1/-1;padding:0}}
-#trDlg::backdrop,#imgDlg::backdrop,#cliDlg::backdrop{background:rgba(10,20,30,.45)}
+#trDlg::backdrop,#imgDlg::backdrop,#cliDlg::backdrop,#sigDlg::backdrop{background:rgba(10,20,30,.45)}
 /* illustrazioni degli articoli */
 .thumb{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:2px;margin:-4px 8px -4px 0;vertical-align:middle;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:zoom-in;flex:none}
 .thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
@@ -776,6 +781,13 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" class="btn" id="cliDel">Elimina</button>
           <span class="status" id="cliMsg" role="status" aria-live="polite"></span>
         </div>
+      </form>
+    </dialog>
+    <dialog id="sigDlg" aria-labelledby="sigTitle">
+      <form method="dialog" class="trform">
+        <div class="trhead"><h2 id="sigTitle">Firma nella mail</h2><button type="submit" class="btn small" aria-label="Chiudi">✕</button></div>
+        <p class="hint" style="margin:0">La mail come la riceve il cliente in Outlook: testo in Calibri 11 pt, firma a grandezza reale (96 dpi, le misure di Outlook). Se è più larga della finestra, scorri di lato.</p>
+        <iframe id="sigFull" class="sigfull" sandbox="allow-same-origin allow-popups" title="Mail con la firma"></iframe>
       </form>
     </dialog>
     <dialog id="trDlg" aria-labelledby="trTitle">
@@ -1678,6 +1690,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Formato non accettato: serve una mail di Outlook (.msg), un'immagine JPEG o PNG, un file .htm o un testo.":"Format nicht akzeptiert: Eine Outlook-Mail (.msg), ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig.",
 "Mail di Outlook non leggibile: salvala di nuovo come .msg o copia la firma e incollala.":"Outlook-Mail nicht lesbar: erneut als .msg speichern oder die Signatur kopieren und einfügen.",
 "Anteprima della firma":"Vorschau der Signatur",
+"Vedi firma":"Signatur ansehen",
+"Apri la firma a grandezza reale":"Signatur in Originalgröße öffnen",
+"Anteprima parziale, solo indicativa: «Vedi firma» la mostra intera, com'è nella mail.":"Teilvorschau, nur zur Orientierung: «Signatur ansehen» zeigt sie vollständig, wie in der Mail.",
+"Firma nella mail":"Signatur in der Mail",
+"La mail come la riceve il cliente in Outlook: testo in Calibri 11 pt, firma a grandezza reale (96 dpi, le misure di Outlook). Se è più larga della finestra, scorri di lato.":"Die Mail, wie sie der Kunde in Outlook erhält: Text in Calibri 11 pt, Signatur in Originalgröße (96 dpi, die Maße von Outlook). Ist sie breiter als das Fenster, seitlich scrollen.",
+"Mail con la firma":"Mail mit Signatur",
 "Cambia":"Ändern",
 "Trascina qui un altro file per sostituirlo":"Eine andere Datei hierher ziehen, um sie zu ersetzen",
 "Sostituisci l'offerta esterna con un altro file":"Externes Angebot durch eine andere Datei ersetzen",
@@ -4469,22 +4487,27 @@ async function renderSig(){
   const im = mailState().firmaImg, box = $('#sigBox');
   if(sigUrl){ URL.revokeObjectURL(sigUrl); sigUrl = ''; }
   let b = null; if(im) try{ b = await docTx('readonly', s => s.get(SIG_ID)); }catch(e){}
-  const info = b && `<span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><button type="button" class="btn small" data-sigdel>Togli firma</button>`;
+  const info = b && `<span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><span class="sigbtns"><button type="button" class="btn small" data-sigview>Vedi firma</button><button type="button" class="btn small" data-sigdel>Togli firma</button></span>`;
   if(b && /^text\//.test(b.type)){
-    // anteprima in una cornice a parte, senza script: si vede come nella mail, senza gli stili dell'app
-    const doc = `<!doctype html><html><head><meta charset="utf-8"><base target="_blank"></head><body style="margin:8px;font-family:Calibri,Arial,sans-serif;font-size:11pt">${sigClean(await b.text())}</body></html>`;
-    box.innerHTML = `<div class="sigprev"><iframe class="sigframe" sandbox="allow-same-origin allow-popups" srcdoc="${esc(doc)}" title="Anteprima della firma"></iframe>${info}</div>`;
-    const fr = box.querySelector('iframe');
-    // firma più larga del riquadro: rimpicciolita per vederla intera
-    fr.addEventListener('load', () => { try{
-      const de = fr.contentDocument.documentElement, k = de.clientWidth / de.scrollWidth;
-      if(k < 1) fr.contentDocument.body.style.zoom = k;
-      fr.style.height = Math.min(400, de.scrollHeight + 4) + 'px';
-    }catch(e){} });
+    // anteprima solo indicativa: un ritaglio della firma a grandezza reale (in una cornice senza script, senza gli stili dell'app);
+    // intera nella finestra «Vedi firma»
+    const doc = `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:8px;overflow:hidden;font-family:Calibri,Arial,sans-serif;font-size:11pt">${sigClean(await b.text())}</body></html>`;
+    box.innerHTML = `<div class="sigprev"><div class="sigwin" data-sigview role="button" tabindex="0" title="Apri la firma a grandezza reale"><iframe class="sigframe" sandbox="allow-same-origin" srcdoc="${esc(doc)}" title="Anteprima della firma" tabindex="-1"></iframe></div>`
+      + `<span class="hint">Anteprima parziale, solo indicativa: «Vedi firma» la mostra intera, com'è nella mail.</span>${info}</div>`;
   }
   else if(b){ sigUrl = URL.createObjectURL(b); box.innerHTML = `<div class="sigprev"><img src="${sigUrl}" alt="">${info}</div>`; }
   else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica la firma"><span>Trascina qui una mail di Outlook (.msg) con la firma, un'immagine (JPEG, PNG) o il file .htm della firma</span><span>oppure clicca per sceglierla</span></div>`
     + `<div class="sigpaste" data-sigpaste contenteditable="true" role="textbox" aria-label="Incolla qui la firma" placeholder="…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V"></div>`;
+}
+// la mail con la firma a grandezza reale, in una finestra: testo, saluti e firma come nel file .eml (immagini dai file, non da cid:)
+let sigFullUrls = [];
+async function sigView(){
+  const sig = await sigPart(); if(!sig) return;
+  sigFullUrls.forEach(u => URL.revokeObjectURL(u)); sigFullUrls = [];
+  let html = mailHtml(mailFull(), sig);
+  for(const im of sig.imgs){ const u = URL.createObjectURL(im.blob); sigFullUrls.push(u); html = html.split('cid:'+im.cid).join(u); }
+  $('#sigFull').srcdoc = html.replace('<head>', '<head><base target="_blank">');
+  $('#sigDlg').showModal();
 }
 async function sigPut(blob, name){
   try{ await docTx('readwrite', s => s.put(blob, SIG_ID)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
@@ -5142,6 +5165,8 @@ function bind(){
     if(!confirm(tr(`Togliere il file «${cfg.ext.f.name}»?`))) return;
     cfg.ext = null; save(); renderMail(); docGc();
   });
+  $('#sigBox').addEventListener('click', e => { if(e.target.closest('[data-sigview]')) sigView(); });
+  $('#sigBox').addEventListener('keydown', e => { if(e.target.closest('.sigwin[data-sigview]') && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); sigView(); } });
   $('#sigBox').addEventListener('click', async e => {
     if(!e.target.closest('[data-sigdel]')) return;
     try{ await docTx('readwrite', s => s.delete(SIG_ID)); }catch(_){}
