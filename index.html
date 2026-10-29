@@ -253,6 +253,12 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .mailgrp .extrow label{flex:1 1 auto;min-width:0}
 #sigBox .sigprev{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
 #sigBox img{max-width:100%;max-height:120px;border:1px solid var(--line);border-radius:4px;background:#fff}
+.mailtext .trset,.mailtext{min-width:0}
+#sigBox .sightml{box-sizing:border-box;width:100%;max-height:260px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:#222;font:11pt Calibri,Arial,sans-serif}
+#sigBox .sightml *{all:revert}
+#sigBox .sigpaste{margin-top:6px;min-height:38px;padding:8px 10px;border:2px dashed var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:12.5px;overflow:hidden;cursor:text}
+#sigBox .sigpaste:empty::before{content:attr(placeholder);color:var(--muted)}
+#sigBox .sigpaste:focus{border-color:var(--brand);outline:none}
 #trDlg{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 #cliDlg{width:min(1120px,calc(100vw - 32px));max-height:calc(100vh - 32px);border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
 .cligrid{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
@@ -459,7 +465,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" data-shape="round" aria-pressed="false">Rotondo</button>
         </div>
       </div>
-      <div class="row3 stageOnly">
+      <div class="row3 bottom stageOnly">
         <label class="field rectOnly"><span>Larghezza (m)</span><input type="number" id="W" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field rectOnly"><span>Profondità (m)</span><input type="number" id="D" min="0.5" max="60" step="0.5" inputmode="decimal"></label>
         <label class="field roundOnly" hidden><span>Diametro</span><select id="diam"><option value="3">Ø 3 m</option><option value="4">Ø 4 m</option><option value="6">Ø 6 m</option><option value="8">Ø 8 m</option><option value="10">Ø 10 m</option></select></label>
@@ -702,8 +708,8 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <div class="archrow"><button type="button" class="btn small" id="mailReset" title="Rimette il testo iniziale della mail nella lingua di stampa">Testo predefinito</button></div>
           <fieldset class="trset"><legend>Firma</legend>
             <label class="field"><span>Saluti e firma del venditore</span><textarea id="mailSig" rows="4" data-noi18n></textarea></label>
-            <div class="field"><span>Immagine di firma / piè di pagina (JPEG)</span><div id="sigBox"></div></div>
-            <input type="file" id="sigFile" accept=".jpg,.jpeg,image/jpeg" hidden>
+            <div class="field"><span>Firma / piè di pagina (immagine o testo copiato)</span><div id="sigBox"></div></div>
+            <input type="file" id="sigFile" accept=".jpg,.jpeg,.png,.gif,.htm,.html,.txt,image/jpeg,image/png,image/gif,text/html,text/plain" hidden>
           </fieldset>
         </div>
       </div>
@@ -1659,7 +1665,16 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "oppure clicca per sceglierla":"oder klicken, um es auszuwählen",
 "Carica l'immagine della firma":"Signaturbild hochladen",
 "Togli immagine":"Bild entfernen",
-"Formato non accettato: serve un'immagine JPEG.":"Format nicht akzeptiert: Ein JPEG-Bild ist nötig."
+"Formato non accettato: serve un'immagine JPEG.":"Format nicht akzeptiert: Ein JPEG-Bild ist nötig.",
+"Firma / piè di pagina (immagine o testo copiato)":"Signatur / Fußzeile (Bild oder kopierter Text)",
+"Carica la firma":"Signatur hochladen",
+"Trascina qui un'immagine (JPEG, PNG) o il file .htm della firma":"Ein Bild (JPEG, PNG) oder die .htm-Datei der Signatur hierher ziehen",
+"Incolla qui la firma":"Signatur hier einfügen",
+"…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V":"…oder die Signatur kopieren (zum Beispiel aus Outlook) und hier mit Strg+V einfügen",
+"Togli firma":"Signatur entfernen",
+"Firma caricata":"Signatur hochgeladen",
+"Firma copiata":"Kopierte Signatur",
+"Formato non accettato: serve un'immagine JPEG o PNG, un file .htm o un testo.":"Format nicht akzeptiert: Ein JPEG- oder PNG-Bild, eine .htm-Datei oder ein Text ist nötig."
 }}</script>
 <script>
 "use strict";
@@ -2125,7 +2140,12 @@ function finishOffer(out, cfg, R, look, area, warn){
     if(m3==null) noVol.push(it.code);
     lines.push({group:l.group, code:it.code, name:it.name + (isSet ? ' (set da 4)' : pk>1 ? ` (conf. da ${pk})` : ''), rawName:it.name, pkg:pk, isSet, pieces, qty, key, adj, unitCost:r2(pr*(isSet ? pk : 1)), autoQty:isSet ? autoPieces/pk : autoPieces, step:isSet ? 1 : pk, mk:mkp, mkMod, unit, total:r2(unit*qty), cost:r2(pr*pieces), kg, m3, fattura:it.fattura||''});
   }
-  lines.sort((a,b) => GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  // righe nell'ordine del listino (gli articoli che non ci sono vanno in fondo), tenute insieme per gruppo:
+  // i gruppi vengono nell'ordine del loro primo articolo nel listino
+  const ord = new Map(ITEMS.map((i,n) => [ncode(i.code), n])), at = l => ord.has(ncode(l.code)) ? ord.get(ncode(l.code)) : 1e9;
+  lines.sort((a,b) => at(a)-at(b) || GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
+  const grpOrd = [...new Set(lines.map(l => l.group))];
+  lines.sort((a,b) => grpOrd.indexOf(a.group)-grpOrd.indexOf(b.group));
   if(adjNotes.length) warn('info', 'Quantità modificate a mano: '+adjNotes.join(', ')+'.');
   if(mkNotes.length) warn('info', `Maggiorazioni diverse dal ${dec(mkAll, mkAll%1 ? 1 : 0)}% generale: `+mkNotes.join(', ')+'.');
   // Articoli aggiunti al listino da fatture di acquisto (righe azzurre): codice, prezzo, peso e imballo da controllare.
@@ -3842,7 +3862,7 @@ function renderResult(){
   renderStair(p);
   let html = `<table><thead><tr><th>Codice</th><th>Descrizione</th><th class="num">Q.tà</th><th class="num c-cost">Acquisto €</th><th class="num c-cost">Magg. %</th><th class="num">Vendita €</th><th class="num">Totale €</th></tr></thead><tbody>`;
   const mkp = dec(+cfg.markup||0, (+cfg.markup||0)%1 ? 1 : 0);
-  for(const g of GROUPS){
+  for(const g of new Set(res.lines.map(l => l.group))){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
     html += `<tr class="grp"><td colspan="3">${g==='Rampe' ? thumbSrc(rampSrc(+cfg.H,true), `Rampa ${cfg.H} cm montata al palco`, 'Immagine indicativa del kit rampa per questa altezza') : ''}${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td></tr>`;
@@ -4269,25 +4289,102 @@ function renderMail(){
   if(mailAuto.lang!==cfg.lingua){ bi.value = mailText(); mailAuto.lang = cfg.lingua; }
   if(!renderMail.sig){ renderMail.sig = true; $('#mailSig').value = mailState().firma || ''; renderSig(); }
 }
-/* firma della mail: testo (saluti, nome del venditore) e un'immagine JPEG sotto, uguali per tutte le offerte.
-   Il testo sta in localStorage, l'immagine in IndexedDB con gli altri file. */
-const SIG_ID = 'mail.firma';
+/* firma della mail: testo (saluti, nome del venditore) e sotto un'immagine o una firma copiata (per esempio da Outlook,
+   con tabelle e link), uguali per tutte le offerte. Il testo sta in localStorage, la firma sotto in IndexedDB con gli altri file
+   (immagine così com'è, testo copiato come HTML ripulito). */
+const SIG_ID = 'mail.firma', SIG_IMG = /^image\/(jpeg|png|gif)$/;
 let sigUrl = '';
+// HTML copiato: restano testo, tabelle, link e stili in linea; via script, stili, classi e immagini locali (al loro posto il testo alternativo)
+function sigClean(html){
+  const d = new DOMParser().parseFromString(html, 'text/html');
+  d.querySelectorAll('script,style,meta,link,title,iframe,frame,object,embed,form,input,button,textarea,select,svg,math,template,base').forEach(n => n.remove());
+  const w = d.createTreeWalker(d.body, NodeFilter.SHOW_COMMENT), cs = [];
+  while(w.nextNode()) cs.push(w.currentNode);
+  cs.forEach(c => c.remove());
+  for(const el of [...d.body.querySelectorAll('*')]){
+    if(el.tagName.includes(':')){ el.replaceWith(...el.childNodes); continue; }   // o:p e simili di Word/Outlook
+    for(const a of [...el.attributes]){
+      const n = a.name.toLowerCase(), v = a.value.trim();
+      if(n.startsWith('on') || n==='class' || n==='id' || n.includes(':') || (n==='href' && !/^(https?:|mailto:|tel:)/i.test(v))
+        || (n==='src' && !/^(https?:|data:image\/(jpeg|png|gif);)/i.test(v)) || n==='srcset' || n==='background') el.removeAttribute(a.name);
+    }
+    // tabelle flottanti o posizionate (align, float, position) potrebbero finire sopra o accanto al testo della mail
+    if(!/^T[DH]$/.test(el.tagName)) el.removeAttribute('align');
+    if(el.style) for(const k of ['float','position','top','left','right','bottom','z-index','transform']) el.style.removeProperty(k);
+    if(el.getAttribute('style')==='') el.removeAttribute('style');
+    if(el.tagName==='IMG' && !el.getAttribute('src')) el.replaceWith(el.getAttribute('alt') || '');
+  }
+  return d.body.innerHTML.trim();
+}
+// versione solo testo della firma copiata, per la parte di testo semplice della mail
+function sigText(html){
+  let s = '';
+  const walk = n => {
+    if(n.nodeType===3){ s += n.nodeValue.replace(/\s+/g, ' '); return; }
+    if(n.nodeType!==1 || n.tagName==='IMG') return;
+    if(n.tagName==='BR'){ s += '\n'; return; }
+    const blk = /^(P|DIV|TR|LI|H[1-6]|TABLE|UL|OL|BLOCKQUOTE|HR)$/.test(n.tagName);
+    if(blk) s += '\n';
+    n.childNodes.forEach(walk);
+    if(n.tagName==='TD' || n.tagName==='TH') s += '   ';
+    if(blk) s += '\n';
+  };
+  walk(new DOMParser().parseFromString(html, 'text/html').body);
+  return s.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
 async function renderSig(){
   const im = mailState().firmaImg, box = $('#sigBox');
   if(sigUrl){ URL.revokeObjectURL(sigUrl); sigUrl = ''; }
   let b = null; if(im) try{ b = await docTx('readonly', s => s.get(SIG_ID)); }catch(e){}
-  if(b){ sigUrl = URL.createObjectURL(b);
-    box.innerHTML = `<div class="sigprev"><img src="${sigUrl}" alt=""><span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><button type="button" class="btn small" data-sigdel>Togli immagine</button></div>`; }
-  else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica l'immagine della firma"><span>Trascina qui un'immagine JPEG (firma, logo, piè di pagina)</span><span>oppure clicca per sceglierla</span></div>`;
+  const info = b && `<span class="hint" data-noi18n>${esc(im.name)} · ${docSize(im.size)}</span><button type="button" class="btn small" data-sigdel>Togli firma</button>`;
+  if(b && /^text\//.test(b.type)) box.innerHTML = `<div class="sigprev"><div class="sightml" data-noi18n>${sigClean(await b.text())}</div>${info}</div>`;
+  else if(b){ sigUrl = URL.createObjectURL(b); box.innerHTML = `<div class="sigprev"><img src="${sigUrl}" alt="">${info}</div>`; }
+  else box.innerHTML = `<div class="drop" data-sigdrop role="button" tabindex="0" aria-label="Carica la firma"><span>Trascina qui un'immagine (JPEG, PNG) o il file .htm della firma</span><span>oppure clicca per sceglierla</span></div>`
+    + `<div class="sigpaste" data-sigpaste contenteditable="true" role="textbox" aria-label="Incolla qui la firma" placeholder="…oppure copia la firma (per esempio da Outlook) e incollala qui con Ctrl+V"></div>`;
 }
+async function sigPut(blob, name){
+  try{ await docTx('readwrite', s => s.put(blob, SIG_ID)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
+  const m = mailState(); m.firmaImg = {name, size:blob.size}; mailStore(m); renderSig(); mailMsg('Firma caricata');
+}
+const sigHtml = (html, name) => { html = sigClean(html); if(html && (sigText(html) || /<img/i.test(html))) sigPut(new Blob([html], {type:'text/html'}), name); };
+const sigPlain = t => '<div>' + esc(t.trim()).replace(/\r?\n/g, '<br>') + '</div>';
 async function sigAdd(f){
   if(!f) return;
-  if(!/jpe?g$/i.test(f.type) && !/\.jpe?g$/i.test(f.name)){ mailMsg('Formato non accettato: serve un\'immagine JPEG.', true); return; }
-  try{ await docTx('readwrite', s => s.put(f, SIG_ID)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
-  const m = mailState(); m.firmaImg = {name:f.name, size:f.size}; mailStore(m); renderSig();
+  if(SIG_IMG.test(f.type) || /\.(jpe?g|png|gif)$/i.test(f.name)) return sigPut(f, f.name);
+  if(/^text\/html$/.test(f.type) || /\.html?$/i.test(f.name)){
+    // le firme di Outlook (.htm) sono spesso in windows-1252: si legge il charset dal file
+    const buf = await f.arrayBuffer(), cs = (new TextDecoder('latin1').decode(buf.slice(0, 4096)).match(/charset=["']?([\w-]+)/i) || [])[1];
+    let t; try{ t = new TextDecoder(cs || 'utf-8').decode(buf); }catch(e){ t = new TextDecoder().decode(buf); }
+    return sigHtml(t, f.name);
+  }
+  if(/^text\/plain$/.test(f.type) || /\.txt$/i.test(f.name)) return sigHtml(sigPlain(await f.text()), f.name);
+  mailMsg('Formato non accettato: serve un\'immagine JPEG o PNG, un file .htm o un testo.', true);
+}
+// firma incollata o trascinata come testo: HTML se c'è (tabelle, link), altrimenti testo semplice
+function sigData(dt){
+  const f = [...dt.files].find(f => SIG_IMG.test(f.type));
+  if(f) return sigAdd(f);
+  const h = dt.getData('text/html'), t = dt.getData('text/plain');
+  if(h) sigHtml(h, tr('Firma copiata'));
+  else if(t.trim()) sigHtml(sigPlain(t), tr('Firma copiata'));
 }
 async function sigBlob(){ if(!mailState().firmaImg) return null; try{ return await docTx('readonly', s => s.get(SIG_ID)) || null; }catch(e){ return null; } }
+// firma sotto il messaggio: {html, text, imgs:[{cid, blob}]}; le immagini incorporate diventano parti del messaggio (cid:)
+async function sigPart(){
+  const b = await sigBlob(); if(!b) return null;
+  const ext = t => ({'image/png':'png', 'image/gif':'gif'})[t] || 'jpg';
+  if(!/^text\//.test(b.type)) return {html:'<img src="cid:firma0@stagedeck" alt="" style="max-width:600px">', text:'', imgs:[{cid:'firma0@stagedeck', blob:b, name:'firma.'+ext(b.type)}]};
+  const d = new DOMParser().parseFromString(sigClean(await b.text()), 'text/html'), imgs = [];
+  for(const im of d.querySelectorAll('img[src^="data:"]')){
+    try{ const blob = await (await fetch(im.getAttribute('src'))).blob(), cid = `firma${imgs.length}@stagedeck`;
+      imgs.push({cid, blob, name:`firma${imgs.length}.${ext(blob.type)}`}); im.setAttribute('src', 'cid:'+cid); }
+    catch(e){ im.remove(); }
+  }
+  const html = d.body.innerHTML;
+  return {html, text:sigText(html), imgs};
+}
+const mailHtml = (text, sig) => `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt"><div>${esc(text).replace(/\r?\n/g, '<br>\r\n')}</div>\r\n<br>\r\n<div style="clear:both">${sig.html}</div></body></html>`;
+const mailPlain = (text, sig) => [text, sig && sig.text].filter(Boolean).join('\n\n');
 // testo completo: messaggio e firma
 const mailFull = () => [$('#mailBody').value.replace(/\s+$/, ''), $('#mailSig').value.trim()].filter(Boolean).join('\n\n');
 async function extAdd(f){
@@ -4297,6 +4394,8 @@ async function extAdd(f){
   const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   try{ await docTx('readwrite', s => s.put(f, id)); }catch(e){ mailMsg('Caricamento non riuscito: memoria del browser piena o bloccata.', true); return; }
   cfg.ext = {f:{id, name:f.name, type:f.type || '', size:f.size}};
+  // con l'offerta esterna l'offerta del configuratore di solito non si allega
+  const m = mailState(); m.sel = {...(m.sel || {}), offerta:false}; mailStore(m);
   save(); renderMail(); docGc(); mailMsg('Offerta esterna caricata');
 }
 const fileSafe = s => String(s).replace(/[\\/:*?"<>|\r\n]+/g, '-').trim() || 'file';
@@ -4345,17 +4444,18 @@ const b64 = async blob => {
 // intestazioni con lettere accentate: parole codificate UTF-8 (RFC 2047), a pezzi corti
 const mimeWord = s => /^[\x20-\x7e]*$/.test(s) ? s : [...s].reduce((a, c, i) => { if(i % 12===0) a.push(''); a[a.length-1] += c; return a; }, [])
   .map(p => '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(p))) + '?=').join('\r\n ');
-// con l'immagine di firma il testo va anche in HTML, con l'immagine dentro il messaggio (multipart/related, cid:firma)
+// con la firma sotto il testo va anche in HTML, con le immagini della firma dentro il messaggio (multipart/related, cid:firma)
 async function emlBlob(to, subj, text, files, sig){
   const B = 'stagedeck_' + Date.now().toString(36), parts = [];
   const head = [`To: ${to}`, `Subject: ${mimeWord(subj)}`, 'X-Unsent: 1', 'MIME-Version: 1.0', `Content-Type: multipart/mixed; boundary="${B}"`, '', 'This is a multi-part message in MIME format.'];
   parts.push(head.join('\r\n'));
-  const plain = `Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([text.replace(/\r?\n/g, '\r\n')]))}`;
+  const plain = `Content-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([mailPlain(text, sig).replace(/\r?\n/g, '\r\n')]))}`;
   if(sig){
-    const html = `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family:Calibri,Arial,sans-serif;font-size:11pt">${esc(text).replace(/\r?\n/g, '<br>\r\n')}<br>\r\n<br>\r\n<img src="cid:firma@stagedeck" alt="" style="max-width:600px"></body></html>`;
+    let rel = '';
+    for(const im of sig.imgs) rel += `\r\n--${B}r\r\nContent-Type: ${im.blob.type || 'image/jpeg'}; name="${im.name}"\r\nContent-ID: <${im.cid}>\r\nContent-Disposition: inline; filename="${im.name}"\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(im.blob)}\r\n`;
     parts.push(`\r\n--${B}\r\nContent-Type: multipart/related; boundary="${B}r"\r\n\r\n--${B}r\r\nContent-Type: multipart/alternative; boundary="${B}a"\r\n`
-      + `\r\n--${B}a\r\n${plain}\r\n--${B}a\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([html]))}\r\n--${B}a--\r\n`
-      + `\r\n--${B}r\r\nContent-Type: image/jpeg; name="firma.jpg"\r\nContent-ID: <firma@stagedeck>\r\nContent-Disposition: inline; filename="firma.jpg"\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(sig)}\r\n--${B}r--\r\n`);
+      + `\r\n--${B}a\r\n${plain}\r\n--${B}a\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n${await b64(new Blob([mailHtml(text, sig)]))}\r\n--${B}a--\r\n`
+      + rel + `\r\n--${B}r--\r\n`);
   }
   else parts.push(`\r\n--${B}\r\n${plain}`);
   for(const f of files){
@@ -4376,7 +4476,7 @@ async function mailRun(fn){
 const mailEml = () => mailRun(async () => {
   const files = await mailFiles(), subj = $('#mailSubj').value.trim();
   mailMsg('Creo il messaggio…');
-  const blob = await emlBlob($('#mailTo').value.trim(), subj, mailFull(), files, await sigBlob());
+  const blob = await emlBlob($('#mailTo').value.trim(), subj, mailFull(), files, await sigPart());
   // nome del file senza accenti e trattini lunghi: con questi alcuni browser lo scaricano come «download»
   await saveBlob(blob, fileSafe(subj || tr('Offerta')).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7e]+/g, '-') + '.eml', 'Email');
   mailMsg(tr(`Email pronta con ${files.length} allegati: apri il file .eml scaricato`));
@@ -4384,8 +4484,8 @@ const mailEml = () => mailRun(async () => {
 const mailShare = () => mailRun(async () => {
   const files = (await mailFiles()).map(f => new File([f.blob], f.name, {type: f.blob.type}));
   if(!navigator.canShare({files})) throw new Error('Questo dispositivo non condivide alcuni dei file scelti: usa «Crea email».');
-  const sig = await sigBlob(); if(sig) files.push(new File([sig], 'firma.jpg', {type:'image/jpeg'}));
-  await navigator.share({files, title: $('#mailSubj').value, text: mailFull()});
+  const sig = await sigPart(); if(sig && !sig.text) sig.imgs.forEach(im => files.push(new File([im.blob], im.name, {type: im.blob.type})));
+  await navigator.share({files, title: $('#mailSubj').value, text: mailPlain(mailFull(), sig)});
   mailMsg('');
 });
 const mailDl = () => mailRun(async () => {
@@ -4776,7 +4876,8 @@ function bind(){
   const setLayout = mode => {
     const sec = $('#tab-offerta'), form = $('#cfgForm');
     sec.dataset.layout = mode;
-    if(mode==='top') $('#notes').after(form); else sec.prepend(form);
+    // gli avvisi stanno sempre sopra la vista schematica: con i dati sopra, la comparsa di un avviso non sposta i campi
+    if(mode==='top') $('#notes').before(form); else sec.prepend(form);
     $$('.layseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.layout===mode ? 'true' : 'false'));
     try{ localStorage.setItem(LKEY, mode); }catch(e){}
     draw3d();
@@ -4856,20 +4957,33 @@ function bind(){
   });
   $('#mailEml').addEventListener('click', mailEml);
   $('#mailDl').addEventListener('click', mailDl);
-  $('#mailCopy').addEventListener('click', () => copy(mailFull()).then(() => mailMsg('Copiato')));
+  // con una firma copiata il testo va negli appunti anche in HTML, per incollarlo formattato in una posta web
+  $('#mailCopy').addEventListener('click', async () => {
+    const sig = await sigPart(), text = mailPlain(mailFull(), sig);
+    if(sig && sig.text && !sig.imgs.length && window.ClipboardItem) try{
+      await navigator.clipboard.write([new ClipboardItem({'text/plain': new Blob([text], {type:'text/plain'}), 'text/html': new Blob([mailHtml(mailFull(), sig)], {type:'text/html'})})]);
+      mailMsg('Copiato'); return;
+    }catch(e){}
+    copy(text).then(() => mailMsg('Copiato'));
+  });
   $('#mailSig').addEventListener('input', e => { const m = mailState(); m.firma = e.target.value; mailStore(m); });
   // offerta esterna e immagine della firma: clic o trascinamento nella zona
-  const dropIn = (box, sel, add, input) => {
+  const dropIn = (box, sel, add, input, addData) => {
     const z = e => e.target.closest && e.target.closest(sel);
     box.addEventListener('click', e => { if(z(e)){ $(input).value = ''; $(input).click(); } });
     box.addEventListener('keydown', e => { if(z(e) && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); $(input).value = ''; $(input).click(); } });
     box.addEventListener('dragover', e => { const x = z(e); if(!x) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; x.classList.add('over'); });
     box.addEventListener('dragleave', e => { const x = z(e); if(x && !x.contains(e.relatedTarget)) x.classList.remove('over'); });
-    box.addEventListener('drop', e => { const x = z(e); if(!x) return; e.preventDefault(); x.classList.remove('over'); if(e.dataTransfer.files.length) add(e.dataTransfer.files[0]); });
+    box.addEventListener('drop', e => { const x = z(e); if(!x) return; e.preventDefault(); x.classList.remove('over'); if(e.dataTransfer.files.length) add(e.dataTransfer.files[0]); else if(addData) addData(e.dataTransfer); });
     $(input).addEventListener('change', e => add(e.target.files[0]));
   };
   dropIn($('#mailList'), '[data-extdrop]', extAdd, '#extFile');
-  dropIn($('#sigBox'), '[data-sigdrop]', sigAdd, '#sigFile');
+  dropIn($('#sigBox'), '[data-sigdrop]', sigAdd, '#sigFile', sigData);
+  // zona in cui incollare la firma: si accetta solo l'incolla (o il trascinamento), non la scrittura
+  $('#sigBox').addEventListener('paste', e => { if(!e.target.closest('[data-sigpaste]')) return; e.preventDefault(); sigData(e.clipboardData); });
+  $('#sigBox').addEventListener('beforeinput', e => { if(e.target.closest('[data-sigpaste]')) e.preventDefault(); });
+  $('#sigBox').addEventListener('input', e => { const x = e.target.closest('[data-sigpaste]'); if(x) x.textContent = ''; });
+  $('#sigBox').addEventListener('drop', e => { if(!e.target.closest('[data-sigpaste]')) return; e.preventDefault(); sigData(e.dataTransfer); });
   $('#mailList').addEventListener('click', e => {
     if(!e.target.closest('[data-extdel]') || !cfg.ext) return;
     if(!confirm(tr(`Togliere il file «${cfg.ext.f.name}»?`))) return;
