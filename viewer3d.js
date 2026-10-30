@@ -455,12 +455,15 @@ function create(canvas){
     let stairOut = 0;                                           // quanto escono le scale dal palco (per la sala)
     // aggancio della scala modulare alla pedana (compreso nel VSM20, montato sul gradino più alto, va con tutti i VSM):
     // un montante quadro 40×40 fissato su ciascuna gamba posteriore dell'elemento più alto con due viti (testa bombata o
-    // esagonale fuori, dado ad alette dentro), fino al bordo della pedana, con la manopola in cima. (cx, cz) = punto del bordo, o = verso fuori, yBase = piano da cui parte la scala.
-    const stairHooks = (cx, cz, o, n, yBase, deckTop) => {
+    // esagonale fuori, dado ad alette dentro), fino al bordo della pedana, con la manopola in cima. (cx, cz) = punto del
+    // bordo, o = verso fuori, yBase = piano da cui parte la scala. Sui lati con il corrimano VHSM non serve: è il
+    // corrimano a collegare la scala alla pedana (rails = lati col corrimano: 1 = solo quello a -1, 2 = tutti e due).
+    const stairHooks = (cx, cz, o, n, yBase, deckTop, rails = 0) => {
       const px = o[0]!==0 ? [0,0,1] : [1,0,0], d = 22;
       const P = (x, y, dd) => [cx + px[0]*x + o[0]*dd, y, cz + px[2]*x + o[2]*dd];
       const y0 = yBase + n*200 - 330, y1 = deckTop - 15;
       for(const sx of [-1, 1]){
+        if(rails >= 2 || (rails===1 && sx < 0)) continue;
         const x = sx*(SW/2 + 22), a = P(x - 20, y0, d - 20), b = P(x + 20, y1, d + 20);
         push(AS, box([Math.min(a[0],b[0]), y0, Math.min(a[2],b[2])], [Math.max(a[0],b[0]), y1, Math.max(a[2],b[2])]), BOX_IDX);
         for(const yr of [y0 + 70, y0 + 150]){
@@ -518,7 +521,7 @@ function create(canvas){
           if(!stepBy[key]) stepBy[key] = [];
           stepBy[key].push({r:R, t:[cx+o[0]*dist, 5, cz+o[2]*dist]});
         }
-        stairHooks(cx, cz, o, n, 0, ty + 90);
+        stairHooks(cx, cz, o, n, 0, ty + 90, n>=2 ? sides : 0);
         // corrimano: uno ogni 2 gradini, partendo dall'alto (con 3 gradini sta sul 2° e 3°), su 1 o 2 lati
         if(sides && n>=2){
           const rz = [0,1,0], rx = o, ryv = [rz[1]*rx[2]-rz[2]*rx[1], rz[2]*rx[0]-rz[0]*rx[2], rz[0]*rx[1]-rz[1]*rx[0]];
