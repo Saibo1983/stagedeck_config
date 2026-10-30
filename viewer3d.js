@@ -451,7 +451,7 @@ function create(canvas){
     const st = plan.stair || {}, adjStair = st.kind==='adjustable' && st.len;
     const nMod = st.kind==='modular' ? st.steps : Math.max(1, Math.round(H/20) - 1);
     const SD = 282, SW = 910;                                   // profondità e larghezza di un elemento modulare
-    const AS = mk(), AA = mk();                                 // scala regolabile: gradini neri, alluminio
+    const AS = mk(), AA = mk(), HK = mk();                                 // scala regolabile: gradini neri, alluminio
     let stairOut = 0;                                           // quanto escono le scale dal palco (per la sala)
     // aggancio della scala modulare alla pedana (compreso nel VSM20, montato sul gradino più alto, va con tutti i VSM):
     // un montante quadro 40×40 fissato su ciascuna gamba posteriore dell'elemento più alto con due viti (testa bombata o
@@ -465,7 +465,7 @@ function create(canvas){
       for(const sx of [-1, 1]){
         if(rails >= 2 || (rails===1 && sx < 0)) continue;
         const x = sx*(SW/2 + 22), a = P(x - 20, y0, d - 20), b = P(x + 20, y1, d + 20);
-        push(AS, box([Math.min(a[0],b[0]), y0, Math.min(a[2],b[2])], [Math.max(a[0],b[0]), y1, Math.max(a[2],b[2])]), BOX_IDX);
+        push(HK, box([Math.min(a[0],b[0]), y0, Math.min(a[2],b[2])], [Math.max(a[0],b[0]), y1, Math.max(a[2],b[2])]), BOX_IDX);
         for(const yr of [y0 + 70, y0 + 150]){
           push(AA, ...cyl(P(x + sx*20, yr, d), P(x + sx*26, yr, d), 8, 6));                     // testa della vite
           push(AA, ...cyl(P(x + sx*20, yr, d), P(x - sx*68, yr, d), 4, 8));                      // vite (montante e gamba)
@@ -582,6 +582,9 @@ function create(canvas){
     }
     if(sRail.length) addBatch(stretched('stairrail', (x,y,z) => [x + Math.sign(x)*(2*SD-474)/2, y, z]), sRail);
     if(AS.P.length) addBatch([rawMat(AS.P, AS.I, [0.06,0.06,0.07], 0.15)], [IDT]);
+    // montanti dell'aggancio: stesso colore del corrimano VHSM (materiale principale del suo modello)
+    if(HK.P.length){ const m = PARTS.stairrail.reduce((a, b) => b.pos.length > a.pos.length ? b : a), c = colorOf(m);
+      addBatch([rawMat(HK.P, HK.I, c.color, c.spec)], [IDT]); }
     if(AA.P.length) addBatch([rawMat(AA.P, AA.I, [0.80,0.82,0.86], 0.5)], [IDT]);
 
     // --- rampe (disegni Everdeck dei kit): pedane in salita larghe 1 m, telaio in alluminio, lamiera mandorlata
