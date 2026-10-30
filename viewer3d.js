@@ -1057,6 +1057,18 @@ function create(canvas){
   // - all'estremità che sta in un angolo la piastra del piede (lunga 10 cm, col taglio a 45°) si accorcia a filo del
   //   montante, così non tocca quella del parapetto vicino;
   // - battipiede: lamiera sul lato interno, dal piano (y 26,5) a 15 cm.
+  // i connettori del modello sono per due parapetti a contatto: qui ogni parapetto è più corto di RAIL_GAP per parte,
+  // quindi la parte del connettore oltre il telaio (bullone, piastra e dado verso il parapetto vicino) si allunga di
+  // 2 × RAIL_GAP verso fuori, così arriva al montante dell'altro parapetto
+  const isConn = bb => bb.y0 >= 240 && bb.y1 <= 905 && bb.y1-bb.y0 <= 60 && bb.z1-bb.z0 <= 220;
+  function stretchConn(name, mi, pos){
+    const C = comps(name)[mi], all = comps(name), fr = all[0].bb.get(all[0].main);   // telaio: componente principale
+    for(let v=0; v<pos.length/3; v++){
+      const bb = C.bb.get(C.root[v]); if(!isConn(bb)) continue;
+      const z = pos[v*3+2];
+      if(z < fr.z0 - 10) pos[v*3+2] -= 2*RAIL_GAP; else if(z > fr.z1 + 10) pos[v*3+2] += 2*RAIL_GAP;
+    }
+  }
   const railCache = new Map();
   function railIdx(name, conn){
     const k = name+'|'+conn; if(railCache.has(k)) return railCache.get(k);
@@ -1081,12 +1093,12 @@ function create(canvas){
       const col = colorOf(m), idx = {lo:[], hi:[]};
       for(let t=0;t<m.idx.length;t+=3){
         const a = m.idx[t], bb = C[mi].bb.get(C[mi].root[a]);
-        if(!(bb.y0 >= 240 && bb.y1 <= 905 && bb.y1-bb.y0 <= 60 && bb.z1-bb.z0 <= 220 && bb.z1 < 300)) continue;
+        if(!(isConn(bb) && bb.z1 < 300)) continue;
         const g = (bb.y0+bb.y1)/2 < 600 ? 'lo' : 'hi';
         idx[g].push(a, m.idx[t+1], m.idx[t+2]);
         out[g].y0 = Math.min(out[g].y0, bb.y0); out[g].y1 = Math.max(out[g].y1, bb.y1);
       }
-      const pos = new Float32Array(m.pos); for(let i=2;i<pos.length;i+=3) pos[i] += RAIL_GAP;
+      const pos = new Float32Array(m.pos); stretchConn('rail1', mi, pos); for(let i=2;i<pos.length;i+=3) pos[i] += RAIL_GAP;
       for(const g of ['lo','hi']) if(idx[g].length) out[g].mats.push({pos, idx:new Uint16Array(idx[g]), color:col.color, spec:col.spec});
     });
     for(const g of ['lo','hi']) out[g].yc = (out[g].y0 + out[g].y1)/2;
@@ -1101,6 +1113,7 @@ function create(canvas){
       const c = colorOf(m);
       let pos = m.pos;
       pos = new Float32Array(m.pos);
+      if(conn) stretchConn(name, mi, pos);
       if(short) for(let i=2;i<pos.length;i+=3) if(pos[i] > 450) pos[i] -= 500;   // 0,5 m: quello da 1 m accorciato
       for(let i=2;i<pos.length;i+=3) pos[i] += pos[i] < mid ? RAIL_GAP : -RAIL_GAP;
       // all'angolo la piastra angolata del piede (sotto y 200) si ferma alla faccia del montante (Ø 48): non tocca l'altra
