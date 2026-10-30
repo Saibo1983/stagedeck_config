@@ -241,10 +241,52 @@ function create(canvas){
     }
     // gambe: la parte sopra z=150 si allunga/accorcia
     if(spider) spiderParts(plan, cfg, ty, topCol);
+    else if(cfg.support==='roll' && !plan.trib && !plan.round) rollRisers(legPts, ty);
     else if(roundLeg) roundLegs(legAxes, ty, cfg);
     else{
       addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
       for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z]), list);
+    }
+
+    // --- Rollrisers (disegni «Rollriser with two/four foot», 30 cm): sotto ogni punto d'angolo dei deck una ruota
+    // piroettante Ø 100 con freno, alta 128 mm fino alla piastra; piastra di 8 mm (2 tubi 176,8 × 85, 4 tubi 180,4 × 180,4,
+    // angoli R30; 1 tubo 100 × 85) con 1, 2 o 4 tubi Ø 48,3 × 3 a interasse 116,8 (58,4 mm dai bordi del deck), lunghi
+    // 149,7 mm (30 cm) o 249,7 (40 cm): la cima a 14,3 mm sotto l'altezza del palco. Viti M8 a 78,5 × 60 con dado sotto.
+    function rollRisers(pts, ty){
+      const ALU = mk(), WH = mk(), DK = mk(), yC = 128, yP = yC + 8, yT = ty + 30 - 14.3;   // ty + 30 = altezza del palco (mm)
+      const rrect = (cx, cz, w, d, r) => {   // rettangolo con gli angoli arrotondati, in pianta
+        const out = [];
+        for(const [ax, az, a0] of [[w/2-r, d/2-r, 0], [-(w/2-r), d/2-r, 90], [-(w/2-r), -(d/2-r), 180], [w/2-r, -(d/2-r), 270]])
+          for(let k=0;k<=6;k++){ const a = (a0 + k*15)*Math.PI/180; out.push([cx + ax + r*Math.cos(a), cz + az + r*Math.sin(a)]); }
+        return out;
+      };
+      for(const [key, p] of pts){
+        const L = p.legs; if(!L.length) continue;
+        const [kx, kz] = key.split(',').map(Number), C = [kx*500, kz*500];   // punto d'angolo dei deck (mm)
+        // tubi: sulla diagonale dall'angolo verso la gamba del deck, a 58,4 mm dai due bordi
+        const T = L.map(([gx, gz]) => [C[0] + Math.sign(gx - C[0])*58.4, C[1] + Math.sign(gz - C[1])*58.4]);
+        const n = T.length, mx = T.reduce((a,g) => a+g[0], 0)/n, mz = T.reduce((a,g) => a+g[1], 0)/n;
+        const alongX = n===2 && Math.abs(T[0][0]-T[1][0]) > Math.abs(T[0][1]-T[1][1]);
+        const [pw, pd] = n>=3 ? [180.4, 180.4] : n===2 ? (alongX ? [176.8, 85] : [85, 176.8]) : [100, 85];
+        push(ALU, ...extrude(rrect(mx, mz, pw, pd, n===1 ? 12 : 30), yC, yP));                // piastra
+        for(const [tx, tz] of T) push(ALU, ...cyl([tx, yP, tz], [tx, yT, tz], 24.15, 16));     // tubo Ø 48,3
+        for(const sx of [-1, 1]) for(const sz of [-1, 1]){
+          const bx = mx + sx*(alongX || n!==2 ? 39.25 : 30), bz = mz + sz*(alongX || n!==2 ? 30 : 39.25);
+          push(DK, ...disc([bx, yP, bz], [bx, yP+8, bz], 6.5, 8));                          // testa della vite M8
+          push(ALU, ...disc([bx, yC-14, bz], [bx, yC-6, bz], 7, 6));                         // dado sotto
+        }
+        // ruota piroettante: piastra di fissaggio, ralla, forcella a due lame, ruota (asse lungo z) e pedale del freno
+        const wx = mx - 30, wy = 50, hz = 16;
+        push(ALU, box([mx-50, yC-6, mz-40], [mx+50, yC, mz+40]), BOX_IDX);
+        push(ALU, ...disc([mx, yC-20, mz], [mx, yC-6, mz], 34, 20));
+        for(const sz of [-1, 1]) push(ALU, box([wx-10, wy, mz+sz*(hz+4)-2], [mx+22, yC-20, mz+sz*(hz+4)+2]), BOX_IDX);
+        push(WH, ...disc([wx, wy, mz-hz], [wx, wy, mz+hz], 50, 24));                         // gomma
+        push(ALU, ...disc([wx, wy, mz-hz-3], [wx, wy, mz+hz+3], 22, 16));                    // mozzo
+        push(DK, box([mx+22, yC-38, mz-25], [mx+70, yC-28, mz+25]), BOX_IDX);                // pedale del freno
+      }
+      if(ALU.P.length) addBatch([rawMat(ALU.P, ALU.I, [0.78,0.79,0.82], 0.55)], [IDT]);
+      if(WH.P.length) addBatch([rawMat(WH.P, WH.I, [0.20,0.20,0.21], 0.1)], [IDT]);
+      if(DK.P.length) addBatch([rawMat(DK.P, DK.I, [0.45,0.46,0.48], 0.4)], [IDT]);
     }
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
@@ -373,6 +415,30 @@ function create(canvas){
       if(PL.P.length) addBatch([rawMat(PL.P, PL.I, [0.74,0.75,0.77], 0.45)], [IDT]);
       if(WN.P.length) addBatch([rawMat(WN.P, WN.I, [0.16,0.16,0.17], 0.2)], [IDT]);
     }
+    // tribuna: connettori (VHC) tra i parapetti laterali di due file vicine. I montanti affiancati al giunto (70 mm per
+    // parte, 27 mm fuori dal bordo) hanno il piede a quote diverse: piastra piatta alta 30 mm sul lato esterno dei due
+    // montanti, con un bullone per montante, alle altezze dei connettori della fila più alta (273 e 873 mm sul piede),
+    // solo dove arriva anche il montante della fila più bassa
+    if(plan.trib && plan.stepLinks && plan.stepLinks.length && !cfg.safety){
+      const PL = mk(), WN = mk(), g = 50 + RAIL_GAP;
+      for(const sl of plan.stepLinks){
+        const J = sl.u*1000, out = sl.side==='left' ? -1 : 1, x0 = sl.side==='left' ? 0 : Wmm, xc = x0 + out*27;
+        const yLo = sl.hLo*10 - 30 + 63.5, yHi = sl.hHi*10 - 30 + 63.5;
+        for(const dy of [273, 873]){
+          const y = yHi + dy; if(y > yLo + 1000) continue;
+          const xp = xc + out*27;                                                         // faccia esterna dei montanti
+          push(PL, box([Math.min(xp, xp+out*5), y-15, J-g-22], [Math.max(xp, xp+out*5), y+15, J+g+22]), BOX_IDX);
+          for(const zc of [J-g, J+g]){
+            push(PL, ...cyl([xp+out*8, y, zc], [xc-out*33, y, zc], 4, 8));               // vite M8 attraverso il montante
+            push(PL, ...cyl([xp+out*5, y, zc], [xp+out*12, y, zc], 7.5, 6));             // testa esagonale
+            push(WN, ...cyl([xc-out*26, y, zc], [xc-out*36, y, zc], 7, 10));             // dado a farfalla
+            const wx = xc-out*31; push(WN, box([wx-3, y-21, zc-3], [wx+3, y+21, zc+3]), BOX_IDX);   // alette
+          }
+        }
+      }
+      if(PL.P.length) addBatch([rawMat(PL.P, PL.I, [0.74,0.75,0.77], 0.45)], [IDT]);
+      if(WN.P.length) addBatch([rawMat(WN.P, WN.I, [0.16,0.16,0.17], 0.2)], [IDT]);
+    }
     for(const g of railGroups.values()){
       let mats;
       if(spider) mats = spiderRail(g.Lm*1000);                       // parapetti Spider VH-2 e VH-1 (disegni 81-82)
@@ -397,6 +463,26 @@ function create(canvas){
     const SD = 282, SW = 910;                                   // profondità e larghezza di un elemento modulare
     const AS = mk(), AA = mk();                                 // scala regolabile: gradini neri, alluminio
     let stairOut = 0;                                           // quanto escono le scale dal palco (per la sala)
+    // aggancio della scala modulare alla pedana (compreso nel VSM20, montato sul gradino più alto, va con tutti i VSM):
+    // un montante quadro 40×40 fissato su ciascuna gamba posteriore dell'elemento più alto con due viti (testa bombata o
+    // esagonale fuori, dado ad alette dentro), fino al bordo della pedana, con la manopola in cima. (cx, cz) = punto del bordo, o = verso fuori, yBase = piano da cui parte la scala.
+    const stairHooks = (cx, cz, o, n, yBase, deckTop) => {
+      const px = o[0]!==0 ? [0,0,1] : [1,0,0], d = 22;
+      const P = (x, y, dd) => [cx + px[0]*x + o[0]*dd, y, cz + px[2]*x + o[2]*dd];
+      const y0 = yBase + n*200 - 330, y1 = deckTop - 15;
+      for(const sx of [-1, 1]){
+        const x = sx*(SW/2 + 22), a = P(x - 20, y0, d - 20), b = P(x + 20, y1, d + 20);
+        push(AS, box([Math.min(a[0],b[0]), y0, Math.min(a[2],b[2])], [Math.max(a[0],b[0]), y1, Math.max(a[2],b[2])]), BOX_IDX);
+        for(const yr of [y0 + 70, y0 + 150]){
+          push(AA, ...cyl(P(x + sx*20, yr, d), P(x + sx*26, yr, d), 8, 6));                     // testa della vite
+          push(AA, ...cyl(P(x + sx*20, yr, d), P(x - sx*68, yr, d), 4, 8));                      // vite (montante e gamba)
+          push(AS, ...cyl(P(x - sx*62, yr, d), P(x - sx*70, yr, d), 6, 10));                     // dado ad alette
+          const w = P(x - sx*66, yr, d); push(AS, box([w[0]-3, yr-16, w[2]-3], [w[0]+3, yr+16, w[2]+3]), BOX_IDX);
+        }
+        push(AA, ...cyl(P(x + sx*20, y1 - 45, d), P(x + sx*40, y1 - 45, d), 5, 8));                                 // vite
+        push(AS, ...cyl(P(x + sx*40, y1 - 45, d), P(x + sx*58, y1 - 45, d), 16, 10));                               // manopola
+      }
+    };
     for(const side of Object.keys(byside)){
       byside[side].forEach((stc,i) => {
         const o = OUT[side], horiz = side==='back'||side==='front';
@@ -442,6 +528,7 @@ function create(canvas){
           if(!stepBy[key]) stepBy[key] = [];
           stepBy[key].push({r:R, t:[cx+o[0]*dist, 5, cz+o[2]*dist]});
         }
+        stairHooks(cx, cz, o, n, 0, ty + 90);
         // corrimano: uno ogni 2 gradini, partendo dall'alto (con 3 gradini sta sul 2° e 3°), su 1 o 2 lati
         if(sides && n>=2){
           const rz = [0,1,0], rx = o, ryv = [rz[1]*rx[2]-rz[2]*rx[1], rz[2]*rx[0]-rz[0]*rx[2], rz[0]*rx[1]-rz[1]*rx[0]];
@@ -463,10 +550,14 @@ function create(canvas){
       const putStep = (h, x, y, z) => { const key = h<=600 ? 'step'+(h/10) : 'tall'+h; (stepBy[key] || (stepBy[key] = [])).push({r:RF, t:[x, y, z]}); };
       for(const [a,b] of plan.aisles){
         const cx = (a+b)*500;
-        if(plan.access && plan.access.kind==='modular') for(let k=0;k<plan.access.steps;k++) putStep((plan.access.steps-k)*200, cx, 5, Dmm + SD/2 + k*SD);
+        if(plan.access && plan.access.kind==='modular'){
+          for(let k=0;k<plan.access.steps;k++) putStep((plan.access.steps-k)*200, cx, 5, Dmm + SD/2 + k*SD);
+          stairHooks(cx, Dmm, [0,0,1], plan.access.steps, 0, plan.rows[0].h*10 + 60);
+        }
         if(plan.inter) for(const r of plan.rows.slice(0, -1)){
           const top = r.h*10 + 60, zb = (plan.N-1-r.i)*dep;         // piano della fila e sua alzata (bordo dietro)
           for(let k=0;k<plan.inter;k++) putStep((plan.inter-k)*200, cx, top, zb + SD/2 + k*SD);
+          stairHooks(cx, zb, [0,0,1], plan.inter, top, plan.rows[r.i+1].h*10 + 60);
         }
       }
       // bordi anticaduta per le sedie (SKBP): profilo sul bordo dietro di ogni fila (trattiene le gambe posteriori)
@@ -731,8 +822,42 @@ function create(canvas){
   function png(){ draw(); return new Promise(res => canvas.toBlob(res, 'image/png')); }
   // immagine a 4 viste in proiezione ortogonale: assonometria, fronte, lato (da destra), pianta. labels: 4 titoli + titolo
   function ortho(l,r,b,t,n,f){ return [2/(r-l),0,0,0, 0,2/(t-b),0,0, 0,0,-2/(f-n),0, -(r+l)/(r-l),-(t+b)/(t-b),-(f+n)/(f-n),1]; }
-  async function png4(labels, title){
-    const QW = 1200, QH = 820, HEAD = 90, out = document.createElement('canvas');
+  // quote indicative sulle viste ortogonali: dims = {W, D, H (mm: larghezza, profondità, piano più alto da terra),
+  // tW, tD, tH (testi), note (riga in basso)}. Linee di quota fuori dal palco, con frecce e testo lungo la linea.
+  function drawDims(ctx, i, P, dims, qx, qy){
+    const {W, D, H} = dims, OFF = 46;   // px: distanza della linea di quota dal palco
+    const dim = (A, B, O, text) => {
+      // O = verso (unitario, nella scena) in cui spostare la quota: la distanza è in pixel, così resta nell'immagine
+      const a = P(A), b = P(B), o = P([A[0]+O[0]*1000, A[1]+O[1]*1000, A[2]+O[2]*1000]);
+      const ol = Math.hypot(o[0]-a[0], o[1]-a[1]) || 1, dx = (o[0]-a[0])/ol*OFF, dy = (o[1]-a[1])/ol*OFF;
+      const a2 = [a[0]+dx, a[1]+dy], b2 = [b[0]+dx, b[1]+dy];
+      const L = Math.hypot(b2[0]-a2[0], b2[1]-a2[1]); if(L < 20) return;
+      const ux = (b2[0]-a2[0])/L, uy = (b2[1]-a2[1])/L, ex = Math.sign(a2[0]-a[0]) || 0, ey = Math.sign(a2[1]-a[1]) || 0;
+      ctx.save(); ctx.strokeStyle = '#e3450d'; ctx.fillStyle = '#e3450d'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(const [p, q] of [[a, a2], [b, b2]]){ ctx.moveTo(p[0]+ex*6, p[1]+ey*6); ctx.lineTo(q[0]+ex*10, q[1]+ey*10); }   // linee di richiamo
+      ctx.moveTo(a2[0], a2[1]); ctx.lineTo(b2[0], b2[1]); ctx.stroke();
+      for(const [p, s] of [[a2, 1], [b2, -1]]){   // frecce
+        ctx.beginPath(); ctx.moveTo(p[0], p[1]);
+        ctx.lineTo(p[0]+s*ux*16-uy*6, p[1]+s*uy*16+ux*6); ctx.lineTo(p[0]+s*ux*16+uy*6, p[1]+s*uy*16-ux*6); ctx.closePath(); ctx.fill();
+      }
+      let ang = Math.atan2(uy, ux); if(ang > Math.PI/2) ang -= Math.PI; if(ang <= -Math.PI/2) ang += Math.PI;
+      ctx.translate((a2[0]+b2[0])/2, (a2[1]+b2[1])/2); ctx.rotate(ang);
+      ctx.font = '600 26px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(text).width + 14;
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(-tw/2, -17, tw, 34);
+      ctx.fillStyle = '#b8360a'; ctx.fillText(text, 0, 0);
+      ctx.restore();
+    };
+    // altezza sempre sul retro (nella tribuna è la fila più alta)
+    if(i===1){ dim([0,0,D], [W,0,D], [0,-1,0], dims.tW); dim([0,0,0], [0,H,0], [-1,0,0], dims.tH); }       // fronte
+    else if(i===2){ dim([W,0,0], [W,0,D], [0,-1,0], dims.tD); dim([W,0,0], [W,H,0], [0,0,-1], dims.tH); }  // lato destro
+    else if(i===3){ dim([0,H,0], [W,H,0], [0,0,-1], dims.tW); dim([0,H,0], [0,H,D], [-1,0,0], dims.tD); } // pianta
+    if(dims.note){ ctx.fillStyle = '#566774'; ctx.font = '22px system-ui, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'; ctx.fillText(dims.note, qx+1200-24, qy+44); ctx.textAlign = 'left'; }
+  }
+  const QH4 = 820;
+  async function png4(labels, title, dims){
+    const QW = 1200, QH = QH4, HEAD = 90, out = document.createElement('canvas');
     out.width = QW*2; out.height = QH*2 + HEAD;
     const ctx = out.getContext('2d');
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, out.width, out.height);
@@ -751,13 +876,19 @@ function create(canvas){
       let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity;
       for(const p of corners){ const x = vm[0]*p[0]+vm[4]*p[1]+vm[8]*p[2]+vm[12], y = vm[1]*p[0]+vm[5]*p[1]+vm[9]*p[2]+vm[13];
         mnx = Math.min(mnx,x); mxx = Math.max(mxx,x); mny = Math.min(mny,y); mxy = Math.max(mxy,y); }
-      let w = (mxx-mnx)*1.12, h = (mxy-mny)*1.12; const cx = (mnx+mxx)/2, cy = (mny+mxy)/2, a = QW/(QH-60);
+      const pad = dims && i>0 ? 1.3 : 1.12;   // con le quote un po' più di spazio intorno
+      let w = (mxx-mnx)*pad, h = (mxy-mny)*pad; const cx = (mnx+mxx)/2, cy = (mny+mxy)/2, a = QW/(QH-60);
       if(w/h > a) h = w/a; else w = h*a;
       const top = cy + h/2 + h*60/(QH-60);                  // spazio in alto per il titolo della vista
-      view = {vm, eye:eyeP, proj:ortho(cx-w/2, cx+w/2, top-h-h*60/(QH-60), top, 10, R*4)};
+      const l = cx-w/2, r = cx+w/2, bt = top-h-h*60/(QH-60);
+      view = {vm, eye:eyeP, proj:ortho(l, r, bt, top, 10, R*4)};
       dirty = true; draw();
       const qx = (i%2)*QW, qy = HEAD + Math.floor(i/2)*QH;
       ctx.drawImage(canvas, qx, qy);
+      // punto della scena (mm) -> pixel dell'immagine
+      const P = p => { const x = vm[0]*p[0]+vm[4]*p[1]+vm[8]*p[2]+vm[12], y = vm[1]*p[0]+vm[5]*p[1]+vm[9]*p[2]+vm[13];
+        return [qx + (x-l)/(r-l)*QW, qy + (top-y)/(top-bt)*QH]; };
+      if(i>0 && dims) drawDims(ctx, i, P, dims, qx, qy);
       ctx.strokeStyle = '#c9d2d9'; ctx.lineWidth = 2; ctx.strokeRect(qx+1, qy+1, QW-2, QH-2);
       ctx.fillStyle = '#12202b'; ctx.font = '600 30px system-ui, sans-serif'; ctx.fillText(labels[i] || '', qx+24, qy+44);
     });
@@ -1022,6 +1153,13 @@ function create(canvas){
     return [P, I];
   }
   const BOX_IDX = [0,1,2,0,2,3, 4,6,5,4,7,6, 0,4,5,0,5,1, 3,2,6,3,6,7, 1,5,6,1,6,2, 0,3,7,0,7,4];
+  // cilindro chiuso (ruote, mozzi): fianco e due dischi
+  function disc(a, b, r, seg=24){
+    const [P, I] = cyl(a, b, r, seg), n = P.length/3;
+    for(const e of [a, b]){ const c = P.length/3; P.push(...e);
+      for(let i=0;i<seg;i++){ const k = (e===a ? 0 : 1) + i*2, j = (e===a ? 0 : 1) + ((i+1)%seg)*2; I.push(c, k, j); } }
+    return [P, I, n];
+  }
   return {build, resize, theme, reset, png, png4, glb, request, cam, setXray, item};
 }
 window.StageView = {create};
