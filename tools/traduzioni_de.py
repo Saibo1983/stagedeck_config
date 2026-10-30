@@ -498,7 +498,7 @@ DE = {
     "Misure indicative": "Richtmaße",
     "Profili delle pedane verniciati neri": "Podestprofile schwarz lackiert",
     "Gambe verniciate nere": "Beine schwarz lackiert",
-    "Verniciatura nera su richiesta: {}. Prezzo e tempi di consegna da verificare.": "Schwarze Lackierung auf Anfrage: {0}. Preis und Lieferzeit zu prüfen.",
+    "Verniciatura nera: {}. Tempi di consegna da verificare.": "Schwarze Lackierung: {0}. Lieferzeit zu prüfen.",
     "profili delle pedane": "Podestprofile",
     "gambe": "Beine",
     "profili delle pedane e gambe": "Podestprofile und Beine",

@@ -1345,7 +1345,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Misure indicative":"Richtmaße",
 "Profili delle pedane verniciati neri":"Podestprofile schwarz lackiert",
 "Gambe verniciate nere":"Beine schwarz lackiert",
-"Verniciatura nera su richiesta: {}. Prezzo e tempi di consegna da verificare.":"Schwarze Lackierung auf Anfrage: {0}. Preis und Lieferzeit zu prüfen.",
+"Verniciatura nera: {}. Tempi di consegna da verificare.":"Schwarze Lackierung: {0}. Lieferzeit zu prüfen.",
 "profili delle pedane":"Podestprofile",
 "gambe":"Beine",
 "profili delle pedane e gambe":"Podestprofile und Beine",
@@ -2152,9 +2152,17 @@ const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length
 
 // Voci aggiuntive, aggregazione, confezioni, maggiorazioni, prezzi, pesi, volumi e spedizione: comune a palco e tribuna
 function finishOffer(out, cfg, R, look, area, warn){
-  // verniciatura nera su richiesta (si vede nel 3D; prezzo e tempi da chiedere al fornitore)
-  const black = [cfg.deckBlack && cfg.support!=='spider' ? 'profili delle pedane' : '', cfg.legBlack && (cfg.kind==='tribuna' || cfg.support==='legs') ? 'gambe' : ''].filter(Boolean);
-  if(black.length) out.notes.push(`Verniciatura nera su richiesta: ${black.join(' e ')}. Prezzo e tempi di consegna da verificare.`);
+  // verniciatura nera: una voce per ogni pedana (secondo la misura) e per ogni gamba, sotto il pezzo verniciato
+  const deckBlack = cfg.deckBlack && cfg.support!=='spider', legBlack = cfg.legBlack && (cfg.kind==='tribuna' || cfg.support==='legs');
+  const sizeOf = code => { for(const f of Object.values(FAMILIES)) for(const [k, c] of Object.entries(f.codes)) if(ncode(c)===ncode(code)) return k; return null; };
+  for(const l of [...out.lines]){
+    if(deckBlack && l.group==='Pedana' && /PLATFORM/i.test((look.get(ncode(l.code))||{}).section||'')){
+      const k = sizeOf(l.code); out.lines.push({group:'Pedana', code: k && BLACK_DECK[k] ? 'NERO-'+BLACK_DECK[k].replace('×','x') : 'NERO-SPECIALE', qty:l.qty});
+    }
+    if(legBlack && blackLeg(l.code) && look.has(ncode('NERO-'+l.code))) out.lines.push({group:l.group, code:'NERO-'+look.get(ncode(l.code)).code, qty:l.qty});
+  }
+  const black = [deckBlack ? 'profili delle pedane' : '', legBlack ? 'gambe' : ''].filter(Boolean);
+  if(black.length) out.notes.push(`Verniciatura nera: ${black.join(' e ')}. Tempi di consegna da verificare.`);
   // --- voci aggiuntive
   for(const x of cfg.extras) if(x.code && x.qty>0) out.lines.push({group:'Varie', code:x.code, qty:Math.ceil(x.qty)});
 
@@ -2860,6 +2868,15 @@ const SHAPED = {
 };
 const shapedOf = code => { const m = ncode(code).match(/^(?:VS|PT)750[HW]-(1X1T|2X1T-[LR]|1X1C|2X1C-[LR])$/); return m ? SHAPED[m[1]] : null; };
 for(const it of ITEMS){ const sh = shapedOf(it.code); if(sh) it.shape = sh.shape; }
+/* verniciatura nera (profili delle pedane, gambe): non è nel listino, una voce per misura di pedana e per gamba.
+   Prezzi di acquisto in prezzi_extra.json (fuori da git), chiavi NERO-…; le gambe a pezzi come nel listino (set da 4). */
+const BLACK_DECK = {'4x2':'2×1', '2x2':'1×1', '4x1':'2×0,5', '2x1':'1×0,5', '1x1':'0,5×0,5'};
+for(const [k, m] of Object.entries(BLACK_DECK))
+  ITEMS.push({code:'NERO-'+m.replace('×','x'), name:`Black painted frame, stage platform ${m}`, section:'BLACK PAINTING', kg:0, pack:[0,0,0]});
+ITEMS.push({code:'NERO-SPECIALE', name:'Black painted frame, special stage platform', section:'BLACK PAINTING', kg:0, pack:[0,0,0]});
+const blackLeg = code => /^(VFL|VTL|VRL|VRLA|VRLT)\d+$/i.test(ncode(code));
+for(const it of ITEMS.filter(i => blackLeg(i.code)))
+  ITEMS.push({code:'NERO-'+it.code, name:`Black painted leg ${it.code}`, section:'BLACK PAINTING', pkg:it.pkg||1, kg:0, pack:[0,0,0]});
 // pezzi speciali dei palchi rotondi (generati dalle suddivisioni, prezzo dalla regola in prezzi.json)
 for(const it of roundItems()) if(!ITEMS.some(i => ncode(i.code)===ncode(it.code))) ITEMS.push(it);
 const KEY = 'stagedeck.v3', OLDKEY = 'stagedeck.v2', PKEY = 'stagedeck.prezzi';
