@@ -1338,6 +1338,9 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Misure arrotondate a {} × {} m: i moduli di questo piano sono multipli di {}.":"Maße gerundet auf {0} × {1} m: Die Module dieser Deckplatte sind Vielfache von {2}.",
 "Non riesco a coprire la superficie con i moduli del piano scelto.":"Die Fläche lässt sich mit den Modulen der gewählten Deckplatte nicht abdecken.",
 "Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.":"Podeste nach Preis optimiert: Sie können in verschiedenen Richtungen liegen. «Podeste optimieren» ausschalten, damit alle in derselben Richtung liegen.",
+"Scale modulari: l'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM).":"Modultreppen: Die Einhängung am Podest ist im VSM20 enthalten und wird an der obersten Stufe montiert (passt zu allen VSM).",
+"Parapetti laterali: connettori tra una fila e l'altra ({}), montati dove i montanti delle due file si affiancano. Con alzate diverse i fori dei montanti possono non corrispondere: in quel caso i fori li fa il cliente.":"Seitengeländer: Verbinder zwischen den Reihen ({0}), dort montiert, wo die Pfosten der beiden Reihen nebeneinander stehen. Bei unterschiedlichen Stufenhöhen können die Bohrungen der Pfosten abweichen: In diesem Fall bohrt der Kunde die Löcher selbst.",
+"Misure indicative":"Richtmaße",
 "Palco rotondo Ø {} m: {} pedane 1×1 m a lato curvo (quarto di cerchio, raggio 1 m), 4 gambe ciascuna. Senza parapetti, mascheratura e rampe.":"Runde Bühne Ø {0} m: {1} Podeste 1×1 m mit gebogener Seite (Viertelkreis, Radius 1 m), je 4 Beine. Ohne Geländer, Verkleidung und Rampen.",
 "Il palco rotondo Ø 2 m si fa con le pedane 1×1 a lato curvo, che ci sono solo in HEXA e legno: uso Ø 3 m.":"Die runde Bühne Ø 2 m wird aus Podesten 1×1 mit gebogener Seite gebaut, die es nur in HEXA und Holz gibt: verwende Ø 3 m.",
 "Misure: cateti 1.000 mm, ipotenusa 1.414 mm, angoli 90° e 45°.":"Maße: Katheten 1.000 mm, Hypotenuse 1.414 mm, Winkel 90° und 45°.",
@@ -1933,6 +1936,7 @@ function roundItems(){
   }
   return items;
 }
+const HOOK_NOTE = 'Scale modulari: l\'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM).';
 const FIXED_LEGS = {20:'VFL20',40:'VFL40',60:'VFL60',80:'VFL80',100:'VFL100'};
 const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'VTL100']];
 const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
@@ -2350,7 +2354,7 @@ function compute(cfg, R, look, kits){
   else if(nStairs && !stair) warn('bad', cfg.stairType==='modular'
     ? `La scala modulare ha elementi da 20 cm e l'ultimo gradino sta 20 cm sotto il palco: si compone solo per palchi da 40, 60, 80 o 100 cm. Con ${H} cm scegli la scala regolabile.`
     : `Nessuna scala del tipo scelto per ${H} cm (modulari per palchi da 40 a 100 cm a passi di 20; regolabili 40–180 cm).`);
-  if(stair && stair.kind==='modular') out.notes.push(`Scala modulare: ${stair.parts.map(p => p.code).join(' + ')}, ultimo gradino a ${H-20} cm, 20 cm sotto il palco.`);
+  if(stair && stair.kind==='modular') out.notes.push(`Scala modulare: ${stair.parts.map(p => p.code).join(' + ')}, ultimo gradino a ${H-20} cm, 20 cm sotto il palco.`, HOOK_NOTE);
   if(stair && stair.kind==='adjustable'){
     if(H<stair.lo || H>stair.hi) warn('bad',`La scala ${stair.model} va da ${stair.lo} a ${stair.hi} cm: con ${H} cm non si monta.`);
     out.notes.push(leg && leg.round ? `Scala regolabile ${stair.model} (${stair.lo}–${stair.hi} cm).` : `Scala regolabile ${stair.model} (${stair.lo}–${stair.hi} cm), da abbinare alle gambe telescopiche ${stair.legCode}.`);
@@ -2723,8 +2727,15 @@ function computeTribune(cfg, R, look){
   // lati a gradini: un elemento per fila; la prima fila si può lasciare senza (T.sideFirst)
   const sideFirst = T.sideFirst!==false;
   for(const side of ['left','right']) if(cfg.rails[side]) for(const r of rows) if(r.i>0 || sideFirst) addRun(side, (N-1-r.i)*depth, depth, r.h);
+  // connettori tra i parapetti laterali di due file vicine (quote diverse): stesso VHC dei parapetti dritti, montato
+  // dove i due montanti si affiancano; u = giunto lungo il lato (m dal retro), hLo/hHi = quote delle due file (cm)
+  const stepLinks = [];
+  for(const side of ['left','right']) if(cfg.rails[side]) for(const r of rows) if(r.i>0 && (r.i>1 || sideFirst))
+    stepLinks.push({side, u:(N-r.i)*depth, hLo:rows[r.i-1].h, hHi:r.h});
+  links += stepLinks.length;
   for(const [code, qty] of railQ) out.lines.push({group:'Parapetti', code, qty});
   M.rail = [...railQ.values()].reduce((a,b) => a+b, 0); M.rail_link = links;
+  if(stepLinks.length) out.notes.push(`Parapetti laterali: connettori tra una fila e l'altra (${stepLinks.length}), montati dove i montanti delle due file si affiancano. Con alzate diverse i fori dei montanti possono non corrispondere: in quel caso i fori li fa il cliente.`);
   const frontAtEdge = s => cfg.rails.front && sideFirst && !aisles.some(([a,b]) => s==='left' ? a<=1e-9 : b>=W-1e-9);
   M.rail_corner = (cfg.rails.back && cfg.rails.left ? 1 : 0) + (cfg.rails.back && cfg.rails.right ? 1 : 0) + (frontAtEdge('left') && cfg.rails.left ? 1 : 0) + (frontAtEdge('right') && cfg.rails.right ? 1 : 0);
   if(M.rail) out.notes.push(safe ? 'Parapetti di sicurezza VHX: anticaduta e antiscavalcamento, portata 1 kN/m (100 kg/m), altezza 115 cm; non antisfondamento.' : 'Parapetti laterali a gradini: un elemento per fila, alla sua altezza.');
@@ -2752,11 +2763,13 @@ function computeTribune(cfg, R, look){
   if(access){
     for(const pt of access.parts) out.lines.push({group:'Scale', code:pt.code, qty:pt.qty*aisles.length});
     out.notes.push(`Scala d'accesso alla prima fila (${h1} cm) davanti a ogni corridoio: ${access.parts.map(p => p.code).join(' + ')}.`);
+    if(access.kind==='modular') out.notes.push(HOOK_NOTE);
   }
   const inter = rise > 20 ? Math.round(rise/20) - 1 : 0;
   if(inter && aisles.length && N>1){
     for(let k=1;k<=inter;k++) out.lines.push({group:'Scale', code:'VSM'+20*k, qty:aisles.length*(N-1)});
     out.notes.push(`Corridoi: alzata di ${rise} cm, in ogni corridoio ${inter===1?'un gradino intermedio':inter+' gradini intermedi'} (VSM) tra una fila e l'altra.`);
+    if(!(access && access.kind==='modular')) out.notes.push(HOOK_NOTE);
     if(rise % 20) warn('warn',`Con un'alzata di ${rise} cm i gradini dei corridoi non sono tutti uguali (elementi da 20 cm): meglio un'alzata multipla di 20 cm.`);
   }
   M.stair = access ? aisles.length : 0; M.stair_modular = access && access.kind==='modular' ? aisles.length : 0;
@@ -2790,7 +2803,7 @@ function computeTribune(cfg, R, look){
   }
 
   finishOffer(out, cfg, R, look, area, warn);
-  out.plan = {trib:true, W, D, N, depth, rise, h1, hTop, decks, rows, aisles, segs, runs, stops, legRound, c2, c1, c05,
+  out.plan = {trib:true, W, D, N, depth, rise, h1, hTop, decks, rows, aisles, segs, runs, stepLinks, stops, legRound, c2, c1, c05,
     conn:R.rows.some(r => r.on && r.when==='legsHigh'),
     vd2d: out.lines.some(l => ncode(l.code)==='VD2D' && l.qty>0),
     access: access ? {...access, ...stairGeom(access, h1, look), H:h1} : null, inter,
@@ -4173,7 +4186,10 @@ async function save3d4(){
 }
 function png3d4(){
   draw3dNow();
-  return v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)));
+  // quote indicative (non sull'assonometria): larghezza, profondità e altezza del piano più alto
+  const p = res.plan, Hc = p.trib ? p.hTop : +cfg.H, mm = v => Math.round(v*1000);
+  const dims = {W:mm(p.W), D:mm(p.D), H:Hc*10, tW:(p.round ? 'Ø ' : '')+nf(p.W)+' m', tD:(p.round ? 'Ø ' : '')+nf(p.D)+' m', tH:Hc+' cm', note:tr('Misure indicative')};
+  return v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)), dims);
 }
 const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
 // modello 3D per altri programmi (Visualizzatore 3D di Windows, Anteprima del Mac, Blender, ...)
