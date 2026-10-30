@@ -1338,7 +1338,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Misure arrotondate a {} × {} m: i moduli di questo piano sono multipli di {}.":"Maße gerundet auf {0} × {1} m: Die Module dieser Deckplatte sind Vielfache von {2}.",
 "Non riesco a coprire la superficie con i moduli del piano scelto.":"Die Fläche lässt sich mit den Modulen der gewählten Deckplatte nicht abdecken.",
 "Pedane ottimizzate per prezzo: possono essere orientate in versi diversi. Togli «Ottimizza pedane» per averle tutte nello stesso verso.":"Podeste nach Preis optimiert: Sie können in verschiedenen Richtungen liegen. «Podeste optimieren» ausschalten, damit alle in derselben Richtung liegen.",
-"Scale modulari: l'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM).":"Modultreppen: Die Einhängung am Podest ist im VSM20 enthalten und wird an der obersten Stufe montiert (passt zu allen VSM).",
+"Scale modulari: l'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM); sui lati con il corrimano VHSM non serve, è il corrimano a collegare la scala alla pedana.":"Modultreppen: Die Einhängung am Podest ist im VSM20 enthalten und wird an der obersten Stufe montiert (passt zu allen VSM); an Seiten mit Handlauf VHSM ist sie nicht nötig, dort verbindet der Handlauf die Treppe mit dem Podest.",
 "Parapetti laterali: connettori tra una fila e l'altra ({}), montati dove i montanti delle due file si affiancano. Con alzate diverse i fori dei montanti possono non corrispondere: in quel caso i fori li fa il cliente.":"Seitengeländer: Verbinder zwischen den Reihen ({0}), dort montiert, wo die Pfosten der beiden Reihen nebeneinander stehen. Bei unterschiedlichen Stufenhöhen können die Bohrungen der Pfosten abweichen: In diesem Fall bohrt der Kunde die Löcher selbst.",
 "Misure indicative":"Richtmaße",
 "Palco rotondo Ø {} m: {} pedane 1×1 m a lato curvo (quarto di cerchio, raggio 1 m), 4 gambe ciascuna. Senza parapetti, mascheratura e rampe.":"Runde Bühne Ø {0} m: {1} Podeste 1×1 m mit gebogener Seite (Viertelkreis, Radius 1 m), je 4 Beine. Ohne Geländer, Verkleidung und Rampen.",
@@ -1936,7 +1936,7 @@ function roundItems(){
   }
   return items;
 }
-const HOOK_NOTE = 'Scale modulari: l\'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM).';
+const HOOK_NOTE = 'Scale modulari: l\'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM); sui lati con il corrimano VHSM non serve, è il corrimano a collegare la scala alla pedana.';
 const FIXED_LEGS = {20:'VFL20',40:'VFL40',60:'VFL60',80:'VFL80',100:'VFL100'};
 const TELE_LEGS = [[40,60,'VTL40'],[60,100,'VTL60'],[80,140,'VTL80'],[100,180,'VTL100']];
 const ADJ_STAIRS = [[40,60,'VAS-2'],[60,100,'VAS-4'],[80,140,'VAS-5'],[100,180,'VAS-7']];
