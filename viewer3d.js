@@ -248,36 +248,45 @@ function create(canvas){
       for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z]), list);
     }
 
-    // --- Rollrisers (brochure Larcher): sotto ogni punto d'angolo dei deck una ruota piroettante con freno e, sulla sua
-    // piastra, 1, 2 o 4 tubi Ø 48 (quanti sono gli angoli di deck che si incontrano) infilati negli attacchi delle gambe.
-    // Ruota Ø 100 larga 32, forcella e piastra di 6 mm a 150 mm da terra; i tubi salgono fino dentro l'attacco.
+    // --- Rollrisers (disegni «Rollriser with two/four foot», 30 cm): sotto ogni punto d'angolo dei deck una ruota
+    // piroettante Ø 100 con freno, alta 128 mm fino alla piastra; piastra di 8 mm (2 tubi 176,8 × 85, 4 tubi 180,4 × 180,4,
+    // angoli R30; 1 tubo 100 × 85) con 1, 2 o 4 tubi Ø 48,3 × 3 a interasse 116,8 (58,4 mm dai bordi del deck), lunghi
+    // 149,7 mm (30 cm) o 249,7 (40 cm): la cima a 14,3 mm sotto l'altezza del palco. Viti M8 a 78,5 × 60 con dado sotto.
     function rollRisers(pts, ty){
-      const ALU = mk(), WH = mk(), DK = mk(), yP = 150;
-      for(const p of pts.values()){
+      const ALU = mk(), WH = mk(), DK = mk(), yC = 128, yP = yC + 8, yT = ty + 30 - 14.3;   // ty + 30 = altezza del palco (mm)
+      const rrect = (cx, cz, w, d, r) => {   // rettangolo con gli angoli arrotondati, in pianta
+        const out = [];
+        for(const [ax, az, a0] of [[w/2-r, d/2-r, 0], [-(w/2-r), d/2-r, 90], [-(w/2-r), -(d/2-r), 180], [w/2-r, -(d/2-r), 270]])
+          for(let k=0;k<=6;k++){ const a = (a0 + k*15)*Math.PI/180; out.push([cx + ax + r*Math.cos(a), cz + az + r*Math.sin(a)]); }
+        return out;
+      };
+      for(const [key, p] of pts){
         const L = p.legs; if(!L.length) continue;
-        const n = L.length, mx = L.reduce((a,g) => a+g[0], 0)/n, mz = L.reduce((a,g) => a+g[1], 0)/n;
-        let x0 = Math.min(...L.map(g => g[0])) - 40, x1 = Math.max(...L.map(g => g[0])) + 40;
-        let z0 = Math.min(...L.map(g => g[1])) - 40, z1 = Math.max(...L.map(g => g[1])) + 40;
-        if(x1 - x0 < 110){ x0 = mx - 55; x1 = mx + 55; }
-        if(z1 - z0 < 110){ z0 = mz - 55; z1 = mz + 55; }
-        push(ALU, box([x0, yP-6, z0], [x1, yP, z1]), BOX_IDX);                               // piastra
-        for(const [gx, gz] of L){
-          push(ALU, ...cyl([gx, yP, gz], [gx, ty + 60, gz], 24, 16));                         // tubo Ø 48
-          push(ALU, box([gx-30, yP, gz-30], [gx+30, yP+4, gz+30]), BOX_IDX);                   // flangia saldata
+        const [kx, kz] = key.split(',').map(Number), C = [kx*500, kz*500];   // punto d'angolo dei deck (mm)
+        // tubi: sulla diagonale dall'angolo verso la gamba del deck, a 58,4 mm dai due bordi
+        const T = L.map(([gx, gz]) => [C[0] + Math.sign(gx - C[0])*58.4, C[1] + Math.sign(gz - C[1])*58.4]);
+        const n = T.length, mx = T.reduce((a,g) => a+g[0], 0)/n, mz = T.reduce((a,g) => a+g[1], 0)/n;
+        const alongX = n===2 && Math.abs(T[0][0]-T[1][0]) > Math.abs(T[0][1]-T[1][1]);
+        const [pw, pd] = n>=3 ? [180.4, 180.4] : n===2 ? (alongX ? [176.8, 85] : [85, 176.8]) : [100, 85];
+        push(ALU, ...extrude(rrect(mx, mz, pw, pd, n===1 ? 12 : 30), yC, yP));                // piastra
+        for(const [tx, tz] of T) push(ALU, ...cyl([tx, yP, tz], [tx, yT, tz], 24.15, 16));     // tubo Ø 48,3
+        for(const sx of [-1, 1]) for(const sz of [-1, 1]){
+          const bx = mx + sx*(alongX || n!==2 ? 39.25 : 30), bz = mz + sz*(alongX || n!==2 ? 30 : 39.25);
+          push(DK, ...disc([bx, yP, bz], [bx, yP+8, bz], 6.5, 8));                          // testa della vite M8
+          push(ALU, ...disc([bx, yC-14, bz], [bx, yC-6, bz], 7, 6));                         // dado sotto
         }
-        for(const [bx, bz] of [[x0+14, z0+14], [x1-14, z0+14], [x0+14, z1-14], [x1-14, z1-14]])
-          push(ALU, ...disc([bx, yP, bz], [bx, yP+8, bz], 7, 6));                            // dadi dei bulloni
-        // ruota: asse lungo z, spostata di 35 mm (piroettante); forcella a due lame e freno a pedale
-        const wx = mx - 35, wy = 50, hz = 16;
-        push(ALU, box([mx-40, yP-30, mz-30], [mx+40, yP-6, mz+30]), BOX_IDX);                // ralla
-        for(const sz of [-1, 1]) push(ALU, box([wx-12, wy, mz+sz*(hz+4)-2], [mx+20, yP-30, mz+sz*(hz+4)+2]), BOX_IDX);
-        push(WH, ...disc([wx, wy, mz-hz], [wx, wy, mz+hz], 50, 24));                         // gomma grigia
+        // ruota piroettante: piastra di fissaggio, ralla, forcella a due lame, ruota (asse lungo z) e pedale del freno
+        const wx = mx - 30, wy = 50, hz = 16;
+        push(ALU, box([mx-50, yC-6, mz-40], [mx+50, yC, mz+40]), BOX_IDX);
+        push(ALU, ...disc([mx, yC-20, mz], [mx, yC-6, mz], 34, 20));
+        for(const sz of [-1, 1]) push(ALU, box([wx-10, wy, mz+sz*(hz+4)-2], [mx+22, yC-20, mz+sz*(hz+4)+2]), BOX_IDX);
+        push(WH, ...disc([wx, wy, mz-hz], [wx, wy, mz+hz], 50, 24));                         // gomma
         push(ALU, ...disc([wx, wy, mz-hz-3], [wx, wy, mz+hz+3], 22, 16));                    // mozzo
-        push(DK, box([mx+20, yP-45, mz-25], [mx+70, yP-35, mz+25]), BOX_IDX);                // pedale del freno
+        push(DK, box([mx+22, yC-38, mz-25], [mx+70, yC-28, mz+25]), BOX_IDX);                // pedale del freno
       }
       if(ALU.P.length) addBatch([rawMat(ALU.P, ALU.I, [0.78,0.79,0.82], 0.55)], [IDT]);
-      if(WH.P.length) addBatch([rawMat(WH.P, WH.I, [0.42,0.43,0.45], 0.1)], [IDT]);
-      if(DK.P.length) addBatch([rawMat(DK.P, DK.I, [0.55,0.56,0.58], 0.4)], [IDT]);
+      if(WH.P.length) addBatch([rawMat(WH.P, WH.I, [0.20,0.20,0.21], 0.1)], [IDT]);
+      if(DK.P.length) addBatch([rawMat(DK.P, DK.I, [0.45,0.46,0.48], 0.4)], [IDT]);
     }
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
