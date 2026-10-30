@@ -241,10 +241,43 @@ function create(canvas){
     }
     // gambe: la parte sopra z=150 si allunga/accorcia
     if(spider) spiderParts(plan, cfg, ty, topCol);
+    else if(cfg.support==='roll' && !plan.trib && !plan.round) rollRisers(legPts, ty);
     else if(roundLeg) roundLegs(legAxes, ty, cfg);
     else{
       addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
       for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z]), list);
+    }
+
+    // --- Rollrisers (brochure Larcher): sotto ogni punto d'angolo dei deck una ruota piroettante con freno e, sulla sua
+    // piastra, 1, 2 o 4 tubi Ø 48 (quanti sono gli angoli di deck che si incontrano) infilati negli attacchi delle gambe.
+    // Ruota Ø 100 larga 32, forcella e piastra di 6 mm a 150 mm da terra; i tubi salgono fino dentro l'attacco.
+    function rollRisers(pts, ty){
+      const ALU = mk(), WH = mk(), DK = mk(), yP = 150;
+      for(const p of pts.values()){
+        const L = p.legs; if(!L.length) continue;
+        const n = L.length, mx = L.reduce((a,g) => a+g[0], 0)/n, mz = L.reduce((a,g) => a+g[1], 0)/n;
+        let x0 = Math.min(...L.map(g => g[0])) - 40, x1 = Math.max(...L.map(g => g[0])) + 40;
+        let z0 = Math.min(...L.map(g => g[1])) - 40, z1 = Math.max(...L.map(g => g[1])) + 40;
+        if(x1 - x0 < 110){ x0 = mx - 55; x1 = mx + 55; }
+        if(z1 - z0 < 110){ z0 = mz - 55; z1 = mz + 55; }
+        push(ALU, box([x0, yP-6, z0], [x1, yP, z1]), BOX_IDX);                               // piastra
+        for(const [gx, gz] of L){
+          push(ALU, ...cyl([gx, yP, gz], [gx, ty + 60, gz], 24, 16));                         // tubo Ø 48
+          push(ALU, box([gx-30, yP, gz-30], [gx+30, yP+4, gz+30]), BOX_IDX);                   // flangia saldata
+        }
+        for(const [bx, bz] of [[x0+14, z0+14], [x1-14, z0+14], [x0+14, z1-14], [x1-14, z1-14]])
+          push(ALU, ...disc([bx, yP, bz], [bx, yP+8, bz], 7, 6));                            // dadi dei bulloni
+        // ruota: asse lungo z, spostata di 35 mm (piroettante); forcella a due lame e freno a pedale
+        const wx = mx - 35, wy = 50, hz = 16;
+        push(ALU, box([mx-40, yP-30, mz-30], [mx+40, yP-6, mz+30]), BOX_IDX);                // ralla
+        for(const sz of [-1, 1]) push(ALU, box([wx-12, wy, mz+sz*(hz+4)-2], [mx+20, yP-30, mz+sz*(hz+4)+2]), BOX_IDX);
+        push(WH, ...disc([wx, wy, mz-hz], [wx, wy, mz+hz], 50, 24));                         // gomma grigia
+        push(ALU, ...disc([wx, wy, mz-hz-3], [wx, wy, mz+hz+3], 22, 16));                    // mozzo
+        push(DK, box([mx+20, yP-45, mz-25], [mx+70, yP-35, mz+25]), BOX_IDX);                // pedale del freno
+      }
+      if(ALU.P.length) addBatch([rawMat(ALU.P, ALU.I, [0.78,0.79,0.82], 0.55)], [IDT]);
+      if(WH.P.length) addBatch([rawMat(WH.P, WH.I, [0.42,0.43,0.45], 0.1)], [IDT]);
+      if(DK.P.length) addBatch([rawMat(DK.P, DK.I, [0.55,0.56,0.58], 0.4)], [IDT]);
     }
 
     // --- morsetti tra le gambe (a 170 mm sotto il deck)
@@ -1111,6 +1144,13 @@ function create(canvas){
     return [P, I];
   }
   const BOX_IDX = [0,1,2,0,2,3, 4,6,5,4,7,6, 0,4,5,0,5,1, 3,2,6,3,6,7, 1,5,6,1,6,2, 0,3,7,0,7,4];
+  // cilindro chiuso (ruote, mozzi): fianco e due dischi
+  function disc(a, b, r, seg=24){
+    const [P, I] = cyl(a, b, r, seg), n = P.length/3;
+    for(const e of [a, b]){ const c = P.length/3; P.push(...e);
+      for(let i=0;i<seg;i++){ const k = (e===a ? 0 : 1) + i*2, j = (e===a ? 0 : 1) + ((i+1)%seg)*2; I.push(c, k, j); } }
+    return [P, I, n];
+  }
   return {build, resize, theme, reset, png, png4, glb, request, cam, setXray, item};
 }
 window.StageView = {create};
