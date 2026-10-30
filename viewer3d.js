@@ -415,29 +415,19 @@ function create(canvas){
       if(PL.P.length) addBatch([rawMat(PL.P, PL.I, [0.74,0.75,0.77], 0.45)], [IDT]);
       if(WN.P.length) addBatch([rawMat(WN.P, WN.I, [0.16,0.16,0.17], 0.2)], [IDT]);
     }
-    // tribuna: connettori (VHC) tra i parapetti laterali di due file vicine. I montanti affiancati al giunto (70 mm per
-    // parte, 27 mm fuori dal bordo) hanno il piede a quote diverse: piastra piatta alta 30 mm sul lato esterno dei due
-    // montanti, con un bullone per montante, alle altezze dei connettori della fila più alta (273 e 873 mm sul piede),
-    // solo dove arriva anche il montante della fila più bassa
+    // tribuna: connettori VHC (modello CAD) tra i parapetti laterali di due file vicine, al giunto, come se fossero quelli
+    // dell'elemento che parte lì. Altezze dei fori dell'elemento della fila più alta (connettore basso e alto), solo dove
+    // arriva anche il montante della fila più bassa; i fori nell'altro montante li fa il cliente se non corrispondono.
     if(plan.trib && plan.stepLinks && plan.stepLinks.length && !cfg.safety){
-      const PL = mk(), WN = mk(), g = 50 + RAIL_GAP;
+      const V = vhcParts(), lists = {lo:[], hi:[]};
       for(const sl of plan.stepLinks){
-        const J = sl.u*1000, out = sl.side==='left' ? -1 : 1, x0 = sl.side==='left' ? 0 : Wmm, xc = x0 + out*27;
-        const yLo = sl.hLo*10 - 30 + 63.5, yHi = sl.hHi*10 - 30 + 63.5;
-        for(const dy of [273, 873]){
-          const y = yHi + dy; if(y > yLo + 1000) continue;
-          const xp = xc + out*27;                                                         // faccia esterna dei montanti
-          push(PL, box([Math.min(xp, xp+out*5), y-15, J-g-22], [Math.max(xp, xp+out*5), y+15, J+g+22]), BOX_IDX);
-          for(const zc of [J-g, J+g]){
-            push(PL, ...cyl([xp+out*8, y, zc], [xc-out*33, y, zc], 4, 8));               // vite M8 attraverso il montante
-            push(PL, ...cyl([xp+out*5, y, zc], [xp+out*12, y, zc], 7.5, 6));             // testa esagonale
-            push(WN, ...cyl([xc-out*26, y, zc], [xc-out*36, y, zc], 7, 10));             // dado a farfalla
-            const wx = xc-out*31; push(WN, box([wx-3, y-21, zc-3], [wx+3, y+21, zc+3]), BOX_IDX);   // alette
-          }
+        const J = sl.u*1000, yLo = sl.hLo*10 - 30 + 63.5, yHi = sl.hHi*10 - 30 + 63.5;
+        for(const g of ['lo','hi']){
+          const yc = yHi + V[g].yc; if(yc > yLo + 1000) continue;
+          lists[g].push(sl.side==='left' ? {r:I3, t:[0, yHi, J+50]} : {r:RY(Math.PI), t:[Wmm, yHi, J-50]});
         }
       }
-      if(PL.P.length) addBatch([rawMat(PL.P, PL.I, [0.74,0.75,0.77], 0.45)], [IDT]);
-      if(WN.P.length) addBatch([rawMat(WN.P, WN.I, [0.16,0.16,0.17], 0.2)], [IDT]);
+      for(const g of ['lo','hi']) if(lists[g].length && V[g].mats.length) addBatch(V[g].mats, lists[g]);
     }
     for(const g of railGroups.values()){
       let mats;
@@ -1080,6 +1070,27 @@ function create(canvas){
       return new Uint16Array(idx);
     });
     railCache.set(k, out); return out;
+  }
+  // connettore VHC da solo, preso dal modello del parapetto da 1 m (i suoi 2 connettori stanno all'inizio, z < 300):
+  // lo = quello basso, hi = quello alto; yc = altezza del centro sul piede del parapetto. Stesso spostamento di RAIL_GAP.
+  let vhcCache = null;
+  function vhcParts(){
+    if(vhcCache) return vhcCache;
+    const C = comps('rail1'), out = {lo:{mats:[], y0:Infinity, y1:-Infinity}, hi:{mats:[], y0:Infinity, y1:-Infinity}};
+    PARTS.rail1.forEach((m, mi) => {
+      const col = colorOf(m), idx = {lo:[], hi:[]};
+      for(let t=0;t<m.idx.length;t+=3){
+        const a = m.idx[t], bb = C[mi].bb.get(C[mi].root[a]);
+        if(!(bb.y0 >= 240 && bb.y1 <= 905 && bb.y1-bb.y0 <= 60 && bb.z1-bb.z0 <= 220 && bb.z1 < 300)) continue;
+        const g = (bb.y0+bb.y1)/2 < 600 ? 'lo' : 'hi';
+        idx[g].push(a, m.idx[t+1], m.idx[t+2]);
+        out[g].y0 = Math.min(out[g].y0, bb.y0); out[g].y1 = Math.max(out[g].y1, bb.y1);
+      }
+      const pos = new Float32Array(m.pos); for(let i=2;i<pos.length;i+=3) pos[i] += RAIL_GAP;
+      for(const g of ['lo','hi']) if(idx[g].length) out[g].mats.push({pos, idx:new Uint16Array(idx[g]), color:col.color, spec:col.spec});
+    });
+    for(const g of ['lo','hi']) out[g].yc = (out[g].y0 + out[g].y1)/2;
+    return vhcCache = out;
   }
   function railMats(Lm, kick, conn, cornerLo, cornerHi){
     const name = Lm===2 ? 'rail2' : 'rail1', short = Lm===0.5, idxs = railIdx(name, conn);
