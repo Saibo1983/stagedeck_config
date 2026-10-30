@@ -497,6 +497,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
         <p class="hint">Davanti a ogni corridoio, se la prima fila supera i 20 cm, c'è la scala d'accesso; con alzate oltre 20 cm i corridoi hanno gradini intermedi. Parapetti nel riquadro «Parapetti»: retro dietro l'ultima fila, fronte davanti alla prima (aperto ai corridoi), lati a gradini.</p>
       </div>
       <label class="field"><span>Pedana</span><select id="family"></select></label>
+      <label class="check"><input type="checkbox" id="deckBlack"> Profili delle pedane verniciati neri</label>
     </div>
 
     <div class="sec">
@@ -504,6 +505,7 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
       <label class="field stageOnly"><span>Struttura</span><select id="support"></select></label>
       <label class="field"><span>Tipo di gamba</span><select id="legShape"><option value="square">Quadre 60×60 (VFL, telescopiche VTL)</option><option value="round">Tonde Ø 48 (VRL, telescopiche VRLT)</option><option value="roundAdj">Tonde Ø 48 con piedino regolabile (VRLA)</option></select></label>
       <label class="check"><input type="checkbox" id="tele"> Gambe telescopiche, solo su richiesta (dislivelli del terreno o misure particolari)</label>
+      <label class="check"><input type="checkbox" id="legBlack"> Gambe verniciate nere</label>
       <p class="hint" id="legHint"></p>
     </div>
 
@@ -1341,6 +1343,12 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Scale modulari: l'aggancio alla pedana è compreso nel VSM20 e si monta sul gradino più alto (va bene con tutti i VSM); sui lati con il corrimano VHSM non serve, è il corrimano a collegare la scala alla pedana.":"Modultreppen: Die Einhängung am Podest ist im VSM20 enthalten und wird an der obersten Stufe montiert (passt zu allen VSM); an Seiten mit Handlauf VHSM ist sie nicht nötig, dort verbindet der Handlauf die Treppe mit dem Podest.",
 "Parapetti laterali: connettori tra una fila e l'altra ({}), montati dove i montanti delle due file si affiancano. Con alzate diverse i fori dei montanti possono non corrispondere: in quel caso i fori li fa il cliente.":"Seitengeländer: Verbinder zwischen den Reihen ({0}), dort montiert, wo die Pfosten der beiden Reihen nebeneinander stehen. Bei unterschiedlichen Stufenhöhen können die Bohrungen der Pfosten abweichen: In diesem Fall bohrt der Kunde die Löcher selbst.",
 "Misure indicative":"Richtmaße",
+"Profili delle pedane verniciati neri":"Podestprofile schwarz lackiert",
+"Gambe verniciate nere":"Beine schwarz lackiert",
+"Verniciatura nera su richiesta: {}. Prezzo e tempi di consegna da verificare.":"Schwarze Lackierung auf Anfrage: {0}. Preis und Lieferzeit zu prüfen.",
+"profili delle pedane":"Podestprofile",
+"gambe":"Beine",
+"profili delle pedane e gambe":"Podestprofile und Beine",
 "Palco rotondo Ø {} m: {} pedane 1×1 m a lato curvo (quarto di cerchio, raggio 1 m), 4 gambe ciascuna. Senza parapetti, mascheratura e rampe.":"Runde Bühne Ø {0} m: {1} Podeste 1×1 m mit gebogener Seite (Viertelkreis, Radius 1 m), je 4 Beine. Ohne Geländer, Verkleidung und Rampen.",
 "Il palco rotondo Ø 2 m si fa con le pedane 1×1 a lato curvo, che ci sono solo in HEXA e legno: uso Ø 3 m.":"Die runde Bühne Ø 2 m wird aus Podesten 1×1 mit gebogener Seite gebaut, die es nur in HEXA und Holz gibt: verwende Ø 3 m.",
 "Misure: cateti 1.000 mm, ipotenusa 1.414 mm, angoli 90° e 45°.":"Maße: Katheten 1.000 mm, Hypotenuse 1.414 mm, Winkel 90° und 45°.",
@@ -2144,6 +2152,9 @@ const listCodes = a => a.length>5 ? a.slice(0,5).join(', ')+` e altri ${a.length
 
 // Voci aggiuntive, aggregazione, confezioni, maggiorazioni, prezzi, pesi, volumi e spedizione: comune a palco e tribuna
 function finishOffer(out, cfg, R, look, area, warn){
+  // verniciatura nera su richiesta (si vede nel 3D; prezzo e tempi da chiedere al fornitore)
+  const black = [cfg.deckBlack && cfg.support!=='spider' ? 'profili delle pedane' : '', cfg.legBlack && (cfg.kind==='tribuna' || cfg.support==='legs') ? 'gambe' : ''].filter(Boolean);
+  if(black.length) out.notes.push(`Verniciatura nera su richiesta: ${black.join(' e ')}. Prezzo e tempi di consegna da verificare.`);
   // --- voci aggiuntive
   for(const x of cfg.extras) if(x.code && x.qty>0) out.lines.push({group:'Varie', code:x.code, qty:Math.ceil(x.qty)});
 
@@ -2973,7 +2984,7 @@ const today = () => new Date().toISOString().slice(0,10);
 
 const DEFAULT_CFG = {
   cliente:'', cli:null, progetto:'', numero:'', data:today(),
-  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6,
+  W:4, D:4, H:60, family:'hexa', tele:false, deckMix:false, shape:'rect', diam:6, deckBlack:false, legBlack:false,
   trasporto:{carrier:'brigl', mail:'', from:'everdeck', forkFrom:true, to:'', forkTo:false, lift:true, name:'', phone:''},
   rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
   room:{back:false, left:false, right:false, floor:false, clear:false, gap:0},
@@ -3344,7 +3355,7 @@ function fillForm(){
   renderKind();
   $('#deckMix').setAttribute('aria-pressed', cfg.deckMix ? 'true' : 'false');
   $('#deckMixHint').textContent = cfg.deckMix ? 'Pedane al prezzo più basso, anche in versi diversi.' : 'Pedane tutte nello stesso verso.';
-  $('#tele').checked = cfg.tele; $('#kick').checked = cfg.kick; $('#chairStop').checked = !!cfg.chairStop; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
+  $('#tele').checked = cfg.tele; $('#deckBlack').checked = !!cfg.deckBlack; $('#legBlack').checked = !!cfg.legBlack; $('#kick').checked = cfg.kick; $('#chairStop').checked = !!cfg.chairStop; $('#safety').checked = !!cfg.safety; $('#pdfCost').checked = !!cfg.pdfCost; $('#descShow').checked = !!cfg.descShow; $$('#outLang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang===(cfg.lingua||'it')))); $('#descPdf').checked = !!cfg.descPdf;
   $$('[data-side]').forEach(c => c.checked = !!cfg.rails[c.dataset.side]);
   $$('[data-room]').forEach(b => b.setAttribute('aria-pressed', cfg.room[b.dataset.room] ? 'true' : 'false'));
   $('#roomGap').value = +cfg.room.gap || 0;
@@ -3391,7 +3402,8 @@ function renderFamilies(){
   if(!opts.some(([k]) => k===cfg.family)) cfg.family = opts[0][0];
   $('#family').innerHTML = opts.map(([k,f]) => `<option value="${k}">${f.label}</option>`).join('');
   $('#family').value = cfg.family;
-  $('#tele').closest('label').hidden = cfg.support!=='legs';
+  $('#tele').closest('label').hidden = $('#legBlack').closest('label').hidden = cfg.support!=='legs';
+  $('#deckBlack').closest('label').hidden = cfg.support==='spider';   // lo Spider ha già la versione nera
   $('#legShape').closest('label').hidden = cfg.support!=='legs';
   $('#kick').closest('label').hidden = $('#safety').closest('label').hidden = spider;   // lo Spider ha i suoi parapetti VH-2 e VH-1
 }

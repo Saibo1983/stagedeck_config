@@ -170,7 +170,9 @@ function create(canvas){
     const ty = H*10 - 30;                       // sotto il deck (mm da terra)
     const delta = H*10 - 600;                   // allungamento rispetto alla gamba da 60 cm del modello
     const fam = cfg.family || 'hexa';
-    const frameCol = FRAME_DARK[fam] ? [0.10,0.10,0.11] : null;
+    const frameCol = FRAME_DARK[fam] || cfg.deckBlack ? [0.10,0.10,0.11] : null;   // profili verniciati neri
+    // gambe verniciate nere: le parti in alluminio della gamba (il piede in gomma resta com'è)
+    const legOver = cfg.legBlack ? m => m.key==='254,254,255' ? [0.11,0.11,0.12] : null : undefined;
     const topCol = DECK_TOP[fam] || DECK_TOP.hexa;
     const deckOver = m => m.key==='64,64,64' ? topCol : (m.key==='254,254,255' && frameCol ? frameCol : null);
     const spider = cfg.support==='spider' && !plan.round && !plan.trib;
@@ -222,7 +224,7 @@ function create(canvas){
       for(const q of plan.round.pieces){
         if(q.std) continue;
         const pts = q.poly.map(([x,y]) => [x*1000, y*1000]);
-        addBatch([rawMat(...extrude(pts, ty, ty+72, false), FRAME_DARK[fam] ? [0.10,0.10,0.11] : [0.80,0.82,0.86], 0.5), Object.assign(rawMat(...extrude(pts, ty+72, ty+90), topCol, 0.15), {top:true})], [IDT]);
+        addBatch([rawMat(...extrude(pts, ty, ty+72, false), frameCol || [0.80,0.82,0.86], 0.5), Object.assign(rawMat(...extrude(pts, ty+72, ty+90), topCol, 0.15), {top:true})], [IDT]);
         const sgn = Math.sign(pts.reduce((a,v,i) => { const w = pts[(i+1)%pts.length]; return a + v[0]*w[1]-w[0]*v[1]; }, 0));
         const inside = (x,z) => Math.min(...pts.map((a,i) => { const b = pts[(i+1)%pts.length], L = Math.hypot(b[0]-a[0], b[1]-a[1]);
           return L < 1e-6 ? Infinity : ((x-a[0])*-(b[1]-a[1]) + (z-a[1])*(b[0]-a[0]))/L*sgn; }));   // distanza dal lato più vicino (<0 fuori)
@@ -244,8 +246,8 @@ function create(canvas){
     else if(cfg.support==='roll' && !plan.trib && !plan.round) rollRisers(legPts, ty);
     else if(roundLeg) roundLegs(legAxes, ty, cfg);
     else{
-      addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z]), legs);
-      for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z]), list);
+      addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+delta : z], legOver), legs);
+      for(const [dl, list] of legsBy) addBatch(stretched('leg', (x,y,z) => [x,y,z > 150 ? z+dl : z], legOver), list);
     }
 
     // --- Rollrisers (disegni «Rollriser with two/four foot», 30 cm): sotto ogni punto d'angolo dei deck una ruota
@@ -1014,7 +1016,7 @@ function create(canvas){
         push(A, ...cyl([x,12,z], [x,top,z], r, 16)); push(K, ...cyl([x,0,z], [x,12,z], 26, 16));
       }
     }
-    addBatch([rawMat(A.P, A.I, [0.80,0.82,0.86], 0.5)], [IDT]);
+    addBatch([rawMat(A.P, A.I, cfg.legBlack ? [0.11,0.11,0.12] : [0.80,0.82,0.86], 0.5)], [IDT]);
     addBatch([rawMat(K.P, K.I, [0.10,0.10,0.11], 0.15)], [IDT]);
   }
   // Spider Deck (disegni Everdeck 73-80): pianale spesso 55 mm su gambe a forbice, una ogni metro quadro (1×1:
