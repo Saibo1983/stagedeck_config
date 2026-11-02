@@ -98,6 +98,10 @@ const DECK_TOP = {   // piano di calpestio per famiglia
   wood:[0.66,0.48,0.30], plexb:[0.03,0.03,0.04], plexm:[0.93,0.93,0.94], plext:[0.60,0.78,0.88]
 };
 const FRAME_DARK = {spiderb:true};
+/* parapetti (VH, VHK col battipiede, Spider VH), connettori VHC, scalette modulari VSM e corrimano VHSM sono verniciati
+   neri (foto Everdeck): nei modelli CAD sono grigio acciaio, il colore si cambia qui. Viti e galletti restano chiari. */
+const PAINT_BLACK = [0.09,0.09,0.10];
+const blackSteel = m => m.key==='190,188,186' ? PAINT_BLACK : null;
 
 /* ---------- la vista ---------- */
 function create(canvas){
@@ -580,12 +584,12 @@ function create(canvas){
     const widen = (x,y) => [x + Math.sign(x)*(SW-642)/2, y + Math.sign(y)*(SD-242)/2];
     for(const [key,list] of Object.entries(stepBy)){
       const src = key.startsWith('step') ? key : 'step60', h = key.startsWith('step') ? 0 : +key.slice(4) - 600;
-      addBatch(stretched(src, (x,y,z) => [...widen(x,y), z > 300 && h ? z + h : z]), list);
+      addBatch(stretched(src, (x,y,z) => [...widen(x,y), z > 300 && h ? z + h : z], blackSteel), list);
     }
-    if(sRail.length) addBatch(stretched('stairrail', (x,y,z) => [x + Math.sign(x)*(2*SD-474)/2, y, z]), sRail);
+    if(sRail.length) addBatch(stretched('stairrail', (x,y,z) => [x + Math.sign(x)*(2*SD-474)/2, y, z], blackSteel), sRail);
     if(AS.P.length) addBatch([rawMat(AS.P, AS.I, [0.06,0.06,0.07], 0.15)], [IDT]);
     // montanti dell'aggancio: stesso colore del corrimano VHSM (materiale principale del suo modello)
-    if(HK.P.length){ const m = PARTS.stairrail.reduce((a, b) => b.pos.length > a.pos.length ? b : a), c = colorOf(m);
+    if(HK.P.length){ const m = PARTS.stairrail.reduce((a, b) => b.pos.length > a.pos.length ? b : a), c = colorOf(m, blackSteel(m));
       addBatch([rawMat(HK.P, HK.I, c.color, c.spec)], [IDT]); }
     if(AA.P.length) addBatch([rawMat(AA.P, AA.I, [0.80,0.82,0.86], 0.5)], [IDT]);
 
@@ -968,11 +972,11 @@ function create(canvas){
       const d = spec.h - 600; mats = stretched('leg', (x,y,z) => [x, y, z > 150 ? z + d : z]); T = {r:ZUP, t:[0,0,0]};
     } else if(spec.kind==='rail'){
       const base = spec.L > 1000 ? 'rail2' : 'rail1', cut = spec.L > 1000 ? 1000 : 450, d = spec.L - (spec.L > 1000 ? 2000 : 1000);
-      mats = stretched(base, (x,y,z) => [x, y, z > cut ? z + d : z]);
-      if(spec.kick) mats.push(rawMat(box([-24,0,-40],[-20,150,spec.L-60]), BOX_IDX, [0.80,0.82,0.86], 0.4));   // battipiede
+      mats = stretched(base, (x,y,z) => [x, y, z > cut ? z + d : z], blackSteel);
+      if(spec.kick) mats.push(rawMat(box([-24,0,-40],[-20,150,spec.L-60]), BOX_IDX, PAINT_BLACK, 0.35));   // battipiede
     } else if(spec.kind==='step'){
       const src = spec.h <= 200 ? 20 : spec.h <= 400 ? 40 : 60, d = spec.h - src*10;
-      mats = stretched('step'+src, (x,y,z) => [x, y, z > src*5 ? z + d : z]); T = {r:ZUP, t:[0,0,0]};
+      mats = stretched('step'+src, (x,y,z) => [x, y, z > src*5 ? z + d : z], blackSteel); T = {r:ZUP, t:[0,0,0]};
     } else if(spec.kind==='shape'){       // pedana sagomata (triangolo, quarto di cerchio): telaio in alluminio + piano
       const pts = spec.pts, top = DECK_TOP[spec.fam] || DECK_TOP.hexa;
       mats = [rawMat(...extrude(pts, 0, 72), [0.80,0.82,0.86], 0.5), rawMat(...extrude(pts, 72, 90), top, 0.15)];
@@ -1098,7 +1102,7 @@ function create(canvas){
     if(vhcCache) return vhcCache;
     const C = comps('rail1'), out = {lo:{mats:[], y0:Infinity, y1:-Infinity}, hi:{mats:[], y0:Infinity, y1:-Infinity}};
     PARTS.rail1.forEach((m, mi) => {
-      const col = colorOf(m), idx = {lo:[], hi:[]};
+      const col = colorOf(m, blackSteel(m)), idx = {lo:[], hi:[]};
       for(let t=0;t<m.idx.length;t+=3){
         const a = m.idx[t], bb = C[mi].bb.get(C[mi].root[a]);
         if(!(isConn(bb) && bb.z1 < 300)) continue;
@@ -1118,7 +1122,7 @@ function create(canvas){
     // l'interno), così tra due parapetti vicini restano 40 mm e all'angolo 20 mm
     const mid = Lm*500 - 50;
     const mats = PARTS[name].map((m, mi) => {
-      const c = colorOf(m);
+      const c = colorOf(m, blackSteel(m));
       let pos = m.pos;
       pos = new Float32Array(m.pos);
       if(conn) stretchConn(name, mi, pos);
@@ -1132,7 +1136,7 @@ function create(canvas){
       }
       return {pos, idx:idxs[mi], color:c.color, spec:c.spec};
     }).filter(m => m.idx.length);
-    if(kick) mats.push(rawMat(box([-24,26.5,-40+RAIL_GAP],[-20,176.5, (Lm===2 ? 1940 : Lm===1 ? 940 : 440) - RAIL_GAP]), BOX_IDX, [0.80,0.82,0.86], 0.4));
+    if(kick) mats.push(rawMat(box([-24,26.5,-40+RAIL_GAP],[-20,176.5, (Lm===2 ? 1940 : Lm===1 ? 940 : 440) - RAIL_GAP]), BOX_IDX, PAINT_BLACK, 0.35));   // battipiede
     return mats;
   }
   // parapetto Spider VH-2 / VH-1 (disegni Everdeck 81-82): telaio in tubo con gli angoli in alto curvati, traverso
@@ -1148,7 +1152,7 @@ function create(canvas){
       for(let k=0;k<4;k++) add(cyl(pts[k], pts[k+1], 19, 12));
     }
     for(const zp of [a, b]) add([box([x-38,-60,zp-30],[x+20,0,zp+30]), BOX_IDX]);   // morsetti sul bordo
-    return [rawMat(P, I, [0.80,0.82,0.86], 0.5)];
+    return [rawMat(P, I, PAINT_BLACK, 0.35)];
   }
   // parapetto di sicurezza VHX (dalle immagini Everdeck/GlobalTruss): corrimano tondo in alto, due montanti quadri,
   // traverso basso e montanti tondi ogni ~11 cm, tubo quadro di base sotto il bordo; alto 115 cm sul piano; misure in mm
