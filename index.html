@@ -299,7 +299,7 @@ tr.inv td:first-child{box-shadow:inset 3px 0 0 var(--inv)}
 .clirow{display:flex;gap:8px;align-items:center}
 .clirow input{flex:1 1 160px;min-width:0}
 @media (max-width:820px){.cligrid,.clicols{grid-template-columns:minmax(0,1fr)}.fisrow{grid-template-columns:minmax(0,1fr) auto}.fisrow .fisok{grid-column:1/-1;padding:0}}
-#trDlg::backdrop,#imgDlg::backdrop,#cliDlg::backdrop,#sigDlg::backdrop{background:rgba(10,20,30,.45)}
+#trDlg::backdrop,#imgDlg::backdrop,#nameDlg::backdrop,#cliDlg::backdrop,#sigDlg::backdrop{background:rgba(10,20,30,.45)}
 /* illustrazioni degli articoli */
 .thumb{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:2px;margin:-4px 8px -4px 0;vertical-align:middle;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:zoom-in;flex:none}
 .thumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
@@ -325,6 +325,13 @@ tr.grp .thumb{width:56px;height:40px;margin:-6px 10px -6px 0}
 #imgBig{max-width:100%;max-height:70vh;object-fit:contain;background:#fff;border-radius:6px;align-self:center}
 @media print{.thumb{border:0;width:34px;height:34px;margin:-3px 6px -3px 0}}
 .trform{display:flex;flex-direction:column;gap:12px;padding:16px}
+/* nome del file prima di scaricare immagini e modelli 3D: prosegui col nome proposto o rinomina */
+#nameDlg{width:min(460px,calc(100vw - 32px));border:1px solid var(--line);border-radius:10px;padding:0;background:var(--surface);color:var(--ink)}
+.field>span.namerow{display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-weight:400}
+.namerow input{flex:1 1 auto;min-width:0}
+.namerow .ext{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.namecur{margin:0;font-family:var(--f-mono);font-size:13px;word-break:break-all}
+.namebtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
 .trhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .trcolli ul{margin:4px 0 0;padding-left:18px}
 .trset{border:1px solid var(--line);border-radius:8px;padding:8px 12px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
@@ -799,6 +806,17 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
           <button type="button" class="btn" id="cliSave">Salva</button>
           <button type="button" class="btn" id="cliDel">Elimina</button>
           <span class="status" id="cliMsg" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="nameDlg" aria-labelledby="nameTitle">
+      <form method="dialog" class="trform" id="nameForm">
+        <div class="trhead"><h2 id="nameTitle">Salva il file</h2><button type="submit" class="btn small" value="cancel" formnovalidate aria-label="Chiudi">✕</button></div>
+        <p class="namecur" id="nameCur" data-noi18n></p>
+        <label class="field" id="nameEdit" hidden><span>Nome del file</span><span class="namerow"><input type="text" id="nameInput" autocomplete="off" spellcheck="false"><span class="ext" id="nameExt" data-noi18n></span></span></label>
+        <div class="namebtns">
+          <button type="button" class="btn" id="nameRen">Rinomina il file</button>
+          <button type="submit" class="btn primary" value="ok" id="nameOk">Prosegui</button>
         </div>
       </form>
     </dialog>
@@ -1318,6 +1336,10 @@ footer{margin-top:28px;color:var(--muted);font-size:12px;border-top:1px solid va
 "Rimette le righe tolte, l'ordine del listino, le quantità calcolate e la maggiorazione generale":"Stellt entfernte Zeilen, die Reihenfolge der Preisliste, die berechneten Mengen und den allgemeinen Aufschlag wieder her",
 "Togli {} dall'offerta":"{0} aus dem Angebot entfernen",
 "Togli dall'offerta":"Aus dem Angebot entfernen",
+"Salva il file":"Datei speichern",
+"Nome del file":"Dateiname",
+"Rinomina il file":"Datei umbenennen",
+"Prosegui":"Weiter",
 "Sposta {} (frecce su e giù)":"{0} verschieben (Pfeiltasten auf und ab)",
 "Trascina per cambiare l'ordine":"Ziehen, um die Reihenfolge zu ändern",
 "Articoli tolti a mano dall'offerta: {}.":"Von Hand aus dem Angebot entfernte Artikel: {0}.",
@@ -4252,16 +4274,18 @@ function open3dPop(){
 }
 async function save3d(){
   if(!v3.view) return;
+  const name = await askFileName(`vista3d_${ref3d()}.png`); if(!name) return;
   const blob = await v3.view.png();
   if(!blob) return;
-  await saveBlob(blob, `vista3d_${ref3d()}.png`, 'Immagine');
+  await saveBlob(blob, name, 'Immagine');
 }
 // immagine a 4 viste (assonometria, fronte, lato, pianta) con il titolo del palco o della tribuna
 async function save3d4(){
   if(!v3.view || !res || !res.plan) return;
+  const name = await askFileName(`viste_${ref3d()}.png`); if(!name) return;
   const blob = await inLang(cfg.lingua, png3d4);   // titoli nella lingua di stampa, come PDF e copie
   if(!blob) return;
-  await saveBlob(blob, `viste_${ref3d()}.png`, 'Immagine a 4 viste');
+  await saveBlob(blob, name, 'Immagine a 4 viste');
 }
 function png3d4(){
   draw3dNow();
@@ -4275,12 +4299,14 @@ const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/
 async function saveGlb(){
   if(!v3.view) return;
   draw3dNow();
-  await saveBlob(v3.view.glb(), `palco3d_${ref3d()}.glb`, 'Modello 3D');
+  const name = await askFileName(`palco3d_${ref3d()}.glb`); if(!name) return;
+  await saveBlob(v3.view.glb(), name, 'Modello 3D');
 }
 // pagina HTML da mandare al cliente: si apre con un doppio clic nel browser e il palco si gira con il dito o il mouse
 async function saveHtml3d(){
   if(!v3.view) return;
-  await saveBlob(await html3d(), `palco3d_${ref3d()}.html`, 'Pagina 3D');
+  const name = await askFileName(`palco3d_${ref3d()}.html`); if(!name) return;
+  await saveBlob(await html3d(), name, 'Pagina 3D');
 }
 async function html3d(){
   draw3dNow();
@@ -4302,6 +4328,25 @@ document.getElementById('mv').src=URL.createObjectURL(new Blob([u],{type:'model/
   return new Blob([html], {type:'text/html'});
 }
 function draw3dNow(){ cancelAnimationFrame(v3.raf); try{ v3.view.build(res.plan, cfg); }catch(e){ console.error(e); } }
+// prima di scaricare: «Prosegui» col nome proposto o «Rinomina il file»; null se si chiude il riquadro
+function askFileName(filename){
+  const dlg = $('#nameDlg'), dot = filename.lastIndexOf('.'), base = dot>0 ? filename.slice(0, dot) : filename, ext = dot>0 ? filename.slice(dot) : '';
+  if(!dlg || typeof dlg.showModal!=='function') return Promise.resolve(filename);
+  $('#nameCur').textContent = filename; $('#nameCur').hidden = false;
+  $('#nameEdit').hidden = true; $('#nameRen').hidden = false; $('#nameOk').textContent = 'Prosegui';
+  $('#nameInput').value = base; $('#nameExt').textContent = ext;
+  dlg.returnValue = '';
+  return new Promise(ok => {
+    dlg.addEventListener('close', () => {
+      if(dlg.returnValue!=='ok') return ok(null);
+      const raw = $('#nameEdit').hidden ? '' : $('#nameInput').value.trim().replace(new RegExp(ext.replace(/\./g,'\\.')+'$', 'i'), '').trim();
+      const v = raw ? fileSafe(raw) : base;
+      ok(v + ext);
+    }, {once:true});
+    dlg.showModal();
+    $('#nameOk').focus();
+  });
+}
 async function saveBlob(blob, filename, what){
   try{
     let dl = null;
@@ -5130,6 +5175,11 @@ function bind(){
     };
     document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
   });
+  $('#nameRen').addEventListener('click', () => {
+    $('#nameEdit').hidden = false; $('#nameRen').hidden = true; $('#nameCur').hidden = true; $('#nameOk').textContent = 'Salva';
+    const i = $('#nameInput'); i.focus(); i.select();
+  });
+  $('#nameInput').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); $('#nameDlg').close('ok'); } });
   $('#adjReset').addEventListener('click', () => { cfg.adj = {}; cfg.mkRow = {}; cfg.removed = []; cfg.order = []; cfg.regroup = {}; update(); });
   $('#presetSel').addEventListener('change', e => { if(e.target.value) applyPreset(e.target.value); e.target.value = ''; });
   $('#archSave').addEventListener('click', archSave);
