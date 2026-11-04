@@ -2880,6 +2880,7 @@ for(const it of ITEMS){ const sh = shapedOf(it.code); if(sh) it.shape = sh.shape
 const BLACK_DECK = {'4x2':'2×1', '2x2':'1×1', '4x1':'2×0,5', '2x1':'1×0,5', '1x1':'0,5×0,5'};
 for(const [k, m] of Object.entries(BLACK_DECK))
   ITEMS.push({code:'NERO-'+m.replace('×','x'), name:`Black painted frame, stage platform ${m}`, section:'BLACK PAINTING', kg:0, pack:[0,0,0]});
+ITEMS.push({code:'NERO-1,5x1', name:'Black painted frame, stage platform 1,5×1', section:'BLACK PAINTING', kg:0, pack:[0,0,0]});   // il 1,5×1 non esce dalla copertura: si aggiunge a mano
 ITEMS.push({code:'NERO-SPECIALE', name:'Black painted frame, special stage platform', section:'BLACK PAINTING', kg:0, pack:[0,0,0]});
 const blackLeg = code => /^(VFL|VTL|VRL|VRLA|VRLT)\d+$/i.test(ncode(code));
 for(const it of ITEMS.filter(i => blackLeg(i.code)))

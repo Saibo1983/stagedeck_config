@@ -35,8 +35,9 @@ I prezzi del listino sono di acquisto. La maggiorazione è fissa al 37% (il camp
 
 ## Verniciatura nera
 - Spunte «Profili delle pedane verniciati neri» (riquadro Pedana) e «Gambe verniciate nere» (riquadro Gambe): il 3D le mostra nere e l'offerta aggiunge una voce di verniciatura sotto ogni pedana e ogni gamba.
-- Codici (non nel listino Everdeck): `NERO-2x1`, `NERO-1x1`, `NERO-2x0,5`, `NERO-1x0,5`, `NERO-0,5x0,5` per le pedane, `NERO-SPECIALE` per i pezzi speciali e curvi, `NERO-` + codice della gamba (es. `NERO-VFL20`, `NERO-VTL40`) per le gambe.
+- Codici (non nel listino Everdeck): `NERO-2x1`, `NERO-1x1`, `NERO-2x0,5`, `NERO-1x0,5`, `NERO-0,5x0,5` per le pedane (più `NERO-1,5x1`, da aggiungere a mano: il 1,5×1 non esce dalla copertura), `NERO-SPECIALE` per i pezzi speciali e curvi, `NERO-` + codice della gamba (es. `NERO-VFL20`, `NERO-VTL40`) per le gambe.
 - Prezzi di acquisto in `prezzi_extra.json` (fuori da git), con la maggiorazione come il listino; le gambe a pezzo come nel listino (prezzo del set diviso 4). Senza prezzo la voce resta in offerta con l'avviso «prezzo mancante».
+- Sovrapprezzi Everdeck di novembre 2026 (in `prezzi_extra.json`): telai di tutte le misure, gambe fisse VFL20/40/60/80/100 e telescopiche VTL40/60/80/100. Gli altri codici di gambe (VFL25, VFL70, VTL30, tonde VRL/VRLA/VRLT) non hanno ancora prezzo.
 
 ## Regole confermate
 - Pedane tutte orientate nello stesso verso: i 2×1 formano un blocco unico (dall'angolo retro-sinistra) con il lato lungo tutto sulla larghezza o tutto sulla profondità. Dove la misura non è multipla del modulo, la striscia che avanza (a destra e sul fronte) si chiude con 1×1, 2×0,5, 1×0,5 e 0,5×0,5, mai con un 2×1 girato. Tra i due versi vince il prezzo di listino più basso, poi meno pezzi, poi il lato lungo sulla larghezza.
