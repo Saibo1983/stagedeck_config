@@ -2232,11 +2232,15 @@ function finishOffer(out, cfg, R, look, area, warn){
   lines.sort((a,b) => at(a)-at(b) || GROUPS.indexOf(a.group)-GROUPS.indexOf(b.group));
   const grpOrd = [...new Set(lines.map(l => l.group))];
   lines.sort((a,b) => grpOrd.indexOf(a.group)-grpOrd.indexOf(b.group));
-  // ordine scelto a mano con la maniglia a puntini (dentro ogni gruppo): le righe nuove restano dopo quella che le precede nell'ordine del listino
-  const ordIdx = new Map((cfg.order||[]).map((k,i) => [k,i]));
-  if(ordIdx.size){
+  // ordine scelto a mano con la maniglia a puntini, anche da un gruppo all'altro (cfg.regroup: chiave → gruppo nuovo).
+  // La chiave resta quella calcolata (gruppo|codice), così quantità e maggiorazioni cambiate a mano restano attaccate alla riga.
+  // Le righe nuove restano dopo quella che le precede nell'ordine del listino.
+  const regroup = cfg.regroup || {}, ordIdx = new Map((cfg.order||[]).map((k,i) => [k,i]));
+  for(const l of lines){ l.grp0 = l.group; if(regroup[l.key] && regroup[l.key]!==l.group) l.group = regroup[l.key]; }
+  if(ordIdx.size || Object.keys(regroup).length){
+    const gOrd = [...grpOrd, ...new Set(lines.map(l => l.group).filter(g => !grpOrd.includes(g)))];
     const sorted = [];
-    for(const g of grpOrd){
+    for(const g of gOrd){
       const ls = lines.filter(l => l.group===g), out2 = ls.filter(l => ordIdx.has(l.key)).sort((a,b) => ordIdx.get(a.key)-ordIdx.get(b.key));
       ls.forEach((l,i) => { if(!ordIdx.has(l.key)) out2.splice(i ? out2.indexOf(ls[i-1])+1 : 0, 0, l); });
       sorted.push(...out2);
@@ -3047,12 +3051,12 @@ const DEFAULT_CFG = {
   rails:{back:true, left:true, right:true, front:false}, kick:false, safety:false,
   room:{back:false, left:false, right:false, floor:false, clear:false, gap:0},
   kind:'palco', trib:{W:8, rows:5, depth:1, rise:20, h1:20, aisles:{left:false, center:true, right:false}, sideFirst:true}, chairStop:false,
-  support:'legs', legShape:'square', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{}, removed:[], order:[],
+  support:'legs', legShape:'square', skirt:{sides:{back:false,front:false,left:false,right:false}, fabric:'PSP-S', height:'auto'}, trolley:{type:'', qty:''}, stairs:[{side:'front', rails:2}], ramps:[], stairType:'auto', extras:[], adj:{}, mkRow:{}, removed:[], order:[], regroup:{},
   markup:37, discount:0, vat:22, pdfCost:false, descShow:false, descPdf:false, lingua:'it'
 };
 const clone = o => JSON.parse(JSON.stringify(o));
 // "Azzera tutto": impostazioni iniziali senza accessori
-const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {lingua:UILANG, data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, mkRow:{}, removed:[], order:[], markup:37, discount:0});
+const blankCfg = () => Object.assign(clone(DEFAULT_CFG), {lingua:UILANG, data:today(), rails:{back:false,left:false,right:false,front:false}, stairs:[], ramps:[], extras:[], adj:{}, mkRow:{}, removed:[], order:[], regroup:{}, markup:37, discount:0});
 let cfg = clone(DEFAULT_CFG), R = clone(DEFAULT_RULES), res = null;
 
 // configurazione completa: i campi mancanti (salvataggi vecchi) prendono il valore predefinito
@@ -3070,6 +3074,7 @@ function normCfg(src){
   c.mkRow = (c.mkRow && typeof c.mkRow==='object') ? c.mkRow : {};
   c.removed = Array.isArray(c.removed) ? c.removed.filter(k => typeof k==='string') : [];   // righe tolte con la ×
   c.order = Array.isArray(c.order) ? c.order.filter(k => typeof k==='string') : [];         // ordine scelto a mano (chiavi gruppo|codice)
+  c.regroup = (c.regroup && typeof c.regroup==='object' && !Array.isArray(c.regroup)) ? c.regroup : {};   // righe portate a mano in un altro gruppo
   if(!c.mk37){ c.markup = 37; c.mk37 = true; }   // una volta: maggiorazione fissa 37%
   const posOf = x => x.pos!=null && isFinite(+x.pos) ? {pos:+x.pos} : {};   // posizione scelta col cursore (m), sennò automatica
   c.stairs = (c.stairs||[]).map(x => ({side:x.side||'front', rails:x.rails===0||x.rails===1?x.rails:2, ...posOf(x)}));
@@ -3888,8 +3893,8 @@ function renderSecImgs(){
   $$('.secimgs').forEach(box => {
     const gs = box.dataset.groups.split(',');
     const legClamp = code => /^V4?LCO?(-|$)/i.test(code);
-    const ls = (res && res.lines || []).filter(l => l.qty>0 && (gs.includes(l.group)
-      || (l.group==='Collegamenti' && gs.includes(legClamp(l.code) ? 'Collegamenti:gambe' : 'Collegamenti:pedane'))));
+    const ls = (res && res.lines || []).filter(l => l.qty>0 && (gs.includes(l.grp0||l.group)
+      || ((l.grp0||l.group)==='Collegamenti' && gs.includes(legClamp(l.code) ? 'Collegamenti:gambe' : 'Collegamenti:pedane'))));
     let h = ls.map(l => { const t = thumb(l.code); return t ? `<figure>${t}<figcaption>${esc(l.code)}</figcaption></figure>` : ''; }).join('');
     if(gs.includes('Rampe') && ls.length){   // rampa in offerta: immagine della rampa da sola e montata al palco
       const H = +cfg.H, t = `Rampa ${H} cm`;
@@ -3985,7 +3990,7 @@ function renderShip(){
 function renderResult(){
   res = cfg.kind==='tribuna' ? computeTribune(cfg, R, LOOK) : compute(cfg, R, LOOK, KITS);
   const t = res.totals;
-  const sumQ = g => (res.lines||[]).filter(l => l.group===g && /PLATFORM|DECK/i.test((LOOK.get(ncode(l.code))||{}).section||'')).reduce((a,l) => a+l.qty, 0);
+  const sumQ = g => (res.lines||[]).filter(l => (l.grp0||l.group)===g && /PLATFORM|DECK/i.test((LOOK.get(ncode(l.code))||{}).section||'')).reduce((a,l) => a+l.qty, 0);
   const nDecks = sumQ('Pedana'), nRampDecks = sumQ('Rampe');
   $('#tiles').innerHTML = t ? `
     <div class="tile main"><div class="k">Totale IVA esclusa</div><div class="v">${money(t.net)} <small>€</small></div></div>
@@ -4008,9 +4013,9 @@ function renderResult(){
   for(const g of new Set(res.lines.map(l => l.group))){
     const ls = res.lines.filter(l => l.group===g);
     if(!ls.length) continue;
-    html += `<tr class="grp"><td class="c-ed"></td><td colspan="3">${g==='Rampe' ? thumbSrc(rampSrc(+cfg.H,true), `Rampa ${cfg.H} cm montata al palco`, 'Immagine indicativa del kit rampa per questa altezza') : ''}${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td><td class="c-ed"></td></tr>`;
+    html += `<tr class="grp" data-grp="${esc(g)}"><td class="c-ed"></td><td colspan="3">${g==='Rampe' ? thumbSrc(rampSrc(+cfg.H,true), `Rampa ${cfg.H} cm montata al palco`, 'Immagine indicativa del kit rampa per questa altezza') : ''}${g}</td><td class="c-cost"></td><td class="c-cost"></td><td></td><td class="num">${money(ls.reduce((s,l)=>s+l.total,0))}</td><td class="c-ed"></td></tr>`;
     for(const l of ls) html += `<tr data-key="${esc(l.key)}" data-grp="${esc(g)}"${l.adj||l.mkMod||l.fattura ? ` class="${[l.adj?'mod':'', l.mkMod?'mkmod':'', l.fattura?'inv':''].join(' ').trim()}"` : ''}>`
-      + `<td class="c-ed">${ls.length>1 ? `<button type="button" class="drag" data-drag="${esc(l.key)}" aria-label="Sposta ${esc(l.code)} (frecce su e giù)" title="Trascina per cambiare l'ordine">⠿</button>` : ''}</td><td class="code">${esc(l.code)}</td><td>${thumb(l.code)}${esc(l.name)}${l.fattura ? ` <span class="invtag" data-noi18n title="${esc(l.fattura)}">${esc(tr('fuori listino · controlla'))}</span>` : ''}${descHtml(l.code)}</td><td class="num"><span class="qed">`
+      + `<td class="c-ed">${res.lines.length>1 ? `<button type="button" class="drag" data-drag="${esc(l.key)}" aria-label="Sposta ${esc(l.code)} (frecce su e giù)" title="Trascina per cambiare l'ordine">⠿</button>` : ''}</td><td class="code">${esc(l.code)}</td><td>${thumb(l.code)}${esc(l.name)}${l.fattura ? ` <span class="invtag" data-noi18n title="${esc(l.fattura)}">${esc(tr('fuori listino · controlla'))}</span>` : ''}${descHtml(l.code)}</td><td class="num"><span class="qed">`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="-1" aria-label="Togli ${l.step} a ${esc(l.code)}" ${l.qty<=0?'disabled':''}>−</button>`
       + `<span title="${l.adj ? 'calcolata: '+l.autoQty : ''}">${l.qty}</span>`
       + `<button type="button" data-adj="${esc(l.key)}" data-d="1" aria-label="Aggiungi ${l.step} a ${esc(l.code)}">+</button></span></td><td class="num c-cost">${money(l.unitCost)}</td><td class="num c-cost"><span class="qed mkq">`
@@ -4022,7 +4027,7 @@ function renderResult(){
   $('#offerTable').innerHTML = html + '</tbody></table>';
   $('#offerTable').classList.toggle('desc-on', !!cfg.descShow);
   renderSecImgs();
-  $('#adjReset').hidden = !res.lines.some(l => l.adj || l.mkMod) && !cfg.removed.length && !cfg.order.length;
+  $('#adjReset').hidden = !res.lines.some(l => l.adj || l.mkMod) && !cfg.removed.length && !cfg.order.length && !Object.keys(cfg.regroup).length;
   // la nota della spedizione resta a schermo ma non va nel PDF dell'offerta
   $('#techNotes').innerHTML = res.notes.map(n => `<li${n.startsWith('Spedizione (stima)') ? ' class="shipnote"' : ''}>${esc(n)}</li>`).join('');
   $$('.tribnotice').forEach(e => { e.hidden = !p.trib; e.textContent = p.trib ? tr(TRIB_NOTICE) : ''; });
@@ -4254,7 +4259,7 @@ async function save3d(){
 // immagine a 4 viste (assonometria, fronte, lato, pianta) con il titolo del palco o della tribuna
 async function save3d4(){
   if(!v3.view || !res || !res.plan) return;
-  const blob = await png3d4();
+  const blob = await inLang(cfg.lingua, png3d4);   // titoli nella lingua di stampa, come PDF e copie
   if(!blob) return;
   await saveBlob(blob, `viste_${ref3d()}.png`, 'Immagine a 4 viste');
 }
@@ -4262,7 +4267,7 @@ function png3d4(){
   draw3dNow();
   // quote indicative (non sull'assonometria): larghezza, profondità e altezza del piano più alto
   const p = res.plan, Hc = p.trib ? p.hTop : +cfg.H, mm = v => Math.round(v*1000);
-  const dims = {W:mm(p.W), D:mm(p.D), H:Hc*10, tW:(p.round ? 'Ø ' : '')+nf(p.W)+' m', tD:(p.round ? 'Ø ' : '')+nf(p.D)+' m', tH:Hc+' cm', note:tr('Misure indicative')};
+  const dims = {W:mm(p.W), D:mm(p.D), H:Hc*10, tW:(p.round ? 'Ø ' : '')+nf(p.W)+' m', tD:(p.round ? 'Ø ' : '')+nf(p.D)+' m', tH:nf(Hc)+' cm', note:tr('Misure indicative')};
   return v3.view.png4(['Vista assonometrica','Vista frontale','Vista laterale','Vista in pianta'].map(x => tr(x)), tr(stageTitle(res.plan)), dims);
 }
 const ref3d = () => (cfg.numero || cfg.progetto || 'palco').toString().replace(/[^\w\-]+/g,'_');
@@ -5073,39 +5078,59 @@ function bind(){
     const again = $(`#offerTable button[data-adj="${CSS.escape(k)}"][data-d="${b.dataset.d}"]`);
     if(again && !again.disabled) again.focus();
   });
-  // riordino delle righe: trascinando la maniglia a puntini (mouse e touch) o con le frecce su/giù quando ha il focus
-  const lineOrder = keys => { cfg.order = [...cfg.order.filter(k => !keys.includes(k)), ...keys]; update(); };
-  const grpRows = row => [...row.parentNode.querySelectorAll('tr[data-key]')].filter(r => r.dataset.grp===row.dataset.grp);
+  // riordino delle righe: trascinando la maniglia a puntini (mouse e touch) o con le frecce su/giù quando ha il focus.
+  // Spostamento libero: una riga portata sotto l'intestazione di un altro gruppo passa a quel gruppo.
+  const saveLineOrder = tb => {
+    const keys = [], rg = {};
+    let g = null;
+    for(const r of tb.children){
+      if(r.matches('tr.grp')) g = r.dataset.grp;
+      else if(r.dataset.key){ keys.push(r.dataset.key); const g0 = r.dataset.key.split('|')[0]; if(g && g!==g0) rg[r.dataset.key] = g; }
+    }
+    cfg.order = keys; cfg.regroup = rg; update();
+  };
+  const tbSig = tb => [...tb.children].map(r => r.dataset.key || '#'+r.dataset.grp).join('\n');
+  // dove va la riga: prima della prima riga (o intestazione) che sta sotto il puntatore; prima di un'intestazione vuol dire
+  // in fondo al gruppo sopra, tranne per la prima intestazione (non c'è un gruppo sopra)
+  const placeRow = (row, y) => {
+    const tb = row.parentNode, els = [...tb.children].filter(r => r!==row && (r.dataset.key || r.matches('tr.grp')));
+    const t = els.find(r => { const bx = r.getBoundingClientRect(); return y < bx.top + bx.height/2; });
+    if(!t){ if(tb.lastElementChild!==row) tb.appendChild(row); return; }
+    if(t.matches('tr.grp') && t===els[0]){ if(t.nextElementSibling!==row) t.after(row); return; }
+    if(row.nextElementSibling!==t) t.before(row);
+  };
   $('#offerTable').addEventListener('keydown', e => {
     const h = e.target.closest('button[data-drag]'); if(!h || (e.key!=='ArrowUp' && e.key!=='ArrowDown')) return;
     e.preventDefault();
-    const row = h.closest('tr'), rows = grpRows(row), i = rows.indexOf(row), j = i + (e.key==='ArrowUp' ? -1 : 1);
-    if(j<0 || j>=rows.length) return;
-    const keys = rows.map(r => r.dataset.key); [keys[i], keys[j]] = [keys[j], keys[i]];
-    lineOrder(keys);
+    const row = h.closest('tr'), tb = row.parentNode, before = tbSig(tb);
+    if(e.key==='ArrowUp'){
+      const pv = row.previousElementSibling; if(!pv) return;
+      if(pv.matches('tr.grp')){ if(pv.previousElementSibling) pv.before(row); else return; }   // in fondo al gruppo sopra
+      else pv.before(row);
+    } else {
+      const nx = row.nextElementSibling; if(!nx) return;
+      nx.after(row);   // dopo la riga sotto, o subito sotto l'intestazione del gruppo dopo
+    }
+    if(tbSig(tb)===before) return;
+    saveLineOrder(tb);
     const f = $(`#offerTable button[data-drag="${CSS.escape(h.dataset.drag)}"]`); if(f) f.focus();
   });
   $('#offerTable').addEventListener('pointerdown', e => {
     const h = e.target.closest('button[data-drag]'); if(!h || e.button>0) return;
     e.preventDefault();
-    const row = h.closest('tr'), before = grpRows(row).map(r => r.dataset.key);
+    const row = h.closest('tr'), tb = row.parentNode, before = tbSig(tb);
     row.classList.add('dragging'); document.body.classList.add('dragging-line');
-    try{ h.setPointerCapture(e.pointerId); }catch(_){}
-    const move = ev => {
-      const others = grpRows(row).filter(r => r!==row);
-      const t = others.find(r => { const b = r.getBoundingClientRect(); return ev.clientY < b.top + b.height/2; });
-      if(t){ if(row.nextElementSibling!==t) t.before(row); }
-      else { const last = others[others.length-1]; if(last && last.nextElementSibling!==row) last.after(row); }
-    };
-    const up = () => {
-      h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+    // eventi sul documento: spostando la riga nel DOM il pulsante perde il «pointer capture»
+    const id = e.pointerId, move = ev => { if(ev.pointerId===id) placeRow(row, ev.clientY); };
+    const up = ev => {
+      if(ev.pointerId!==id) return;
+      document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up);
       row.classList.remove('dragging'); document.body.classList.remove('dragging-line');
-      const keys = grpRows(row).map(r => r.dataset.key);
-      if(keys.join('\n')!==before.join('\n')) lineOrder(keys);
+      if(tbSig(tb)!==before) saveLineOrder(tb);
     };
-    h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+    document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
   });
-  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; cfg.mkRow = {}; cfg.removed = []; cfg.order = []; update(); });
+  $('#adjReset').addEventListener('click', () => { cfg.adj = {}; cfg.mkRow = {}; cfg.removed = []; cfg.order = []; cfg.regroup = {}; update(); });
   $('#presetSel').addEventListener('change', e => { if(e.target.value) applyPreset(e.target.value); e.target.value = ''; });
   $('#archSave').addEventListener('click', archSave);
   $('#archOpen').addEventListener('click', archOpen);
