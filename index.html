@@ -4089,9 +4089,13 @@ function renderPos(p){
 }
 
 /* --- PDF: la stampa del browser con «Salva come PDF», solo la parte scelta --- */
-function printPart(part){
+// prima della stampa lo stesso riquadro delle immagini 3D: «Prosegui» col nome proposto o «Rinomina il file»;
+// il nome scelto diventa il titolo della pagina, che il browser propone come nome del PDF
+async function printPart(part){
   if(!res || !res.plan){ say('Niente da stampare'); return; }
+  const name = await askFileName(inLang(cfg.lingua, () => printName(part)) + '.pdf'); if(!name) return;
   const done = printPrep(part), end = () => { window.removeEventListener('afterprint', end); done(); };
+  document.title = name.replace(/\.pdf$/i, '');
   window.addEventListener('afterprint', end);
   window.print();
 }
